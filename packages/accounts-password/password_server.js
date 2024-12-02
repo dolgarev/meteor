@@ -136,8 +136,8 @@ Accounts.findUserByUsername =
  * @returns {Promise<Object>} A user if found, else null
  * @importFromPackage accounts-base
  */
-Accounts.findUserByEmail =
-  (email, options) => Accounts._findUserByQuery({ email }, options);
+Accounts.findUserByEmail = async (email, options) =>
+    await Accounts._findUserByQuery({ email }, options);
 
 const passwordValidator = Match.OneOf(
   Match.Where(str => Match.test(str, String) && str.length <= Meteor.settings?.packages?.accounts?.passwordMaxLength || 256), {
@@ -221,7 +221,7 @@ Accounts.registerLoginHandler("password", async options => {
  * @param {String} newUsername A new username for the user.
  * @importFromPackage accounts-base
  */
-Accounts.setUsername = (userId, newUsername) => {
+Accounts.setUsername = async (userId, newUsername) => {
   check(userId, Match.NonEmptyString);
   check(newUsername, Match.NonEmptyString);
 
@@ -944,7 +944,7 @@ Accounts.addEmailAsync = async (userId, newEmail, verified) => {
  * @param {String} email The email address to remove.
  * @importFromPackage accounts-base
  */
-Accounts.removeEmailAsync =
+Accounts.removeEmail =
   async (userId, email) => {
     check(userId, Match.NonEmptyString);
     check(email, Match.NonEmptyString);
