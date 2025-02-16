@@ -516,7 +516,8 @@ async function doRunCommand(options) {
           open(`http://localhost:${options.port}`)
         }
       }
-    }
+    }, 
+    open: options.open,
   });
 }
 
@@ -1057,7 +1058,7 @@ main.registerCommand({
     process.env.GIT_TERMINAL_PROMPT = 0;
 
     const gitCommand = isWindows
-      ? `git clone --progress ${url} ${files.convertToOSPath(appPath)}`
+      ? `git clone --progress ${url} "${files.convertToOSPath(appPath)}"`
       : `git clone --progress ${url} ${appPath}`;
     const [okClone, errClone] = await bash`${gitCommand}`;
     const errorMessage = errClone && typeof errClone === "string" ? errClone : errClone?.message;
@@ -1373,7 +1374,7 @@ ${Console.command("meteor build ../output")}`,
       files.pathJoin(outputPath, 'bundle')) :
       files.pathJoin(buildDir, 'bundle');
 
-  await stats.recordPackages({
+  stats.recordPackages({
     what: "sdk.bundle",
     projectContext: projectContext
   });

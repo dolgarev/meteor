@@ -422,7 +422,7 @@ export class AccountsServer extends AccountsCommon {
       )
     );
 
-    methodInvocation.setUserId(userId);
+    await methodInvocation.setUserId(userId);
 
     return {
       id: userId,
@@ -664,7 +664,7 @@ export class AccountsServer extends AccountsCommon {
        await accounts.destroyToken(this.userId, token);
       }
       await accounts._successfulLogout(this.connection, this.userId);
-      this.setUserId(null);
+      await this.setUserId(null);
     };
 
     // Generates a new login token with the same expiration as the
@@ -1519,11 +1519,11 @@ export class AccountsServer extends AccountsCommon {
   }
 
   _handleError = (msg, throwError = true, errorCode = 403) => {
-    const isErrorAmbiguous = this._options.ambiguousErrorMessages ?? Meteor.isProduction;
+    const isErrorAmbiguous = this._options.ambiguousErrorMessages ?? true;
     const error = new Meteor.Error(
       errorCode,
       isErrorAmbiguous
-        ? "Something went wrong. Please check your credentials."
+        ? 'Something went wrong. Please check your credentials.'
         : msg
     );
     if (throwError) {
@@ -1806,21 +1806,6 @@ const setupUsersCollection = async users => {
 
       return true;
     },
-    updateAsync: (userId, user, fields, modifier) => {
-      // make sure it is our record
-      if (user._id !== userId) {
-        return false;
-      }
-
-      // user can only modify the 'profile' field. sets to multiple
-      // sub-keys (eg profile.foo and profile.bar) are merged into entry
-      // in the fields list.
-      if (fields.length !== 1 || fields[0] !== 'profile') {
-        return false;
-      }
-
-      return true;
-    },
     fetch: ['_id'] // we only look at _id.
   });
 
@@ -1861,4 +1846,3 @@ const generateCasePermutationsForString = string => {
   }
   return permutations;
 }
-
