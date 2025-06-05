@@ -703,6 +703,9 @@ Object.assign(ProjectContext.prototype, {
           localCatalog: self.localCatalog
         });
 
+        // Provide the packageVersionMap to plugins via global scope
+        global.packageVersionMap = self.packageMap.toVersionMap();
+
         self.packageMapDelta = new packageMapModule.PackageMapDelta({
           cachedVersions: cachedVersions,
           packageMap: self.packageMap,
