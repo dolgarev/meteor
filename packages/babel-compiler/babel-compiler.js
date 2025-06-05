@@ -26,7 +26,7 @@ var excludedFileExtensionPattern = /\.(es5|min)\.js$/i;
 var hasOwn = Object.prototype.hasOwnProperty;
 
 function getMeteorConfig() {
-  return global?.meteorConfig || {};
+  return Plugin?.getMeteorConfig() || {};
 }
 
 // Check if verbose mode is enabled either in the provided config or in extraFeatures
