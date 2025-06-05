@@ -1,3 +1,5 @@
+import { getMeteorConfig } from "../tool-env/meteor-config";
+
 var main = require('./main.js');
 var _ = require('underscore');
 var files = require('../fs/files');
@@ -261,27 +263,6 @@ export function parseRunTargets(targets) {
   });
 };
 
-export function getMeteorConfig(appDir) {
-  const modernForced = JSON.parse(process.env.METEOR_MODERN || "false");
-  let packageJson;
-  if (appDir) {
-    const packageJsonPath = files.pathJoin(appDir, 'package.json');
-    if (!files.exists(packageJsonPath)) {
-      global.meteorConfig = {
-        modern: projectContextModule.normalizeModern(modernForced || false),
-      };
-      return global.meteorConfig;
-    }
-    const packageJsonFile = files.readFile(packageJsonPath, 'utf8');
-    packageJson = JSON.parse(packageJsonFile);
-  }
-  global.meteorConfig = {
-    ...(packageJson?.meteor || {}),
-    modern: projectContextModule.normalizeModern(modernForced || packageJson?.meteor?.modern || false),
-  };
-  return global.meteorConfig;
-}
-
 function filterWebArchs(webArchs, excludeArchsOption, appDir, options) {
   const platforms = (options.platforms || []);
   const isBuildMode = platforms?.length > 0;
@@ -301,7 +282,7 @@ function filterWebArchs(webArchs, excludeArchsOption, appDir, options) {
     if (!isCordovaDev) {
       const excludeArchsOptions = excludeArchsOption ? excludeArchsOption.trim().split(/\s*,\s*/) : [];
       const hasExcludeArchsOptions = (excludeArchsOptions?.length || 0) > 0;
-      const hasModernArchsOnlyEnabled = appDir && global.meteorConfig?.modern?.webArchOnly !== false;
+      const hasModernArchsOnlyEnabled = appDir && getMeteorConfig()?.modern?.webArchOnly !== false;
       if (hasExcludeArchsOptions && hasModernArchsOnlyEnabled) {
         console.warn('modern.webArchOnly and --exclude-archs are both active. If both are set, --exclude-archs takes priority.');
       }

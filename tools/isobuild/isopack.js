@@ -1,3 +1,5 @@
+import { getMeteorConfig } from "../tool-env/meteor-config";
+
 var compiler = require('./compiler.js');
 var archinfo = require('../utils/archinfo');
 var _ = require('underscore');
@@ -515,9 +517,7 @@ Object.assign(Isopack.prototype, {
       name: pluginName,
 
       // Share the meteorConfig object as part of plugin API
-      getMeteorConfig: function () {
-        return global.meteorConfig || {};
-      },
+      getMeteorConfig: getMeteorConfig,
 
       // 'extension' is a file extension without the separation dot
       // (eg 'js', 'coffee', 'coffee.md')

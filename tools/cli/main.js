@@ -287,14 +287,15 @@ main.captureAndExit = async function (header, title, f) {
 
 // NB: files required up to this point may not define commands
 
-const { getMeteorConfig } = require('./commands.js');
+const { initMeteorConfig } = require('../tool-env/meteor-config');
+require('./commands.js');
 require('./commands-packages.js');
 require('./commands-packages-query.js');
 require('./commands-cordova.js');
 require('./commands-aliases.js');
 
 // Initialize meteorConfig globally
-global.meteorConfig = getMeteorConfig();
+initMeteorConfig();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Record all the top-level commands as JSON
@@ -870,7 +871,7 @@ makeGlobalAsyncLocalStorage().run({}, async function () {
     appDir = files.pathResolve(appDir);
 
     // Renitialize meteorConfig globally when having appDir context
-    global.meteorConfig = getMeteorConfig(appDir);
+    initMeteorConfig(appDir);
   }
 
   await require('../tool-env/isopackets.js').ensureIsopacketsLoadable();
