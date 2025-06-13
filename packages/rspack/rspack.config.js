@@ -157,6 +157,7 @@ export default function (inMeteor = {}, argv = {}) {
           writeToDisk: false,
         },
       },
+      experiments: { incremental: true },
     }),
   };
 
@@ -197,7 +198,12 @@ export default function (inMeteor = {}, argv = {}) {
     ],
     watchOptions,
     devtool: isDev ? 'source-map' : 'hidden-source-map',
-    ...createCacheStrategy(mode),
+    ...(isDev &&
+      merge(
+        createCacheStrategy(mode),
+        { experiments: { incremental: true } }
+      )
+    ),
   };
 
   // Load and apply project-level overrides for the selected build
