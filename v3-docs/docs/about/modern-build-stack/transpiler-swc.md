@@ -110,7 +110,7 @@ You can also configure other options using the `.swcrc` format. One common case 
 {
   "jsc": {
     "parser": {
-      "syntax": "emcascript",
+      "syntax": "ecmascript",
       "jsx": true
     }
   }
