@@ -141,6 +141,8 @@ export class PackageNamespace {
         source.prodOnly = !!value;
       } else if (key === "testOnly") {
         source.testOnly = !!value;
+      } else if (key === "devOnly") {
+        source.devOnly = !!value;
       } else if (key === "deprecated") {
         if (typeof(value) === "string") {
           source.deprecatedMessage = value;
@@ -150,9 +152,9 @@ export class PackageNamespace {
         // Do nothing. We might want to add some keys later, and we should err
         // on the side of backwards compatibility.
       }
-      if (size(compact([source.debugOnly, source.prodOnly, source.testOnly])) > 1) {
+      if (size(compact([source.debugOnly, source.prodOnly, source.testOnly, source.devOnly])) > 1) {
         buildmessage.error(
-          "Package can't have more than one of: debugOnly, prodOnly, testOnly.");
+          "Package can't have more than one of: debugOnly, prodOnly, testOnly or devOnly.");
       }
     });
   }

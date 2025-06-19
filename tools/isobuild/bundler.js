@@ -2558,6 +2558,16 @@ class JsImage {
           symlink: includeNodeModules === 'symlink'
         };
 
+        if (buildMode === "production") {
+          const targets = global.meteorBundlerTargets || {};
+          const isDevOnlyModule = ['client', 'server'].some(target =>
+            targets[target]?.packageMap?.getInfo(nmd?.packageName)?.packageSource?.devOnly
+          );
+          if (isDevOnlyModule) {
+            continue;
+          }
+        }
+
         const prodPackagePredicate =
             // This condition essentially means we don't strip devDependencies
             // when running tests, which is important for use cases like the one
@@ -3465,6 +3475,11 @@ async function bundle({
     // Server
     if (! hasCachedBundle) {
       targets.server = await makeServerTarget(app, webArchs);
+    }
+
+    if (buildOptions.buildMode === 'production') {
+      // Store targets in global variable for access in JsImage.write
+      global.meteorBundlerTargets = targets;
     }
 
     if (outputPath !== null) {
