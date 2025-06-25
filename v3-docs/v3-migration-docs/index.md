@@ -1,5 +1,5 @@
 ---
-meteor_version: 3.1.0
+meteor_version: 3.3
 node_version: 22.16.0
 npm_version: 10.9.2
 ---
