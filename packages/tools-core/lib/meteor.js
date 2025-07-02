@@ -278,3 +278,14 @@ export function getMeteorAppFilesAndFolders(options = {}) {
   // Start the scan from the specified path
   return scanDirectory(startPath);
 }
+
+/**
+ * Requires a module relative to the Meteor tools directory.
+ * @param {string} filePath - The path of the file to require, relative to the Meteor tools directory.
+ * @returns {Object} The exported module from the required file.
+ */
+export function getMeteorToolsRequire(filePath) {
+  const mainModule = global.process.mainModule;
+  const absPath = mainModule.filename.split(path.sep).slice(0, -1).join(path.sep);
+  return mainModule.require(path.resolve(absPath, filePath));
+}
