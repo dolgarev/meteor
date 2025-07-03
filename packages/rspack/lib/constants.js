@@ -77,6 +77,13 @@ const RSPACK_BUNDLES_REGEX = new RegExp(`^\/${RSPACK_BUNDLES_CONTEXT}\/(.+)$`);
  */
 const RSPACK_ASSETS_REGEX = new RegExp(`^\/${RSPACK_ASSETS_CONTEXT}\/(.+)$`);
 
+export const FILE_ROLE = {
+  build: 'build',
+  entry: 'entry',
+  run: 'run',
+  output: 'output',
+};
+
 module.exports = {
   DEFAULT_RSPACK_VERSION,
   DEFAULT_REACT_REFRESH_PLUGIN_VERSION,
@@ -87,4 +94,5 @@ module.exports = {
   RSPACK_HOT_UPDATE_REGEX,
   RSPACK_BUNDLES_REGEX,
   RSPACK_ASSETS_REGEX,
+  FILE_ROLE,
 };

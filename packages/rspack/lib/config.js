@@ -13,12 +13,11 @@ const {
 } = require('meteor/tools-core/lib/meteor');
 
 const {
-  RSPACK_BUILD_CONTEXT
+  RSPACK_BUILD_CONTEXT,
 } = require('./constants');
 
 const {
-  ensureModuleFilesExist,
-  writeMainClientEntryForHMR
+  ensureModuleFilesExist
 } = require('./build-context');
 
 /**
@@ -63,7 +62,7 @@ function configureMeteorForRSPack() {
 
   // Write content to module files
   if (isMeteorAppDevelopment()) {
-    writeMainClientEntryForHMR();
+    // writeMainClientEntryForHMR();
     setMeteorAppCustomScriptUrl(addEnvSuffixToFilename('/__rspack__/main-client.js'));
   }
 }

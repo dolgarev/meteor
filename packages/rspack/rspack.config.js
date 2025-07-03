@@ -26,7 +26,7 @@ function createCacheStrategy(mode) {
 }
 
 // SWC loader rule (JSX/JS)
-function createSwcConfig({ isDev }) {
+function createSwcConfig({ isRun }) {
   return {
     test: /\.[jt]sx?$/,
     exclude: /node_modules|\.meteor\/local/,
@@ -39,8 +39,8 @@ function createSwcConfig({ isDev }) {
         target: 'es2015',
         transform: {
           react: {
-            development: isDev,
-            refresh: isDev,
+            development: isRun,
+            refresh: isRun,
           },
         },
       },
@@ -78,6 +78,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isDev = Meteor.isDevelopment || !isProd;
   const isTest = Meteor.isTest;
   const isClient = Meteor.isClient;
+  const isRun = Meteor.isRun;
   const isReactEnabled = Meteor.isReactEnabled;
   const mode = isProd ? 'production' : 'development';
 
@@ -127,13 +128,13 @@ export default function (inMeteor = {}, argv = {}) {
     },
     module: {
       rules: [
-        createSwcConfig({ isDev })
+        createSwcConfig({ isRun })
       ],
     },
     resolve: { extensions: ['.js', '.jsx', '.json'] },
     externals: [/^(meteor.*|react$|react-dom$)/],
     plugins: [
-      ...(isDev ? [
+      ...(isRun ? [
         ...(isReactEnabled ? [new ReactRefreshPlugin()] : []),
         new RequireExternalsPlugin({ buildContext }),
       ].filter(Boolean) : []),
@@ -147,7 +148,7 @@ export default function (inMeteor = {}, argv = {}) {
     ],
     watchOptions,
     devtool: isDev ? 'source-map' : 'hidden-source-map',
-    ...(isDev && {
+    ...(isRun && {
       devServer: {
         static: { directory: clientOutputDir, publicPath: '/__rspack__/' },
         hot: true,
@@ -178,7 +179,7 @@ export default function (inMeteor = {}, argv = {}) {
     module: {
       rules: [
         { test: /\.meteor\/local/, use: 'builtin:empty-loader', sideEffects: false },
-        createSwcConfig({ isDev }),
+        createSwcConfig({ isRun }),
       ],
     },
     resolve: {
@@ -197,8 +198,8 @@ export default function (inMeteor = {}, argv = {}) {
       }),
     ],
     watchOptions,
-    devtool: isDev ? 'source-map' : 'hidden-source-map',
-    ...(isDev &&
+    devtool: isRun ? 'source-map' : 'hidden-source-map',
+    ...(isRun &&
       merge(
         createCacheStrategy(mode),
         { experiments: { incremental: true } }

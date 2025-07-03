@@ -23,6 +23,8 @@ const {
   isMeteorAppProduction,
   isMeteorAppDebug,
   addEnvSuffixToFilename,
+  isMeteorAppRun,
+  isMeteorAppBuild,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -65,6 +67,8 @@ function getRSPackEnv({ isClient, isServer }) {
     ['isProduction', isMeteorAppProduction()],
     ['isDebug', isMeteorAppDebug()],
     ['isTest', isMeteorAppTest()],
+    ['isRun', isMeteorAppRun()],
+    ['isBuild', isMeteorAppBuild()],
     ['isClient', isClient],
     ['isServer', isServer],
     ['clientEntry',
