@@ -20,8 +20,6 @@
 // may not interact correctly. See
 // https://bugzilla.mozilla.org/show_bug.cgi?id=243412.
 .box-sizing-by-border () {
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
@@ -29,21 +27,13 @@
 
 .box-shadow (...) {
   box-shadow: @arguments;
-  -webkit-box-shadow: @arguments; // For Android
 }
 
 ////////// Unselectable
 
 .unselectable () {
-  -webkit-user-select: none; // Chrome/Safari
-  -moz-user-select: none; // Firefox
-  -ms-user-select: none; // IE10+
-
-  // These delarations not implemented in browsers yet:
-  -o-user-select: none;
+  -webkit-user-select: none; // Safari support
   user-select: none;
-
-  // In IE <= 9 and Opera, need unselectable="on" in the HTML.
 }
 
 //////////////////// LOGIN BUTTONS
@@ -62,7 +52,6 @@
 #login-buttons {
 
   display: inline-block;
-  margin-right: 0.2px; // Fixes display on IE8: http://www.compsoft.co.uk/Blog/2009/11/inline-block-not-quite-inline-blocking.html
 
   // This seems to keep the height of the line from
   // being sensitive to the presence of the unicode down arrow,
@@ -103,33 +92,39 @@
 #login-buttons .login-button, .accounts-dialog .login-button {
   cursor: pointer;
   .unselectable();
-  padding: 4px 8px;
+  padding: 0.5rem 1rem;
 
-  font-size: 80%;
+  font-size: 0.9rem;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   line-height: 1.5;
+  font-weight: 500;
 
   text-align: center;
   color: #fff;
 
   background: @login-buttons-color;
-  border: 1px solid @login-buttons-color-border;
-
+  border: none;
+  
   border-radius: 4px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 
   &:hover {
     background: @login-buttons-color-active;
   }
   &:active {
     background: @login-buttons-color-active;
+    transform: translateY(1px);
     .box-shadow(0 2px 3px 0 rgba(0, 0, 0, 0.2) inset);
   }
 
   &.login-button-disabled, &.login-button-disabled:active {
     color: #ddd;
     background: #aaa;
-    border: 1px solid lighten(#aaa, 10%);
+    border: none;
     .box-shadow(none);
+    transform: none;
+    cursor: not-allowed;
+    opacity: 0.7;
   }
 }
 
@@ -225,7 +220,14 @@
 
 #login-buttons a, .accounts-dialog a {
     cursor: pointer;
-    text-decoration: underline;
+    text-decoration: none;
+    color: @login-buttons-color;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: @login-buttons-color-active;
+      text-decoration: underline;
+    }
 }
 
 #login-buttons.login-buttons-dropdown-align-right .login-close-text {
@@ -236,20 +238,18 @@
 @meteor-accounts-dialog-border-width: 1px;
 
 .accounts-dialog {
-  border: @meteor-accounts-dialog-border-width solid #ccc;
+  border: @meteor-accounts-dialog-border-width solid #ddd;
   z-index: 1000;
   background: white;
-  border-radius: 4px;
+  border-radius: 8px;
 
-  padding: 8px 12px;
+  padding: 16px;
   margin: -8px -12px 0 -12px;
 
   width: @login-buttons-accounts-dialog-width;
 
-  .box-shadow(0 0 3px 0 rgba(0, 0, 0, 0.2));
+  .box-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
 
-  // Labels and links inherit app's font with this line commented out:
-  //font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 16px;
   color: #333;
 
@@ -265,33 +265,27 @@
   }
 
   label, .title {
-    font-size: 80%;
-    margin-top: 7px;
-    margin-bottom: -2px;
-  }
-
-  label {
-    // Bootstrap sets labels as 'display: block;'. Undo that.
-    display: inline;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.25rem;
+    display: block;
+    font-weight: 500;
   }
 
   input[type=text], input[type=email], input[type=password] {
-    // Be pixel-accurate in IE 8+ regardless of our borders and
-    // paddings, at the expense of IE 7.
-    // Any heights or widths applied to this element will set the
-    // size of the border box (including padding and borders)
-    // instead of the content box.  This makes it possible to
-    // do width 100%.
     .box-sizing-by-border();
     width: 100%;
-    // A fix purely for the "meteor add bootstrap" experience.
-    // Bootstrap sets "height: 20px" on form fields, which is too
-    // small when applied to the border box.  People have complained
-    // that Bootstrap takes this approach for the sake of IE 7:
-    // https://github.com/twitter/bootstrap/issues/2935
-    // Our work-around is to override Bootstrap's rule (with higher
-    // precedence).
-    &[type] { height: auto; }
+    height: auto;
+    font-size: 1rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    
+    &:focus {
+      outline: none;
+      border-color: @login-buttons-color;
+      box-shadow: 0 0 0 2px rgba(89, 101, 149, 0.25);
+    }
   }
 
   .login-button-form-submit { margin-top: 8px; }
@@ -302,8 +296,8 @@
 
   .accounts-close {
     position: absolute;
-    top: 0;
-    right: 5px;
+    top: 8px;
+    right: 12px;
 
     font-size: 20px;
     font-weight: bold;
@@ -311,6 +305,7 @@
     text-decoration: none;
     color: #000;
     opacity: 0.4;
+    transition: opacity 0.2s ease;
 
     &:hover {
       opacity: 0.8;
@@ -348,22 +343,19 @@
 
   z-index: 1001;
   position: fixed;
-
+  
+  /* Modern centering approach using transform */
   left: 50%;
-  margin-left: -(@login-buttons-accounts-dialog-width
-               + @meteor-accounts-base-padding) / 2;
-
   top: 50%;
-  margin-top: -40px; /* = approximately -height/2, though height can change */
+  transform: translate(-50%, -50%);
+  width: @login-buttons-accounts-dialog-width;
 }
 
 @configure-login-service-dialog-width: 530px;
 
 #configure-login-service-dialog {
   width: @configure-login-service-dialog-width;
-  margin-left: -(@configure-login-service-dialog-width
-               + @meteor-accounts-base-padding) / 2;
-  margin-top: -300px; /* = approximately -height/2, though height can change */
+  /* Using transform for centering instead of negative margins */
 
   table { width: 100%; }
   input[type=text] {
@@ -401,18 +393,15 @@
   width: 100%;
   height: 100%;
   z-index: 999;
-
-  /* XXX consider replacing with DXImageTransform */
-  background-color: rgb(0.2, 0.2, 0.2); /* fallback for IE7-8 */
-
   background-color: rgba(0, 0, 0, 0.7);
 }
 
 #login-buttons, .accounts-dialog {
   input[type=text], input[type=email], input[type=password] {
-    padding: 4px;
-    border: 1px solid #aaa;
-    border-radius: 3px;
-    line-height: 1;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    line-height: 1.5;
+    font-size: 1rem;
   }
 }
