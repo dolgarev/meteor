@@ -34,12 +34,6 @@ CollectionExtensions = {
       throw new Error('Prototype method must be a function');
     }
     
-    // Check for reserved names (reserved for future hook system)
-    const reservedNames = ['before', 'after', 'direct', 'hookOptions', '_hooks'];
-    if (reservedNames.includes(name)) {
-      throw new Error(`Method name '${name}' is reserved for future hook system`);
-    }
-    
     this._prototypeMethods.set(name, method);
   },
 

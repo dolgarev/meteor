@@ -111,21 +111,6 @@ Tinytest.add("CollectionExtensions - static methods", function (test) {
   teardownTest();
 });
 
-// Test reserved names protection
-Tinytest.add("CollectionExtensions - reserved names protection", function (test) {
-  setupTest();
-  
-  const reservedNames = ['before', 'after', 'direct', 'hookOptions', '_hooks'];
-  
-  reservedNames.forEach(name => {
-    test.throws(() => {
-      CollectionExtensions.addPrototypeMethod(name, function() {});
-    }, /reserved for future hook system/);
-  });
-  
-  teardownTest();
-});
-
 // Test error handling in extensions
 Tinytest.add("CollectionExtensions - extension error handling", function (test) {
   setupTest();
