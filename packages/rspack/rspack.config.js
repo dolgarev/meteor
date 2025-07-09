@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import rspack, { DefinePlugin } from '@rspack/core';
+import rspack, { DefinePlugin, BannerPlugin } from '@rspack/core';
 import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
 import { merge } from 'webpack-merge';
 import RequireExternalsPlugin from './RequireExternalsPlugin.js';
@@ -83,12 +83,17 @@ export default function (inMeteor = {}, argv = {}) {
   const mode = isProd ? 'production' : 'development';
 
   // Determine entry points
-  const clientEntry = Meteor.clientEntry
-    ? path.resolve(process.cwd(), Meteor.clientEntry)
-    : path.resolve(process.cwd(), 'ui/main.jsx');
-  const serverEntry = Meteor.serverEntry
-    ? path.resolve(process.cwd(), Meteor.serverEntry)
-    : path.resolve(process.cwd(), 'api/main.js');
+  const entryPath = Meteor.entryPath;
+
+  // Determine output points
+  const outputPath = Meteor.outputPath;
+  const outputFilename = Meteor.outputFilename;
+
+  // Determine run point
+  const runPath = Meteor.runPath;
+
+  // Determine banner
+  const bannerOutput = JSON.parse(Meteor.bannerOutput || '');
 
   // Determine output directories
   const clientOutputDir = path.resolve(process.cwd(), 'public');
@@ -104,19 +109,15 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
-  const prefix = isTest ? 'test-' : 'main-';
-  const suffix = isTest ? '' : isDev ? '.dev' : '.prod';
   // Base client config
   let clientConfig = {
     name: 'meteor-client',
     target: 'web',
     mode,
-    entry: clientEntry,
+    entry: path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: clientOutputDir,
-      filename: ({ chunk }) =>
-        isDev ?
-          `${prefix}client${suffix}.js` :`../${buildContext}/${prefix}client${suffix}.js`,
+      filename: () => isDev ? outputFilename : `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
       publicPath: '/',
       chunkFilename: `${bundlesContext}/[id].[chunkhash].js`,
@@ -136,7 +137,7 @@ export default function (inMeteor = {}, argv = {}) {
     plugins: [
       ...(isRun ? [
         ...(isReactEnabled ? [new ReactRefreshPlugin()] : []),
-        new RequireExternalsPlugin({ buildContext }),
+        new RequireExternalsPlugin({ buildContext, filePath: runPath }),
       ].filter(Boolean) : []),
       new DefinePlugin({
         'Meteor.isClient': JSON.stringify(true),
@@ -144,6 +145,10 @@ export default function (inMeteor = {}, argv = {}) {
         'Meteor.isTest': JSON.stringify(isTest),
         'Meteor.isDevelopment': JSON.stringify(isDev),
         'Meteor.isProduction': JSON.stringify(isProd),
+      }),
+      new BannerPlugin({
+        banner: bannerOutput,
+        entryOnly: true,
       }),
     ],
     watchOptions,
@@ -167,10 +172,10 @@ export default function (inMeteor = {}, argv = {}) {
     name: 'meteor-server',
     target: 'node',
     mode,
-    entry: serverEntry,
+    entry: path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: serverOutputDir,
-      filename: ({ chunk }) => `../${buildContext}/${prefix}server${suffix}.js`,
+      filename: () => `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
       chunkFilename: `${bundlesContext}/[id].[chunkhash].js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
@@ -195,6 +200,10 @@ export default function (inMeteor = {}, argv = {}) {
         'Meteor.isTest': JSON.stringify(isTest),
         'Meteor.isDevelopment': JSON.stringify(isDev),
         'Meteor.isProduction': JSON.stringify(isProd),
+      }),
+      new BannerPlugin({
+        banner: bannerOutput,
+        entryOnly: true,
       }),
     ],
     watchOptions,

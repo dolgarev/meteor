@@ -14,7 +14,6 @@ const {
   getMeteorAppDir,
   getMeteorInitialAppEntrypoints,
   isMeteorAppDevelopment,
-  addEnvSuffixToFilename,
   isMeteorAppRun,
   isMeteorAppBuild,
 } = require('meteor/tools-core/lib/meteor');
@@ -41,7 +40,7 @@ const {
  * Retrieves from global state if already stored, otherwise gets from Meteor
  * @returns {Object} Object containing entry points for client and server
  */
-function getInitialEntrypoints() {
+export function getInitialEntrypoints() {
   const existingEntrypoint = getGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS);
   if (existingEntrypoint) return existingEntrypoint;
   const initialEntrypoints = getMeteorInitialAppEntrypoints();
@@ -58,7 +57,7 @@ function getInitialEntrypoints() {
  * @returns {string} Path to the build context directory
  * @throws {Error} If directory creation fails
  */
-function ensureRSPackBuildContextExists() {
+export function ensureRSPackBuildContextExists() {
   const appDir = getMeteorAppDir();
   const buildContextPath = path.join(appDir, RSPACK_BUILD_CONTEXT);
 
@@ -90,9 +89,8 @@ function ensureRSPackBuildContextExists() {
  * Creates default module files if they don't exist
  * @returns {void}
  */
-function ensureModuleFilesExist() {
+export function ensureModuleFilesExist() {
   const appDir = getMeteorAppDir();
-
 
   const env = isMeteorAppDevelopment() ? { isDevelopment: true } : { isProduction: true };
   const commandRole = isMeteorAppRun()
@@ -101,123 +99,116 @@ function ensureModuleFilesExist() {
     ? { role: FILE_ROLE.build }
     : { role: FILE_ROLE.run };
   const initialEntrypoints = getInitialEntrypoints();
-  console.log("--> (build-context.js-Line: 104)\n initialEntrypoints: ", initialEntrypoints);
   const mainClientFiles = {
     entryFile: initialEntrypoints.mainClient || '',
-    outputFile: getBuildFilename({ isMain: true, isClient: true, ...env, role: FILE_ROLE.output })
+    outputFile: getBuildFilePath({ isMain: true, isClient: true, ...env, role: FILE_ROLE.output, onlyFilename: true }),
   };
   const mainServerFiles = {
     entryFile: initialEntrypoints.mainServer || '',
-    outputFile: getBuildFilename({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output })
+    outputFile: getBuildFilePath({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output, onlyFilename: true }),
   };
   const testClientFiles = {
     entryFile: initialEntrypoints.testClient || '',
-    outputFile: getBuildFilename({ isTest: true, isClient: true, role: FILE_ROLE.output })
+    outputFile: getBuildFilePath({ isTest: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true }),
   };
   const testServerFiles = {
     entryFile: initialEntrypoints.testServer || '',
-    outputFile: getBuildFilename({ isTest: true, isServer: true, role: FILE_ROLE.output })
+    outputFile: getBuildFilePath({ isTest: true, isServer: true, role: FILE_ROLE.output, onlyFilename: true }),
   };
 
   const moduleFiles = {
     /* Main module files for client and server */
-    [getBuildFilename({ isMain: true, isClient: true, ...env, ...commandRole })]:
+    [getBuildFilePath({ isMain: true, isClient: true, ...env, ...commandRole })]:
       getBuildFileContent({ isMain: true, isClient: true, ...env, ...commandRole, ...mainClientFiles }),
-    [getBuildFilename({ isMain: true, isClient: true, ...env, role: FILE_ROLE.entry })]:
+    [getBuildFilePath({ isMain: true, isClient: true, ...env, role: FILE_ROLE.entry })]:
       getBuildFileContent({ isMain: true, isClient: true, ...env, role: FILE_ROLE.entry, ...mainClientFiles }),
-    [getBuildFilename({ isMain: true, isClient: true, ...env, role: FILE_ROLE.output })]:
+    [getBuildFilePath({ isMain: true, isClient: true, ...env, role: FILE_ROLE.output })]:
       getBuildFileContent({ isMain: true, isClient: true, ...env, role: FILE_ROLE.output, ...mainClientFiles }),
-    [getBuildFilename({ isMain: true, isServer: true, ...env, ...commandRole })]:
+    [getBuildFilePath({ isMain: true, isServer: true, ...env, ...commandRole })]:
       getBuildFileContent({ isMain: true, isServer: true, ...env, ...commandRole, ...mainServerFiles }),
-    [getBuildFilename({ isMain: true, isServer: true, ...env, role: FILE_ROLE.entry })]:
+    [getBuildFilePath({ isMain: true, isServer: true, ...env, role: FILE_ROLE.entry })]:
       getBuildFileContent({ isMain: true, isServer: true, ...env, role: FILE_ROLE.entry, ...mainServerFiles }),
-    [getBuildFilename({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output })]:
+    [getBuildFilePath({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output })]:
       getBuildFileContent({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output, ...mainServerFiles }),
     /* Test module files for client and server */
-    [getBuildFilename({ isTest: true, isClient: true, ...commandRole })]:
+    [getBuildFilePath({ isTest: true, isClient: true, ...commandRole })]:
       getBuildFileContent({ isTest: true, isClient: true, ...commandRole, ...testClientFiles }),
-    [getBuildFilename({ isTest: true, isClient: true, role: FILE_ROLE.entry })]:
+    [getBuildFilePath({ isTest: true, isClient: true, role: FILE_ROLE.entry })]:
       getBuildFileContent({ isTest: true, isClient: true, role: FILE_ROLE.entry, ...testClientFiles }),
-    [getBuildFilename({ isTest: true, isClient: true, role: FILE_ROLE.output })]:
+    [getBuildFilePath({ isTest: true, isClient: true, role: FILE_ROLE.output })]:
       getBuildFileContent({ isTest: true, isClient: true, role: FILE_ROLE.output, ...testClientFiles }),
-    [getBuildFilename({ isTest: true, isServer: true, ...commandRole })]:
+    [getBuildFilePath({ isTest: true, isServer: true, ...commandRole })]:
       getBuildFileContent({ isTest: true, isServer: true, ...commandRole, ...testServerFiles }),
-    [getBuildFilename({ isTest: true, isServer: true, role: FILE_ROLE.entry })]:
+    [getBuildFilePath({ isTest: true, isServer: true, role: FILE_ROLE.entry })]:
       getBuildFileContent({ isTest: true, isServer: true, role: FILE_ROLE.entry, ...testServerFiles }),
-    [getBuildFilename({ isTest: true, isServer: true, role: FILE_ROLE.output })]:
+    [getBuildFilePath({ isTest: true, isServer: true, role: FILE_ROLE.output })]:
       getBuildFileContent({ isTest: true, isServer: true, role: FILE_ROLE.output, ...testServerFiles }),
-    // /* TODO: deprecate */
-    // 'main-client.hmr.js': '// Main client entry point for RSPack to enable HMR\n',
-    // 'main-client.js': '// Main client entry point for Meteor compiled by RSPack\n',
-    // 'main-server.js': '// Main server entry point for Meteor compiled by RSPack\n',
-    // 'test-client.js': '// Test client entry point for Meteor compiled by RSPack\n',
-    // 'test-server.js': '// Test server entry point for Meteor compiled by RSPack\n',
   };
 
   Object.entries(moduleFiles).forEach(([filename, defaultContent]) => {
-    // Add environment suffix for main client and server files
-    const actualFilename = (['main-client.js', 'main-client.hmr.js', 'main-server.js'].includes(filename))
-      ? addEnvSuffixToFilename(filename)
-      : filename;
+    // 1. Build full path and ensure directory exists
+    const filePath = path.join(appDir, RSPACK_BUILD_CONTEXT, filename);
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+      } catch (err) {
+        logError(`Failed to create directory ${dir}: ${err.message}`);
+        return; // stop here if we can’t make the folder
+      }
+    }
 
-    const filePath = `${appDir}/${RSPACK_BUILD_CONTEXT}/${actualFilename}`;
+    // 2. If the file exists, check its contents
+    if (fs.existsSync(filePath)) {
+      let existing;
+      try {
+        existing = fs.readFileSync(filePath, 'utf8');
+      } catch (err) {
+        logError(`Failed to read existing file ${filename}: ${err.message}`);
+        return;
+      }
 
-    if (!fs.existsSync(filePath)) {
+      // 3. If it doesn't already start with the new defaultContent, overwrite it
+      if (!existing.includes(defaultContent)) {
+        try {
+          fs.writeFileSync(filePath, defaultContent, 'utf8');
+        } catch (err) {
+          logError(`Failed to rewrite module file ${filename}: ${err.message}`);
+        }
+      }
+
+      // 4. If the file doesn't exist at all, write it for the first time
+    } else {
       try {
         fs.writeFileSync(filePath, defaultContent, 'utf8');
-      } catch (error) {
-        logError(`Failed to create module file ${actualFilename}: ${error.message}`);
+      } catch (err) {
+        logError(`Failed to create module file ${filename}: ${err.message}`);
       }
     }
   });
 }
 
-/**
- * Writes custom content to the main-client.hmr.js entrypoint when in dev mode.
- * This helper function can be used to inject custom code into the client entry point.
- *
- * @returns {boolean} - True if the content was written successfully, false otherwise
- */
-function writeMainClientEntryForHMR() {
-  // Only write custom content in development mode
-  if (!isMeteorAppDevelopment()) {
-    return false;
-  }
-
-  const appDir = getMeteorAppDir();
-  const filePath = `${appDir}/${RSPACK_BUILD_CONTEXT}/${addEnvSuffixToFilename('main-client.hmr.js')}`;
-
-  try {
-    // Ensure the file exists before writing to it
-    if (!fs.existsSync(filePath)) {
-      ensureModuleFilesExist();
-    }
-    // Write the custom content to the file
-    fs.writeFileSync(filePath, `
-// Main client entry point for RSPack to enable HMR
-
-if (module.hot) {
-  module.hot.accept();
-}
-
-import '../${getInitialEntrypoints().mainClient}'; 
-`, 'utf8');
-    return true;
-  } catch (error) {
-    logError(`Failed to write custom content to main-client.hmr.js: ${error.message}`);
-    return false;
-  }
-}
-
-export function getBuildFilename(config) {
+export function getBuildFilePath(config) {
   const module = config?.isTest ? 'test' : config?.isMain ? 'main' : '';
   const side = config?.isServer ? 'server' : config?.isClient ? 'client' : '';
-  const env = config?.isDevelopment ? 'dev' : config?.isProduction ? 'prod' : '';
-  const role = config?.role;
+  const env = config?.isTest
+    ? ''
+    : config?.isDevelopment
+    ? 'dev'
+    : config?.isProduction
+    ? 'prod'
+    : '';
+  const role = [FILE_ROLE.run, FILE_ROLE.build].includes(config?.role)
+    ? 'meteor'
+    : [FILE_ROLE.output].includes(config?.role)
+    ? 'rspack'
+    : config?.role;
   const extension = config?.extension || 'js';
-  return `${module}-${side}${
-    env ? `.${env}-${role}` : `.${role}`
-  }.${extension}`;
+  const onlyFilename = config?.onlyFilename;
+  const filename = `${side}-${role}.${extension}`;
+  return onlyFilename
+    ? filename
+    : `${module}${env ? `-${env}` : ''}/${filename}`;
 }
 
 export function getBuildFileContent(config) {
@@ -228,34 +219,43 @@ export function getBuildFileContent(config) {
 
   const banner = [FILE_ROLE.run, FILE_ROLE.build].includes(role) ? `/**
  * --------------------------------------------------------------------------
- * ☄️ Meteor ${capitalizeFirstLetter(side)} Entry Point (${capitalizeFirstLetter(env || module)})
+ * ☄️ Meteor ${capitalizeFirstLetter(side)} App (${capitalizeFirstLetter(env || module)})
  * --------------------------------------------------------------------------
- * Starts the Meteor application in ${env || module} mode when running the "${role}" command.
+ * Describe the Meteor app for the ${side} side.
  */` : `/**
  * --------------------------------------------------------------------------
- * ⚡ Rspack ${capitalizeFirstLetter(side)} ${capitalizeFirstLetter(role)} (${capitalizeFirstLetter(env || module)})
+ * ⚡ Rspack ${capitalizeFirstLetter(side)} ${
+        role === FILE_ROLE.output ? 'App' : capitalizeFirstLetter(role)
+      } (${capitalizeFirstLetter(env || module)})
  * --------------------------------------------------------------------------
- * Acts as the Rspack ${role} file in ${env} mode.
+ * Describe the Rspack ${side} ${
+   config?.role === FILE_ROLE.output ? 'app' : role
+ }${
+        config?.role === FILE_ROLE.entry ? ' to compile the Rspack app' : ''
+      }.
  */`;
 
-  const hmr = role === FILE_ROLE.run && config?.isClient
+  const hmr = role === FILE_ROLE.run && config?.isClient && !config?.isTest
     ? `/* Enables HMR */
 if (module.hot) {
   module.hot.accept();
 }` : '';
 
   const importContent = role === FILE_ROLE.entry
-    ? `/* Entry to Meteor ${side} app */
-import '../${config?.entryFile}';`
-    : role === FILE_ROLE.build || role === FILE_ROLE.run && config?.isServer
-      ? `/* Link to Rspack ${side} app */
+    ? `/* Link to ☄️ Meteor ${capitalizeFirstLetter(side)} Entry */
+import '../../${config?.entryFile}';`
+      : (role === FILE_ROLE.build || role === FILE_ROLE.run) &&
+        (config?.isServer || config?.isTest)
+      ? `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
 import './${config?.outputFile || ''}';`
-      : role === FILE_ROLE.run && config?.isClient
-      ? '/* No link to Rspack client app as served by HMR server */'
-      : role === FILE_ROLE.output && config?.isClient
-      ? '/* No code generated for Rspack client app as served by HMR server */'
+      : role === FILE_ROLE.run && config?.isClient && !config?.isTest
+      ? '/* No link to ⚡ Rspack Client App as served by HMR server */'
+      : role === FILE_ROLE.output && config?.isClient && !config?.isTest
+      ? '/* No code generated as served by HMR server */'
       : role === FILE_ROLE.output && config?.isServer
-      ? '/* Code generated for Rspack server app */'
+      ? '/* Code generated */'
+      : role === FILE_ROLE.output && config?.isTest
+      ? '/* Code generated */'
       : '';
 
   return `${banner}
@@ -265,12 +265,3 @@ ${hmr}
 ${importContent}
 `;
 }
-
-module.exports = {
-  getInitialEntrypoints,
-  ensureRSPackBuildContextExists,
-  ensureModuleFilesExist,
-  writeMainClientEntryForHMR,
-  getBuildFilename,
-  getBuildFileContent,
-};

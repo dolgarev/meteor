@@ -35,7 +35,7 @@ const {
  * @returns {Promise<void>} A promise that resolves when the check/installation is complete
  * @throws {Error} If RSPack installation fails
  */
-async function ensureRSPackInstalled() {
+export async function ensureRSPackInstalled() {
   // Skip if already checked
   if (getGlobalState(GLOBAL_STATE_KEYS.RSPACK_INSTALLATION_CHECKED, false)) {
     return;
@@ -68,7 +68,7 @@ async function ensureRSPackInstalled() {
  * Sets global state and environment variables based on React detection
  * @returns {Promise<void>} A promise that resolves when the check/installation is complete
  */
-async function ensureReactRefreshPluginInstalled() {
+export async function ensureReactRefreshPluginInstalled() {
   // Skip if already checked
   if (getGlobalState(GLOBAL_STATE_KEYS.REACT_REFRESH_PLUGIN_CHECKED, false)) {
     return;
@@ -112,8 +112,3 @@ async function ensureReactRefreshPluginInstalled() {
   // Mark as checked
   setGlobalState(GLOBAL_STATE_KEYS.REACT_REFRESH_PLUGIN_CHECKED, true);
 }
-
-module.exports = {
-  ensureRSPackInstalled,
-  ensureReactRefreshPluginInstalled
-};

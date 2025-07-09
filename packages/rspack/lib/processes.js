@@ -13,7 +13,6 @@ const {
   logProgress,
   logError,
   logInfo,
-  logSuccess
 } = require('meteor/tools-core/lib/log');
 
 const {
@@ -22,7 +21,6 @@ const {
   isMeteorAppDevelopment,
   isMeteorAppProduction,
   isMeteorAppDebug,
-  addEnvSuffixToFilename,
   isMeteorAppRun,
   isMeteorAppBuild,
 } = require('meteor/tools-core/lib/meteor');
@@ -34,20 +32,21 @@ const {
 
 const {
   GLOBAL_STATE_KEYS,
-  RSPACK_BUILD_CONTEXT,
   RSPACK_BUNDLES_CONTEXT,
   RSPACK_ASSETS_CONTEXT,
+  FILE_ROLE,
 } = require('./constants');
 
 const {
-  getInitialEntrypoints
+  getBuildFilePath,
+  getBuildFileContent,
 } = require('./build-context');
 
 /**
  * Gets the appropriate config file name based on environment
  * @returns {string} The name of the RSPack config file
  */
-function getConfigFileName() {
+export function getConfigFileName() {
   return `test-rspack/rspack.config.js`;
 }
 
@@ -58,9 +57,19 @@ function getConfigFileName() {
  * @param {boolean} options.isServer - Whether this is for server-side build
  * @returns {string[]} Array of command line arguments for RSPack
  */
-function getRSPackEnv({ isClient, isServer }) {
-  const initialEntrypoints = getInitialEntrypoints();
+export function getRSPackEnv({ isClient, isServer }) {
   const RSPACK_BUILD_CONTEXT = require('./constants').RSPACK_BUILD_CONTEXT;
+
+  const module = isMeteorAppTest() ? { isTest: true } : { isMain: true };
+  const env = isMeteorAppDevelopment()
+    ? { isDevelopment: true }
+    : { isProduction: true };
+  const side = isClient ? { isClient: true } : { isServer: true };
+  const commandRole = isMeteorAppRun()
+    ? { role: FILE_ROLE.run }
+    : isMeteorAppBuild()
+      ? { role: FILE_ROLE.build }
+      : { role: FILE_ROLE.run };
 
   const pairs = [
     ['isDevelopment', isMeteorAppDevelopment()],
@@ -71,20 +80,19 @@ function getRSPackEnv({ isClient, isServer }) {
     ['isBuild', isMeteorAppBuild()],
     ['isClient', isClient],
     ['isServer', isServer],
-    ['clientEntry',
-      isMeteorAppTest()
-        ? initialEntrypoints.testClient
-        : (isMeteorAppDevelopment() &&
-            addEnvSuffixToFilename(
-              `${RSPACK_BUILD_CONTEXT}/main-client.hmr.js`
-            )) ||
-          initialEntrypoints.mainClient,
+    ['entryPath', getBuildFilePath({ ...module, ...env, ...side, role: FILE_ROLE.entry }) ],
+    ['outputPath', getBuildFilePath({ ...module, ...env, ...side, role: FILE_ROLE.output }) ],
+    ['outputFilename',
+      getBuildFilePath({
+        ...env,
+        ...side,
+        isMain: true,
+        role: FILE_ROLE.output,
+        onlyFilename: true,
+      }),
     ],
-    ['serverEntry',
-      isMeteorAppTest()
-        ? initialEntrypoints.testServer
-        : initialEntrypoints.mainServer,
-    ],
+    ['runPath', getBuildFilePath({ ...module, ...env, ...side, ...commandRole }) ],
+    ['bannerOutput', JSON.stringify(getBuildFileContent({ ...module, ...env, ...side, role: FILE_ROLE.output }))],
     ['buildContext', RSPACK_BUILD_CONTEXT],
     ['bundlesContext', RSPACK_BUNDLES_CONTEXT],
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
@@ -102,7 +110,7 @@ function getRSPackEnv({ isClient, isServer }) {
  * @param {Function} options.onCompile - Callback function to be called when compilation is complete
  * @returns {Object} The client process object
  */
-function startRSPackClientServe(options = {}) {
+export function startRSPackClientServe(options = {}) {
   const { onCompile } = options;
   // Get the current client process from global state
   const clientProcess = getGlobalState(GLOBAL_STATE_KEYS.CLIENT_PROCESS, null);
@@ -156,7 +164,7 @@ function startRSPackClientServe(options = {}) {
  * @param {Function} options.onCompile - Callback function to be called when compilation is complete
  * @returns {Object} The server process object
  */
-function startRSPackServerWatch(options = {}) {
+export function startRSPackServerWatch(options = {}) {
   const { onCompile } = options;
   // Get the current server process from global state
   const serverProcess = getGlobalState(GLOBAL_STATE_KEYS.SERVER_PROCESS, null);
@@ -209,7 +217,7 @@ function startRSPackServerWatch(options = {}) {
  * @returns {Promise<void>} A promise that resolves when the build is complete
  * @throws {Error} If the build process fails
  */
-async function runRSPackBuild({ isClient, isServer, onCompile } = {}) {
+export async function runRSPackBuild({ isClient, isServer, onCompile } = {}) {
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
 
@@ -256,7 +264,7 @@ async function runRSPackBuild({ isClient, isServer, onCompile } = {}) {
  * Stops any running client and server processes and clears their global state
  * @returns {void}
  */
-function cleanup() {
+export function cleanup() {
   const clientProcess = getGlobalState(GLOBAL_STATE_KEYS.CLIENT_PROCESS, null);
   if (clientProcess) {
     stopProcess(clientProcess);
@@ -269,12 +277,3 @@ function cleanup() {
     setGlobalState(GLOBAL_STATE_KEYS.SERVER_PROCESS, null);
   }
 }
-
-module.exports = {
-  getConfigFileName,
-  getRSPackEnv,
-  startRSPackClientServe,
-  startRSPackServerWatch,
-  runRSPackBuild,
-  cleanup
-};

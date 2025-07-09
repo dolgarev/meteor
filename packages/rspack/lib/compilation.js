@@ -16,16 +16,11 @@ const {
   setGlobalState
 } = require('meteor/tools-core/lib/global-state');
 
-// Helper function to format milliseconds with comma separators
-function formatMilliseconds(ms) {
-  return ms.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
 /**
  * Sets up compilation tracking and callbacks
  * @returns {Object} Object containing compilation tracking state and callbacks
  */
-function setupCompilationTracking() {
+export function setupCompilationTracking() {
   // Initialize global state for first compilation tracking
   const clientFirstCompile = {
     resolved: false,
@@ -184,7 +179,7 @@ function setupCompilationTracking() {
  * @param {Promise} serverFirstCompilePromise - Promise for server first compilation
  * @returns {Promise<void>} A promise that resolves when first compilation is complete
  */
-async function waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise) {
+export async function waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise) {
   const clientState = getGlobalState(GLOBAL_STATE_KEYS.CLIENT_FIRST_COMPILE, clientFirstCompile);
   const serverState = getGlobalState(GLOBAL_STATE_KEYS.SERVER_FIRST_COMPILE, serverFirstCompile);
   if (!clientState?.resolved && !serverState?.resolved && !process.env.RSPACK_FIRST_COMPILATION_COMPLETE) {
@@ -193,9 +188,3 @@ async function waitForFirstCompilation(clientFirstCompile, serverFirstCompile, c
     process.env.RSPACK_FIRST_COMPILATION_COMPLETE = true;
   }
 }
-
-module.exports = {
-  formatMilliseconds,
-  setupCompilationTracking,
-  waitForFirstCompilation
-};

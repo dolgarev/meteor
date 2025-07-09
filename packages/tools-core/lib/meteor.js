@@ -155,26 +155,6 @@ export function isMeteorAppDebug() {
 }
 
 /**
- * Adds environment suffix to a filename based on development or production mode.
- * @param {string} filename - The filename to add the suffix to.
- * @returns {string} The filename with '.dev' or '.prod' added before the extension.
- */
-export function addEnvSuffixToFilename(filename) {
-  if (!filename) return filename;
-
-  const suffix = isMeteorAppDevelopment() ? '.dev' : '.prod';
-  const lastDotIndex = filename.lastIndexOf('.');
-
-  if (lastDotIndex === -1) {
-    // No extension, add suffix at the end
-    return `${filename}${suffix}`;
-  }
-
-  // Insert suffix before the extension
-  return `${filename.substring(0, lastDotIndex)}${suffix}${filename.substring(lastDotIndex)}`;
-}
-
-/**
  * Sets a custom script URL for the Meteor application in the environment variable.
  * @param {string} scriptUrl - The URL of the custom script.
  */

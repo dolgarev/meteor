@@ -2,22 +2,26 @@
  * @module config
  * @description Functions for configuring Meteor for RSPack
  */
+import RSPACK_BUNDLES_CONTEXT from "./constants";
 
 const {
   getMeteorAppFilesAndFolders,
   setMeteorAppIgnore,
   setMeteorAppEntrypoints,
   setMeteorAppCustomScriptUrl,
-  addEnvSuffixToFilename,
   isMeteorAppDevelopment,
+  isMeteorAppRun,
+  isMeteorAppBuild,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
   RSPACK_BUILD_CONTEXT,
+  FILE_ROLE,
 } = require('./constants');
 
 const {
-  ensureModuleFilesExist
+  ensureModuleFilesExist,
+  getBuildFilePath,
 } = require('./build-context');
 
 /**
@@ -26,7 +30,7 @@ const {
  * Creates necessary module files and writes content to them
  * @returns {void}
  */
-function configureMeteorForRSPack() {
+export function configureMeteorForRSPack() {
   // Ignore node_modules to prevent Meteor from processing them
   const projectFilesAndFolders = getMeteorAppFilesAndFolders({ recursive: false });
   const foldersToIgnore = [
@@ -45,16 +49,25 @@ function configureMeteorForRSPack() {
   const meteorAppIgnores = `${foldersToIgnore.join(' ')} ${filesToIgnore.join(' ')}`;
   setMeteorAppIgnore(meteorAppIgnores);
 
-  const mainClientModule = addEnvSuffixToFilename(`${RSPACK_BUILD_CONTEXT}/main-client.js`);
-  const mainServerModule = addEnvSuffixToFilename(`${RSPACK_BUILD_CONTEXT}/main-server.js`);
-  const testClientModule = `${RSPACK_BUILD_CONTEXT}/test-client.js`;
-  const testServerModule = `${RSPACK_BUILD_CONTEXT}/test-server.js`;
+  const env = isMeteorAppDevelopment()
+    ? { isDevelopment: true }
+    : { isProduction: true };
+  const commandRole = isMeteorAppRun()
+    ? { role: FILE_ROLE.run }
+    : isMeteorAppBuild()
+    ? { role: FILE_ROLE.build }
+    : { role: FILE_ROLE.run };
+  const mainClientModule = getBuildFilePath({ isMain: true, ...env, ...commandRole, isClient: true });
+  const mainServerModule = getBuildFilePath({ isMain: true, ...env, ...commandRole, isServer: true });
+  const testClientModule = getBuildFilePath({ isTest: true, ...env, ...commandRole, isClient: true });
+  const testServerModule = getBuildFilePath({ isTest: true, ...env, ...commandRole, isServer: true });
+
   // Set entry points in environment variables if they exist
   setMeteorAppEntrypoints({
-    mainClient: mainClientModule,
-    mainServer: mainServerModule,
-    testClient: testClientModule,
-    testServer: testServerModule,
+    mainClient: `${RSPACK_BUILD_CONTEXT}/${mainClientModule}`,
+    mainServer: `${RSPACK_BUILD_CONTEXT}/${mainServerModule}`,
+    testClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
+    testServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
   });
 
   // Ensure module files exist
@@ -63,10 +76,8 @@ function configureMeteorForRSPack() {
   // Write content to module files
   if (isMeteorAppDevelopment()) {
     // writeMainClientEntryForHMR();
-    setMeteorAppCustomScriptUrl(addEnvSuffixToFilename('/__rspack__/main-client.js'));
+    setMeteorAppCustomScriptUrl(
+      `/__rspack__/${getBuildFilePath({ ...env, isMain: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true })}`,
+    );
   }
 }
-
-module.exports = {
-  configureMeteorForRSPack
-};
