@@ -16,6 +16,7 @@ const {
   isMeteorAppDevelopment,
   isMeteorAppRun,
   isMeteorAppBuild,
+  isMeteorBlazeProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -235,7 +236,7 @@ export function getBuildFileContent(config) {
       }.
  */`;
 
-  const hmr = role === FILE_ROLE.run && config?.isClient && !config?.isTest
+  const hmr = role === FILE_ROLE.entry && config?.isClient && !config?.isTest && !isMeteorBlazeProject()
     ? `/* Enables HMR */
 if (module.hot) {
   module.hot.accept();

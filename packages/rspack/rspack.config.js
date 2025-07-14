@@ -1,12 +1,27 @@
-import path from 'path';
-import fs from 'fs';
 import rspack, { DefinePlugin, BannerPlugin } from '@rspack/core';
-import ReactRefreshPlugin from '@rspack/plugin-react-refresh';
-import { merge } from 'webpack-merge';
-import RequireExternalsPlugin from './RequireExternalsPlugin.js';
+import fs from 'fs';
 import { createRequire } from 'module';
+import path from 'path';
+import { merge } from 'webpack-merge';
+
+import RequireExternalsPlugin from './RequireExternalsPlugin.js';
 
 const require = createRequire(import.meta.url);
+
+// Safe require that doesn't throw if the module isn't found
+function safeRequire(moduleName) {
+  try {
+    return require(moduleName);
+  } catch (error) {
+    if (
+      error.code === 'MODULE_NOT_FOUND' &&
+      error.message.includes(moduleName)
+    ) {
+      return null;
+    }
+    throw error; // rethrow if it's a different error
+  }
+}
 
 // Persistent filesystem cache strategy
 function createCacheStrategy(mode) {
@@ -50,11 +65,7 @@ function createSwcConfig({ isRun }) {
 
 // Watch options shared across both builds
 const watchOptions = {
-  ignored: [
-    '**/main.html',
-    '**/dist/**',
-    '**/.meteor/local/**',
-  ],
+  ignored: ['**/main.html', '**/dist/**', '**/.meteor/local/**'],
 };
 
 /**
@@ -117,7 +128,8 @@ export default function (inMeteor = {}, argv = {}) {
     entry: path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: clientOutputDir,
-      filename: () => isDev ? outputFilename : `../${buildContext}/${outputPath}`,
+      filename: () =>
+        isDev ? outputFilename : `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
       publicPath: '/',
       chunkFilename: `${bundlesContext}/[id].[chunkhash].js`,
@@ -129,16 +141,44 @@ export default function (inMeteor = {}, argv = {}) {
     },
     module: {
       rules: [
-        createSwcConfig({ isRun })
+        createSwcConfig({ isRun }),
+        ...(Meteor.isBlazeEnabled
+          ? [
+              {
+                test: /\.html$/,
+                loader: 'ignore-loader',
+              },
+            ]
+          : []),
       ],
     },
     resolve: { extensions: ['.js', '.jsx', '.json'] },
     externals: [/^(meteor.*|react$|react-dom$)/],
     plugins: [
-      ...(isRun ? [
-        ...(isReactEnabled ? [new ReactRefreshPlugin()] : []),
-        new RequireExternalsPlugin({ buildContext, filePath: runPath }),
-      ].filter(Boolean) : []),
+      ...(isRun
+        ? [
+            ...(isReactEnabled
+              ? [new (safeRequire('@rspack/plugin-react-refresh'))()]
+              : []),
+            new RequireExternalsPlugin({
+              buildContext,
+              filePath: runPath,
+              ...(Meteor.isBlazeEnabled && {
+                externals: /\.html$/,
+                externalMap: (module) => {
+                  const { request, context } = module;
+                  if (request.endsWith('.html')) {
+                    const relContext = path.relative(process.cwd(), context);
+                    const { name } = path.parse(request);
+                    return `./${relContext}/template.${name}.js`;
+                  }
+                  return request;
+                },
+              }),
+              prefixPath: '../../',
+            }),
+          ].filter(Boolean)
+        : []),
       new DefinePlugin({
         'Meteor.isClient': JSON.stringify(true),
         'Meteor.isServer': JSON.stringify(false),
@@ -183,7 +223,11 @@ export default function (inMeteor = {}, argv = {}) {
     optimization: { usedExports: true },
     module: {
       rules: [
-        { test: /\.meteor\/local/, use: 'builtin:empty-loader', sideEffects: false },
+        {
+          test: /\.meteor\/local/,
+          use: 'builtin:empty-loader',
+          sideEffects: false,
+        },
         createSwcConfig({ isRun }),
       ],
     },
@@ -209,11 +253,7 @@ export default function (inMeteor = {}, argv = {}) {
     watchOptions,
     devtool: isRun ? 'source-map' : 'hidden-source-map',
     ...(isRun &&
-      merge(
-        createCacheStrategy(mode),
-        { experiments: { incremental: true } }
-      )
-    ),
+      merge(createCacheStrategy(mode), { experiments: { incremental: true } })),
   };
 
   // Load and apply project-level overrides for the selected build
@@ -222,11 +262,13 @@ export default function (inMeteor = {}, argv = {}) {
   // Check if we're in a Meteor package directory by looking at the path
   const isMeteorPackageConfig = process.cwd().includes('/packages/rspack');
   if (fs.existsSync(projectConfigPath) && !isMeteorPackageConfig) {
-    const projectConfig = require(projectConfigPath)?.default || require(projectConfigPath);
+    const projectConfig =
+      require(projectConfigPath)?.default || require(projectConfigPath);
 
-    const userConfig = typeof projectConfig === 'function'
-      ? projectConfig(Meteor, argv)
-      : projectConfig;
+    const userConfig =
+      typeof projectConfig === 'function'
+        ? projectConfig(Meteor, argv)
+        : projectConfig;
 
     if (Meteor.isClient) {
       clientConfig = merge(clientConfig, userConfig);

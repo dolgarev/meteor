@@ -269,3 +269,11 @@ export function getMeteorToolsRequire(filePath) {
   const absPath = mainModule.filename.split(path.sep).slice(0, -1).join(path.sep);
   return mainModule.require(path.resolve(absPath, filePath));
 }
+
+/**
+ * Checks if the Meteor application is a Blaze project.
+ * @returns {boolean} True if the application is a Blaze project, false otherwise.
+ */
+export function isMeteorBlazeProject() {
+  return getMeteorAppPackages().includes('blaze');
+}

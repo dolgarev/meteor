@@ -1,13 +1,47 @@
 // RequireExternalsPlugin.js
+//
+// This plugin prepare the require of externals used to be lazy required by Meteor bundler.
+//
+// It can describe additional externals using the externals option by array, RegExp or function.
+// These externals will be lazy required as well, and optionally could be resolved using
+// the externalMap function if provided.
+// Used for Blaze to translate require of html files to require of js files bundled by Meteor.
 
 const fs = require('fs');
 const path = require('path');
 
 class RequireExternalsPlugin {
-  constructor({ buildContext, filePath } = {}) {
+  constructor({
+    buildContext,
+    filePath,
+    // Externals can be:
+    // - An array of strings: module name must be included in the array
+    // - A RegExp: module name must match the regex
+    // - A function: function(name) must return true for the module name
+    externals = null,
+    // ExternalMap is a function that receives the request object and returns the external request path
+    // It can be used to customize how external modules are mapped to file paths
+    // If not provided, the default behavior is to map the external module name.
+    externalMap = null,
+    prefixPath = ''
+  } = {}) {
     this.pluginName = 'RequireExternalsPlugin';
-    this._prefix = 'external ';
+
+    // Default prefix for backward compatibility
+    const defaultPrefix = 'external ';
+
+    // Store externals and default prefix
+    this._prefixes = [defaultPrefix];
+
+    // Store the external map function
+    this._externals = externals;
+    this._externalMap = externalMap;
+
+    // Keep the original prefix for backward compatibility
+    this._prefix = defaultPrefix;
     this._prefixLen = this._prefix.length;
+    this.prefixPath = prefixPath;
+
     this._buildContext = buildContext;
     this.filePath = path.resolve(
       process.cwd(),
@@ -19,7 +53,95 @@ class RequireExternalsPlugin {
     this._funcCount = this._computeNextFuncCount();
   }
 
+  // Helper method to check if a module name matches the externals or default prefix
+  _isExternalModule(name) {
+    if (typeof name !== 'string') return false;
+
+    // Check externals if provided
+    if (this._externals) {
+      // If externals is an array, use includes method
+      if (Array.isArray(this._externals)) {
+        if (this._externals.includes(name)) {
+          return { isExternal: true, type: 'externals', value: name };
+        }
+      }
+      // If externals is a RegExp, use test method
+      else if (this._externals instanceof RegExp) {
+        if (this._externals.test(name)) {
+          return { isExternal: true, type: 'externals', value: name };
+        }
+      }
+      // If externals is a function, call it with the name
+      else if (typeof this._externals === 'function') {
+        if (this._externals(name)) {
+          return { isExternal: true, type: 'externals', value: name };
+        }
+      }
+    }
+
+    // Check default prefix (for backward compatibility)
+    for (const prefix of this._prefixes) {
+      if (name.startsWith(prefix)) {
+        return { isExternal: true, type: 'prefix', value: prefix };
+      }
+    }
+
+    return { isExternal: false };
+  }
+
+  // Helper method to extract package name from module name
+  _extractPackageName(name, matchInfo) {
+    let pkg = name.slice(matchInfo.value.length);
+    if (pkg.startsWith('"') && pkg.endsWith('"')) pkg = pkg.slice(1, -1);
+
+    // If the extracted package name is a path, use the path as is
+    if (pkg && (path.isAbsolute(pkg) || pkg.startsWith('./') || pkg.startsWith('../'))) {
+      const module = this.moduleMeta.get(pkg);
+      if (module) {
+        return `${this.prefixPath}${module.relativeRequest}`;
+      }
+      return `${this.prefixPath}${name}`;
+    }
+
+    return pkg;
+  }
+
   apply(compiler) {
+    // Initialize moduleMeta if it doesn't exist
+    this.moduleMeta = this.moduleMeta || new Map();
+
+    // Only set compiler.options.externals if both externals and externalMap are defined
+    if (this._externals && this._externalMap) {
+      compiler.options.externals = [
+        ...compiler.options.externals || [],
+        (module, callback) => {
+          const { request, context } = module;
+          const matchInfo = this._isExternalModule(request);
+          if (matchInfo.isExternal) {
+
+            let externalRequest;
+            // Use externalMap function if provided
+            if (this._externalMap && typeof this._externalMap === 'function') {
+              externalRequest = this._externalMap(module);
+
+              const relContext = path.relative(process.cwd(), context);
+              // Store the original request to resolve properly the lazy html require later
+              this.moduleMeta.set(externalRequest, {
+                originalRequest: request,
+                externalRequest,
+                relativeRequest: path.join(relContext, request),
+              });
+
+              // tell Rspack "don't bundle this, import it at runtime"
+              return callback(null, externalRequest);
+            }
+          }
+
+          callback(); // otherwise normal resolution
+        }
+      ];
+    }
+
     compiler.hooks.done.tap({ name: this.pluginName, stage: -10 }, (stats) => {
       // 1) Ensure globalThis.module / exports block is present
       this._ensureGlobalThisModule();
@@ -31,10 +153,12 @@ class RequireExternalsPlugin {
       const info = stats.toJson({ modules: true });
       const current = new Set();
       for (const m of info.modules) {
-        if (typeof m.name === 'string' && m.name.startsWith(this._prefix)) {
-          let pkg = m.name.slice(this._prefixLen);
-          if (pkg.startsWith('"') && pkg.endsWith('"')) pkg = pkg.slice(1, -1);
-          current.add(pkg);
+        const matchInfo = this._isExternalModule(m.name);
+        if (matchInfo.isExternal) {
+          const pkg = this._extractPackageName(m.name, matchInfo);
+          if (pkg) {
+            current.add(pkg);
+          }
         }
       }
 
@@ -69,10 +193,11 @@ class RequireExternalsPlugin {
       const newRequires = [];
       for (const module of info.modules) {
         const name = module.name;
-        if (typeof name !== 'string' || !name.startsWith(this._prefix)) continue;
-        let pkg = name.slice(this._prefixLen);
-        if (pkg.startsWith('"') && pkg.endsWith('"')) pkg = pkg.slice(1, -1);
-        if (!existing.has(pkg)) {
+        const matchInfo = this._isExternalModule(name);
+        if (!matchInfo.isExternal) continue;
+
+        const pkg = this._extractPackageName(name, matchInfo);
+        if (pkg && !existing.has(pkg)) {
           existing.add(pkg);
           newRequires.push(`require('${pkg}')`);
         }
