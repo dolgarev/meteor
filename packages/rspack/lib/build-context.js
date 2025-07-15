@@ -236,7 +236,7 @@ export function getBuildFileContent(config) {
       }.
  */`;
 
-  const hmr = role === FILE_ROLE.entry && config?.isClient && !config?.isTest && !isMeteorBlazeProject()
+  const hmr = role === FILE_ROLE.entry && config?.isClient && !config?.isTest
     ? `/* Enables HMR */
 if (module.hot) {
   module.hot.accept();

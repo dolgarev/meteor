@@ -22,31 +22,21 @@ class RequireExternalsPlugin {
     // ExternalMap is a function that receives the request object and returns the external request path
     // It can be used to customize how external modules are mapped to file paths
     // If not provided, the default behavior is to map the external module name.
-    externalMap = null,
-    prefixPath = ''
+    externalMap = null
   } = {}) {
     this.pluginName = 'RequireExternalsPlugin';
-
-    // Default prefix for backward compatibility
-    const defaultPrefix = 'external ';
-
-    // Store externals and default prefix
-    this._prefixes = [defaultPrefix];
 
     // Store the external map function
     this._externals = externals;
     this._externalMap = externalMap;
-
-    // Keep the original prefix for backward compatibility
-    this._prefix = defaultPrefix;
-    this._prefixLen = this._prefix.length;
-    this.prefixPath = prefixPath;
+    // Default prefix for backward compatibility
+    this._defaultExternalPrefix = 'external ';
 
     this._buildContext = buildContext;
-    this.filePath = path.resolve(
-      process.cwd(),
-      buildContext,
-      filePath
+    this.fileRelPath = path.join(buildContext, filePath);
+    this.filePath = path.resolve(process.cwd(), this.fileRelPath);
+    this.backRoot = '../'.repeat(
+      this.fileRelPath.replace(/^\.?\/+/, '').split('/').length - 1
     );
 
     // Initialize funcCount based on existing helpers in the file
@@ -79,28 +69,25 @@ class RequireExternalsPlugin {
       }
     }
 
-    // Check default prefix (for backward compatibility)
-    for (const prefix of this._prefixes) {
-      if (name.startsWith(prefix)) {
-        return { isExternal: true, type: 'prefix', value: prefix };
-      }
+    if (name.startsWith(this._defaultExternalPrefix)) {
+      return { isExternal: true, type: 'prefix', value: name };
     }
 
     return { isExternal: false };
   }
 
   // Helper method to extract package name from module name
-  _extractPackageName(name, matchInfo) {
-    let pkg = name.slice(matchInfo.value.length);
+  _extractPackageName(name) {
+    let pkg = name.slice(this._defaultExternalPrefix.length);
     if (pkg.startsWith('"') && pkg.endsWith('"')) pkg = pkg.slice(1, -1);
 
     // If the extracted package name is a path, use the path as is
     if (pkg && (path.isAbsolute(pkg) || pkg.startsWith('./') || pkg.startsWith('../'))) {
       const module = this.moduleMeta.get(pkg);
       if (module) {
-        return `${this.prefixPath}${module.relativeRequest}`;
+        return `${this.backRoot}${module.relativeRequest}`;
       }
-      return `${this.prefixPath}${name}`;
+      return `${this.backRoot}${name}`;
     }
 
     return pkg;

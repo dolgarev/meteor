@@ -175,7 +175,6 @@ export default function (inMeteor = {}, argv = {}) {
                   return request;
                 },
               }),
-              prefixPath: '../../',
             }),
           ].filter(Boolean)
         : []),
