@@ -1,8 +1,9 @@
 import { Meteor } from 'meteor/meteor';
 import { WebApp } from 'meteor/webapp';
+import { shuffleString } from 'meteor/tools-core/lib/string';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { 
-  RSPACK_BUNDLES_CONTEXT, 
+import {
+  RSPACK_BUNDLES_CONTEXT,
   RSPACK_ASSETS_CONTEXT,
   RSPACK_HOT_UPDATE_REGEX,
   RSPACK_BUNDLES_REGEX,
@@ -71,4 +72,35 @@ if (Meteor.isDevelopment) {
     // Otherwise, let it pass through
     next();
   });
+
+  /**
+   * Force client to reload after Rspack server compilation and restart, which doesn’t happen automatically.
+   * On each server reload, generate a new client hash once to force Meteor’s client reload.
+   * After the first reload, apply Meteor's default behavior.
+   */
+  function enableClientReloadOnServerStart() {
+    Meteor.startup(() => {
+      const originalCalc = WebApp.calculateClientHashReplaceable;
+      let hasShuffled = false;
+      let cachedHash = {};
+      let prevRealHash = {};
+      WebApp.calculateClientHashReplaceable = function (...args) {
+        const arch = args[0];
+        const realHash = originalCalc.apply(this, args);
+        if (prevRealHash[arch] && realHash !== prevRealHash[arch]) {
+          prevRealHash[arch] = realHash;
+          return realHash;
+        }
+        prevRealHash[arch] = realHash;
+        if (cachedHash[arch] == null) {
+          cachedHash[arch] = shuffleString(realHash);
+          hasShuffled = true;
+        }
+        return cachedHash[arch];
+      };
+    });
+  }
+
+  // Enable client reload on server startup
+  enableClientReloadOnServerStart();
 }

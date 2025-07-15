@@ -17,7 +17,6 @@
 // Import modules from lib
 const {
   GLOBAL_STATE_KEYS,
-  RSPACK_BUILD_CONTEXT
 } = require('./lib/constants');
 
 const {
@@ -26,7 +25,6 @@ const {
 } = require('./lib/dependencies');
 
 const {
-  getInitialEntrypoints,
   ensureRSPackBuildContextExists
 } = require('./lib/build-context');
 
@@ -47,7 +45,6 @@ const {
 } = require('./lib/compilation');
 
 const {
-  getGlobalState,
   setGlobalState
 } = require('meteor/tools-core/lib/global-state');
 
@@ -59,7 +56,6 @@ const {
 
 const {
   logError,
-  logSuccess
 } = require('meteor/tools-core/lib/log');
 
 // Get entry points from Meteor configuration
@@ -95,7 +91,7 @@ try {
       clientFirstCompilePromise,
       serverFirstCompilePromise,
       onCompileClient,
-      onCompileServer
+      onCompileServer,
     } = setupCompilationTracking();
 
     // For 'run' command, start RSPack in appropriate modes with distinct callbacks

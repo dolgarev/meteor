@@ -277,3 +277,11 @@ export function getMeteorToolsRequire(filePath) {
 export function isMeteorBlazeProject() {
   return getMeteorAppPackages().includes('blaze');
 }
+
+/**
+ * Checks if the Meteor application is a Blaze Hot project.
+ * @returns {boolean} True if the application is a Blaze Hot project, false otherwise.
+ */
+export function isMeteorBlazeHotProject() {
+  return getMeteorAppPackages().includes('blaze-hot');
+}

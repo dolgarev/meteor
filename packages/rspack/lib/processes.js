@@ -24,6 +24,7 @@ const {
   isMeteorAppRun,
   isMeteorAppBuild,
   isMeteorBlazeProject,
+  isMeteorBlazeHotProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -99,6 +100,7 @@ export function getRSPackEnv({ isClient, isServer }) {
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
     ['isReactEnabled', process.env.METEOR_REACT_ENABLED],
     ['isBlazeEnabled', isMeteorBlazeProject()],
+    ['isBlazeHotEnabled', isMeteorBlazeHotProject()],
   ];
   return pairs.flatMap(([key, val]) => [
     '--env',

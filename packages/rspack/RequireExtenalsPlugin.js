@@ -83,7 +83,7 @@ class RequireExternalsPlugin {
       pkg &&
       (path.isAbsolute(pkg) || pkg.startsWith('./') || pkg.startsWith('../'))
     ) {
-      const module = this.moduleMeta.get(pkg);
+      const module = this.externalsMeta.get(pkg);
       if (module) {
         return `${this.backRoot}${module.relativeRequest}`;
       }
@@ -94,8 +94,8 @@ class RequireExternalsPlugin {
   }
 
   apply(compiler) {
-    // Initialize moduleMeta if it doesn't exist
-    this.moduleMeta = this.moduleMeta || new Map();
+    // Initialize externalsMeta if it doesn't exist
+    this.externalsMeta = this.externalsMeta || new Map();
 
     // Only set compiler.options.externals if both externals and externalMap are defined
     if (this._externals && this._externalMap) {
@@ -113,7 +113,7 @@ class RequireExternalsPlugin {
 
               const relContext = path.relative(process.cwd(), context);
               // Store the original request to resolve properly the lazy html require later
-              this.moduleMeta.set(externalRequest, {
+              this.externalsMeta.set(externalRequest, {
                 originalRequest: request,
                 externalRequest,
                 relativeRequest: path.join(relContext, request),

@@ -196,6 +196,7 @@ export default function (inMeteor = {}, argv = {}) {
         static: { directory: clientOutputDir, publicPath: '/__rspack__/' },
         hot: true,
         liveReload: true,
+        ...(Meteor.isBlazeEnabled && { hot: false }),
         port: 3005,
         devMiddleware: {
           writeToDisk: false,
