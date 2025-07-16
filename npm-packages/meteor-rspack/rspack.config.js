@@ -1,10 +1,10 @@
-import rspack, { DefinePlugin, BannerPlugin } from '@rspack/core';
+import { DefinePlugin, BannerPlugin } from '@rspack/core';
 import fs from 'fs';
 import { createRequire } from 'module';
 import path from 'path';
 import { merge } from 'webpack-merge';
 
-import RequireExternalsPlugin from './RequireExternalsPlugin.js';
+import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
 
 const require = createRequire(import.meta.url);
 

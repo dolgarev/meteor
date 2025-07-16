@@ -7,10 +7,10 @@
 // the externalMap function if provided.
 // Used for Blaze to translate require of html files to require of js files bundled by Meteor.
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-class RequireExternalsPlugin {
+export class RequireExternalsPlugin {
   constructor({
     filePath,
     // Externals can be:
@@ -21,7 +21,7 @@ class RequireExternalsPlugin {
     // ExternalMap is a function that receives the request object and returns the external request path
     // It can be used to customize how external modules are mapped to file paths
     // If not provided, the default behavior is to map the external module name.
-    externalMap = null
+    externalMap = null,
   } = {}) {
     this.pluginName = 'RequireExternalsPlugin';
 
@@ -262,5 +262,3 @@ class RequireExternalsPlugin {
     return existing;
   }
 }
-
-module.exports = RequireExternalsPlugin;

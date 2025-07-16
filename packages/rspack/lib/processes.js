@@ -49,7 +49,7 @@ const {
  * @returns {string} The name of the RSPack config file
  */
 export function getConfigFileName() {
-  return `test-rspack/rspack.config.js`;
+  return `${process.cwd()}/node_modules/@meteorjs/rspack/rspack.config.js`;
 }
 
 /**
