@@ -403,6 +403,7 @@ function showErrorPage(res) {
         <a href="https://docs.meteor.com" target="_blank" rel="noreferrer noopener">Docs</a>
         <a href="https://guide.meteor.com" target="_blank" rel="noreferrer noopener">Guide</a>
         <a href="https://forums.meteor.com" target="_blank" rel="noreferrer noopener">Forums</a>
+        <a href="https://discord.com/invite/3w7EKdpghq" target="_blank" rel="noreferrer noopener">Discord</a>
       </div>
     </div>
   </body>
