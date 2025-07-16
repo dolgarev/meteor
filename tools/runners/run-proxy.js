@@ -335,6 +335,8 @@ function showErrorPage(res) {
         font-size: 14px;
         line-height: 1.5;
         white-space: pre-wrap;
+        width: 100%;
+        display: block;
       }
       
       .meteor-logo {
@@ -387,13 +389,13 @@ function showErrorPage(res) {
     <div class="container">
       <div class="log-container">
         <div class="log-header">Server Log</div>
-        <div class="log-content">`);
+        <code class="log-content">`);
 
   for (const item of runLog.getLog()) {
     res.write(Anser.ansiToHtml(Anser.escapeForHtml(item.message)) + "\n");
   }
 
-  res.write(`</div>
+  res.write(`</code>
       </div>
       
       <div class="hint">
