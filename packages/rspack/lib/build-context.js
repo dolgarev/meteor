@@ -79,7 +79,7 @@ export function ensureRSPackBuildContextExists() {
       `public/${RSPACK_ASSETS_CONTEXT}`,
       `private/${RSPACK_ASSETS_CONTEXT}`,
     ],
-    'Meteor-RSPack build context directory',
+    'Meteor-RSPack build context directories',
   );
 
   return buildContextPath;
