@@ -42,13 +42,13 @@ function createCacheStrategy(mode) {
 }
 
 // SWC loader rule (JSX/JS)
-function createSwcConfig({ isRun, isTypeScriptEnabled, isJsxEnabled, isTsxEnabled }) {
+function createSwcConfig({ isRun, isTypescriptEnabled, isJsxEnabled, isTsxEnabled }) {
   const defaultConfig = {
     jsc: {
       baseUrl: process.cwd(),
       paths: { '/*': ['*'] },
       parser: {
-        syntax: isTypeScriptEnabled ? 'typescript' : 'ecmascript',
+        syntax: isTypescriptEnabled ? 'typescript' : 'ecmascript',
         ...(isTsxEnabled && { tsx: true }),
         ...(isJsxEnabled && { jsx: true }),
       },
@@ -101,7 +101,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isReactEnabled = Meteor.isReactEnabled;
   const mode = isProd ? 'production' : 'development';
 
-  const isTypeScriptEnabled = Meteor.isTypeScriptEnabled || false;
+  const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled = Meteor.isJsxEnabled || false;
   const isTsxEnabled = Meteor.isTsxEnabled || false;
 
@@ -134,10 +134,11 @@ export default function (inMeteor = {}, argv = {}) {
 
   const swcConfig = createSwcConfig({
     isRun,
-    isTypeScriptEnabled,
+    isTypescriptEnabled,
     isJsxEnabled,
     isTsxEnabled,
   });
+  console.log("--> (rspack.config.js-Line: 141)\n swcConfig: ", swcConfig?.options?.jsc);
   const externals = [
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : [])
