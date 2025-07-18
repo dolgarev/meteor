@@ -7,7 +7,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@rspack/plugin-react-refresh": "^1.4.3",
     "ignore-loader": "^0.1.2",
     "webpack-merge": "^6.0.1"
   },

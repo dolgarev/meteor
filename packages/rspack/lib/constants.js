@@ -16,6 +16,12 @@ export const DEFAULT_RSPACK_VERSION = '1.4.8';
 export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.4';
 
 /**
+ * Default RSPack React HMRversion to install if not found
+ * @constant {string}
+ */
+export const DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION = '1.4.3';
+
+/**
  * Global state keys used for storing and retrieving state across the application
  * @constant {Object}
  * @property {string} CLIENT_PROCESS - Key for storing the client process
@@ -30,6 +36,7 @@ export const GLOBAL_STATE_KEYS = {
   CLIENT_PROCESS: 'rspack.clientProcess',
   SERVER_PROCESS: 'rspack.serverProcess',
   RSPACK_INSTALLATION_CHECKED: 'rspack.rspackInstallationChecked',
+  RSPACK_REACT_INSTALLATION_CHECKED: 'rspack.rspackReactInstallationChecked',
   REACT_CHECKED: 'rspack.reactChecked',
   INITIAL_ENTRYPONTS: 'meteor.initialEntrypoints',
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',

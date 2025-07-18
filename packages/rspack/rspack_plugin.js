@@ -1,7 +1,7 @@
 /**
  * @module rspack_plugin
  * @description RSPack Plugin for Meteor
- * 
+ *
  * This is the main entry point for the RSPack plugin. It orchestrates the integration
  * between RSPack and Meteor by:
  * 1. Ensuring RSPack and related dependencies are installed
@@ -9,7 +9,7 @@
  * 3. Configuring Meteor settings for RSPack
  * 4. Starting RSPack processes based on the Meteor command (run or build)
  * 5. Handling cleanup when the plugin is stopped
- * 
+ *
  * The plugin uses top-level await to ensure asynchronous operations complete
  * before Meteor continues execution.
  */
@@ -21,7 +21,7 @@ const {
 
 const {
   ensureRSPackInstalled,
-  checkReactInstalled,
+  checkReactInstalled, ensureRSPackReactInstalled,
 } = require('./lib/dependencies');
 
 const {
@@ -67,7 +67,10 @@ try {
   // Ensure RSPack is installed
   await ensureRSPackInstalled();
 
-  await checkReactInstalled();
+  // Check if RSPack React is installed
+  if (checkReactInstalled()) {
+    await ensureRSPackReactInstalled();
+  }
 
   // Ensure the RSPack build context directory exists
   ensureRSPackBuildContextExists();

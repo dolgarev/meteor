@@ -24,6 +24,7 @@ const {
 const {
   DEFAULT_RSPACK_VERSION,
   DEFAULT_METEOR_RSPACK_VERSION,
+  DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION,
   GLOBAL_STATE_KEYS,
 } = require('./constants');
 
@@ -59,12 +60,12 @@ export async function ensureRSPackInstalled() {
       semverCondition: 'gte',
     });
 
+  const rspackDependencies = [
+    `@rspack/cli@${DEFAULT_RSPACK_VERSION}`,
+    `@rspack/core@${DEFAULT_RSPACK_VERSION}`,
+    `@meteorjs/rspack@${DEFAULT_METEOR_RSPACK_VERSION}`,
+  ];
   if (!isRSPackInstalled) {
-    const rspackDependencies = [
-      `@rspack/cli@${DEFAULT_RSPACK_VERSION}`,
-      `@rspack/core@${DEFAULT_RSPACK_VERSION}`,
-      `@meteorjs/rspack@${DEFAULT_METEOR_RSPACK_VERSION}`,
-    ];
     logProgress(
       `RSPack not found. Installing ${joinWithAnd(rspackDependencies)}...`,
     );
@@ -75,7 +76,7 @@ export async function ensureRSPackInstalled() {
 
     if (!success) {
       throw new Error(
-        'Failed to install RSPack. Please install it manually with: meteor npm install @rspack/cli'
+        `Failed to install RSPack. Please install it manually with: meteor npm install -D ${joinWithAnd(rspackDependencies)}`
       );
     }
 
@@ -110,4 +111,46 @@ export async function checkReactInstalled() {
 
   // Mark as checked
   setGlobalState(GLOBAL_STATE_KEYS.REACT_CHECKED, true);
+
+  return isReactInstalled;
+}
+
+export async function ensureRSPackReactInstalled() {
+  // Skip if already checked
+  if (getGlobalState(GLOBAL_STATE_KEYS.RSPACK_REACT_INSTALLATION_CHECKED, false)) {
+    return;
+  }
+
+  const appDir = getMeteorAppDir();
+  const isRSPackReactInstalled =
+    checkNpmDependencyExists('@rspack/plugin-react-refresh', { cwd: appDir }) &&
+    checkNpmDependencyVersion('@rspack/plugin-react-refresh', {
+      cwd: appDir,
+      versionRequirement: DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION,
+      semverCondition: 'gte',
+    });
+
+  const rspackReactDependencies = [
+    `@rspack/plugin-react-refresh@${DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION}`,
+  ];
+  if (!isRSPackReactInstalled) {
+    logProgress(
+      `RSPack React not found. Installing ${joinWithAnd(rspackReactDependencies)}...`,
+    );
+    const success = await installNpmDependency(rspackReactDependencies, {
+      cwd: appDir,
+      dev: true,
+    });
+
+    if (!success) {
+      throw new Error(
+        `Failed to install RSPack React. Please install it manually with: meteor npm install -D ${joinWithAnd(rspackReactDependencies)}`
+      );
+    }
+
+    logSuccess('RSPack React installed successfully.');
+  }
+
+  // Mark as checked
+  setGlobalState(GLOBAL_STATE_KEYS.RSPACK_REACT_INSTALLATION_CHECKED, true);
 }

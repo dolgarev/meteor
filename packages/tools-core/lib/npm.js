@@ -10,23 +10,26 @@ const semver = require('semver');
  * @param {string} dependency - The npm dependency name to check
  * @param {Object} [options] - Options for the check
  * @param {string} [options.cwd] - Current working directory (defaults to process.cwd())
+ * @param {boolean} [options.checkNodeModules] - Whether to check in node_modules first (defaults to false)
  * @returns {boolean} True if the dependency exists, false otherwise
  */
 export function checkNpmDependencyExists(dependency, options = {}) {
   const cwd = options.cwd || process.cwd();
 
   // First, optimistically check if the dependency exists in node_modules
-  const nodeModulesPath = path.join(cwd, 'node_modules', dependency);
-  try {
-    if (fs.existsSync(nodeModulesPath)) {
-      // Check if it has a package.json to confirm it's a valid package
-      const packageJsonPath = path.join(nodeModulesPath, 'package.json');
-      if (fs.existsSync(packageJsonPath)) {
-        return true;
+  if (options.checkNodeModules) {
+    const nodeModulesPath = path.join(cwd, 'node_modules', dependency);
+    try {
+      if (fs.existsSync(nodeModulesPath)) {
+        // Check if it has a package.json to confirm it's a valid package
+        const packageJsonPath = path.join(nodeModulesPath, 'package.json');
+        if (fs.existsSync(packageJsonPath)) {
+          return true;
+        }
       }
+    } catch (error) {
+      // If there's an error checking the file system, continue to the fallback method
     }
-  } catch (error) {
-    // If there's an error checking the file system, continue to the fallback method
   }
 
   // Fallback: Check package.json directly instead of using `npm ls`
@@ -120,13 +123,14 @@ export function installNpmDependency(dependencies, options = {}) {
 
 /**
  * Checks if a specific npm dependency version meets a semver condition.
- * Looks for the dependency version in the package.json file in node_modules.
+ * First checks in node_modules if checkNodeModules is true, then checks project's package.json.
  * 
  * @param {string} dependency - The npm dependency name to check
  * @param {Object} [options] - Options for the check
  * @param {string} [options.cwd] - Current working directory (defaults to process.cwd())
  * @param {string} [options.versionRequirement] - The version requirement to check against (e.g., '6.0.0')
  * @param {string} [options.semverCondition='gte'] - The semver condition to use (e.g., 'gte', 'lt', 'eq')
+ * @param {boolean} [options.checkNodeModules] - Whether to check in node_modules first (defaults to false)
  * @returns {boolean} True if the dependency version meets the condition, false otherwise
  */
 export function checkNpmDependencyVersion(dependency, options = {}) {
@@ -146,17 +150,41 @@ export function checkNpmDependencyVersion(dependency, options = {}) {
     throw new Error(`Invalid semver condition: ${semverCondition}`);
   }
 
-  // First, try to get the version from package.json in node_modules
-  const nodeModulesPath = path.join(cwd, 'node_modules', dependency, 'package.json');
+  // First, check in node_modules if the option is enabled
+  if (options.checkNodeModules) {
+    const nodeModulesPath = path.join(cwd, 'node_modules', dependency, 'package.json');
+    try {
+      if (fs.existsSync(nodeModulesPath)) {
+        const packageJson = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf8'));
+        if (packageJson.version) {
+          return semver[semverCondition](packageJson.version, versionRequirement);
+        }
+      }
+    } catch (error) {
+      // If there's an error reading the package.json, continue to the fallback method
+    }
+  }
+
+  // Fallback: Check project's package.json directly
   try {
-    if (fs.existsSync(nodeModulesPath)) {
-      const packageJson = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf8'));
-      if (packageJson.version) {
-        return semver[semverCondition](packageJson.version, versionRequirement);
+    const packageJsonPath = path.join(cwd, 'package.json');
+    if (fs.existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+
+      // Check all dependency sections for the package and its version
+      const sections = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
+
+      for (const section of sections) {
+        if (packageJson[section] && packageJson[section][dependency]) {
+          const versionString = packageJson[section][dependency];
+          // Extract the version number from the version string (removing ^ or ~ if present)
+          const version = versionString.replace(/^[\^~]/, '');
+          return semver[semverCondition](version, versionRequirement);
+        }
       }
     }
   } catch (error) {
-    // If there's an error reading the package.json, return false
+    // If there's an error reading or parsing package.json, return false
     return false;
   }
 
