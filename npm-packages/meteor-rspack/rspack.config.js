@@ -187,7 +187,7 @@ export default function (inMeteor = {}, argv = {}) {
 
   // Base client config
   let clientConfig = {
-    name: 'meteor-client',
+    name: Meteor.name,
     target: 'web',
     mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),
@@ -273,7 +273,7 @@ export default function (inMeteor = {}, argv = {}) {
 
   // Base server config
   let serverConfig = {
-    name: 'meteor-server',
+    name: Meteor.name,
     target: 'node',
     mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),

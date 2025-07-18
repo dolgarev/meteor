@@ -2,6 +2,7 @@
  * @module processes
  * @description Functions for managing RSPack processes
  */
+import { RSPACK_BUILD_CONTEXT } from "./constants";
 
 const {
   spawnProcess,
@@ -82,6 +83,14 @@ export function getRSPackEnv({ isClient, isServer }) {
   const isJsxEnabled = inputFilePath.endsWith('.jsx');
 
   const pairs = [
+    ['name',
+      `${RSPACK_BUILD_CONTEXT}/${getBuildFilePath({
+        ...env,
+        ...side,
+        isMain: true,
+        role: FILE_ROLE.output,
+      })}`,
+    ],
     ['isDevelopment', isMeteorAppDevelopment()],
     ['isProduction', isMeteorAppProduction()],
     ['isDebug', isMeteorAppDebug()],
