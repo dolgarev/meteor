@@ -144,6 +144,16 @@ export default function (inMeteor = {}, argv = {}) {
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : [])
   ];
+  const extensions = [
+    '.ts',
+    '.tsx',
+    '.js',
+    '.jsx',
+    '.mjs',
+    '.cjs',
+    '.json',
+    '.wasm',
+  ];
 
   // Base client config
   let clientConfig = {
@@ -177,7 +187,7 @@ export default function (inMeteor = {}, argv = {}) {
           : []),
       ],
     },
-    resolve: { extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'] },
+    resolve: { extensions },
     externals,
     plugins: [
       ...(isRun
@@ -248,7 +258,7 @@ export default function (inMeteor = {}, argv = {}) {
       rules: [swcConfig],
     },
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      extensions,
       modules: ['node_modules', path.resolve(process.cwd())],
       conditionNames: ['import', 'require', 'node', 'default'],
     },
