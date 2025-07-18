@@ -40,24 +40,24 @@ export async function ensureRSPackInstalled() {
 
   const appDir = getMeteorAppDir();
   const isRSPackInstalled =
-    (await checkNpmDependencyExists('@rspack/cli', { cwd: appDir })) &&
-    (await checkNpmDependencyVersion('@rspack/cli', {
+    checkNpmDependencyExists('@rspack/cli', { cwd: appDir }) &&
+    checkNpmDependencyVersion('@rspack/cli', {
       cwd: appDir,
       versionRequirement: DEFAULT_RSPACK_VERSION,
       semverCondition: 'gte',
-    })) &&
-    (await checkNpmDependencyExists('@rspack/core', { cwd: appDir })) &&
-    (await checkNpmDependencyVersion('@rspack/core', {
+    }) &&
+    checkNpmDependencyExists('@rspack/core', { cwd: appDir }) &&
+    checkNpmDependencyVersion('@rspack/core', {
       cwd: appDir,
       versionRequirement: DEFAULT_RSPACK_VERSION,
       semverCondition: 'gte',
-    })) &&
-    (await checkNpmDependencyExists('@meteorjs/rspack', { cwd: appDir })) &&
-    (await checkNpmDependencyVersion('@meteorjs/rspack', {
+    }) &&
+    checkNpmDependencyExists('@meteorjs/rspack', { cwd: appDir }) &&
+    checkNpmDependencyVersion('@meteorjs/rspack', {
       cwd: appDir,
       versionRequirement: DEFAULT_METEOR_RSPACK_VERSION,
       semverCondition: 'gte',
-    }));
+    });
 
   if (!isRSPackInstalled) {
     const rspackDependencies = [
@@ -99,7 +99,7 @@ export async function checkReactInstalled() {
 
   const appDir = getMeteorAppDir();
   // Check if React is a dependency in the project
-  const isReactInstalled = await checkNpmDependencyExists('react', { cwd: appDir });
+  const isReactInstalled = checkNpmDependencyExists('react', { cwd: appDir });
 
   if (isReactInstalled) {
     // Set environment variable to indicate React is enabled

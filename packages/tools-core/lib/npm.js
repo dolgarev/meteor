@@ -5,14 +5,14 @@ const semver = require('semver');
 
 /**
  * Checks if a npm dependency exists in the project.
- * First checks optimistically in node_modules folder, then falls back to `meteor npm ls`.
+ * First checks optimistically in node_modules folder, then checks package.json.
  * 
  * @param {string} dependency - The npm dependency name to check
  * @param {Object} [options] - Options for the check
  * @param {string} [options.cwd] - Current working directory (defaults to process.cwd())
- * @returns {Promise<boolean>} A promise that resolves to true if the dependency exists, false otherwise
+ * @returns {boolean} True if the dependency exists, false otherwise
  */
-export async function checkNpmDependencyExists(dependency, options = {}) {
+export function checkNpmDependencyExists(dependency, options = {}) {
   const cwd = options.cwd || process.cwd();
 
   // First, optimistically check if the dependency exists in node_modules
@@ -29,27 +29,27 @@ export async function checkNpmDependencyExists(dependency, options = {}) {
     // If there's an error checking the file system, continue to the fallback method
   }
 
-  // Fallback: Use `meteor npm ls` to check if the dependency exists
-  return new Promise((resolve) => {
-    let output = '';
+  // Fallback: Check package.json directly instead of using `npm ls`
+  try {
+    const packageJsonPath = path.join(cwd, 'package.json');
+    if (fs.existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
-    const proc = spawnProcess('meteor', ['npm', 'ls', dependency, '--depth=0'], {
-      cwd,
-      onStdout: (data) => {
-        output += data;
-      },
-      onStderr: () => {
-        // Ignore stderr output
-      },
-      onExit: (code) => {
-        // npm ls exits with code 0 if the package is found, 1 if not found
-        resolve(code === 0 && !output.includes('(empty)') && !output.includes('missing:'));
-      },
-      onError: () => {
-        resolve(false);
-      }
-    });
-  });
+      // Check if the dependency is listed in any of the dependency sections
+      return !!(
+        (packageJson.dependencies && packageJson.dependencies[dependency]) ||
+        (packageJson.devDependencies && packageJson.devDependencies[dependency]) ||
+        (packageJson.optionalDependencies && packageJson.optionalDependencies[dependency]) ||
+        (packageJson.peerDependencies && packageJson.peerDependencies[dependency])
+      );
+    }
+  } catch (error) {
+    // If there's an error reading or parsing package.json, return false
+    return false;
+  }
+
+  // If we've reached this point, the dependency was not found
+  return false;
 }
 
 /**
@@ -120,15 +120,16 @@ export function installNpmDependency(dependencies, options = {}) {
 
 /**
  * Checks if a specific npm dependency version meets a semver condition.
+ * Looks for the dependency version in the package.json file in node_modules.
  * 
  * @param {string} dependency - The npm dependency name to check
  * @param {Object} [options] - Options for the check
  * @param {string} [options.cwd] - Current working directory (defaults to process.cwd())
  * @param {string} [options.versionRequirement] - The version requirement to check against (e.g., '6.0.0')
  * @param {string} [options.semverCondition='gte'] - The semver condition to use (e.g., 'gte', 'lt', 'eq')
- * @returns {Promise<boolean>} A promise that resolves to true if the dependency version meets the condition, false otherwise
+ * @returns {boolean} True if the dependency version meets the condition, false otherwise
  */
-export async function checkNpmDependencyVersion(dependency, options = {}) {
+export function checkNpmDependencyVersion(dependency, options = {}) {
   const cwd = options.cwd || process.cwd();
   const versionRequirement = options.versionRequirement;
   const semverCondition = options.semverCondition || 'gte';
@@ -155,44 +156,10 @@ export async function checkNpmDependencyVersion(dependency, options = {}) {
       }
     }
   } catch (error) {
-    // If there's an error reading the package.json, continue to the fallback method
+    // If there's an error reading the package.json, return false
+    return false;
   }
 
-  // Fallback: Use `meteor npm ls` to get the dependency version
-  return new Promise((resolve) => {
-    let output = '';
-
-    const proc = spawnProcess('meteor', ['npm', 'ls', dependency, '--depth=0', '--json'], {
-      cwd,
-      onStdout: (data) => {
-        output += data;
-      },
-      onStderr: () => {
-        // Ignore stderr output
-      },
-      onExit: (code) => {
-        if (code !== 0) {
-          resolve(false);
-          return;
-        }
-
-        try {
-          const jsonOutput = JSON.parse(output);
-          const dependencies = jsonOutput.dependencies || {};
-          const dep = dependencies[dependency];
-
-          if (dep && dep.version) {
-            resolve(semver[semverCondition](dep.version, versionRequirement));
-          } else {
-            resolve(false);
-          }
-        } catch (error) {
-          resolve(false);
-        }
-      },
-      onError: () => {
-        resolve(false);
-      }
-    });
-  });
+  // If we've reached this point, the dependency version couldn't be determined
+  return false;
 }
