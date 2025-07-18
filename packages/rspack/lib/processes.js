@@ -163,6 +163,7 @@ export function startRSPackClientServe(options = {}) {
       onStderr: (data) => {
         // Check if this is an EADDRINUSE error in development mode (which we want to completely ignore)
         if (isMeteorAppDevelopment() && data.includes('EADDRINUSE')) {
+          logError(`[RSPack Client Error] ${data}`);
           return;
         }
         // Check if this is actually an informational message (like webpack-dev-server messages)
