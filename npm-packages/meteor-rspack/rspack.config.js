@@ -138,7 +138,6 @@ export default function (inMeteor = {}, argv = {}) {
     isJsxEnabled,
     isTsxEnabled,
   });
-  console.log("--> (rspack.config.js-Line: 141)\n swcConfig: ", swcConfig?.options?.jsc);
   const externals = [
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : [])
