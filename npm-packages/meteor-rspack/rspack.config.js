@@ -173,7 +173,7 @@ export default function (inMeteor = {}, argv = {}) {
           : []),
       ],
     },
-    resolve: { extensions: ['.js', '.jsx', '.json'] },
+    resolve: { extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'] },
     externals: [/^(meteor.*|react$|react-dom$)/],
     plugins: [
       ...(isRun
@@ -244,7 +244,7 @@ export default function (inMeteor = {}, argv = {}) {
       rules: [swcConfig],
     },
     resolve: {
-      extensions: ['.js', '.jsx', '.json'],
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
       modules: ['node_modules', path.resolve(process.cwd())],
       conditionNames: ['import', 'require', 'node', 'default'],
     },
