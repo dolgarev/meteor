@@ -30,7 +30,7 @@ export const GLOBAL_STATE_KEYS = {
   CLIENT_PROCESS: 'rspack.clientProcess',
   SERVER_PROCESS: 'rspack.serverProcess',
   RSPACK_INSTALLATION_CHECKED: 'rspack.rspackInstallationChecked',
-  IS_REACT_ENABLED: 'rspack.isReactEnabled',
+  REACT_CHECKED: 'rspack.reactChecked',
   INITIAL_ENTRYPONTS: 'meteor.initialEntrypoints',
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',
   SERVER_FIRST_COMPILE: 'rspack.serverFirstCompile',

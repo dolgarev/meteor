@@ -85,3 +85,29 @@ export async function ensureRSPackInstalled() {
   // Mark as checked
   setGlobalState(GLOBAL_STATE_KEYS.RSPACK_INSTALLATION_CHECKED, true);
 }
+
+/**
+ * Checks if React is installed and sets global state accordingly
+ * Sets global state and environment variables based on React detection
+ * @returns {Promise<void>} A promise that resolves when the check is complete
+ */
+export async function checkReactInstalled() {
+  // Skip if already checked
+  if (getGlobalState(GLOBAL_STATE_KEYS.REACT_CHECKED, false)) {
+    return;
+  }
+
+  const appDir = getMeteorAppDir();
+  // Check if React is a dependency in the project
+  const isReactInstalled = await checkNpmDependencyExists('react', { cwd: appDir });
+
+  if (isReactInstalled) {
+    // Set environment variable to indicate React is enabled
+    process.env.METEOR_REACT_ENABLED = 'true';
+  } else {
+    process.env.METEOR_REACT_ENABLED = 'false';
+  }
+
+  // Mark as checked
+  setGlobalState(GLOBAL_STATE_KEYS.REACT_CHECKED, true);
+}
