@@ -9,8 +9,6 @@ import { getMeteorAppSwcConfig } from "./lib/swc.js";
 
 const require = createRequire(import.meta.url);
 
-console.log("getMeteorAppSwcConfig()", getMeteorAppSwcConfig());
-
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
   try {
