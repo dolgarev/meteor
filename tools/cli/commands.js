@@ -1847,12 +1847,12 @@ main.registerCommand({
   );
 
   const modernBundlerResourcesContexts = [
-    process.env.RSPACK_ASSETS_CONTEXT || "_rspack-assets",
-    process.env.RSPACK_BUNDLES_CONTEXT || "_rspack-bundles"
+    process.env.RSPACK_ASSETS_CONTEXT || "_build-assets",
+    process.env.RSPACK_BUNDLES_CONTEXT || "_build-bundles"
   ];
   const modernBundlerAppContexts = [
     files.pathJoin(options.appDir, "node_modules", ".cache", "rspack"),
-    files.pathJoin(options.appDir, process.env.RSPACK_BUILD_CONTEXT || "_rspack"),
+    files.pathJoin(options.appDir, process.env.RSPACK_BUILD_CONTEXT || "_build"),
     ...modernBundlerResourcesContexts.reduce((arr, context) => [
       ...arr,
       files.pathJoin(options.appDir, `public/${context}`),

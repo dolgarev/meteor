@@ -44,21 +44,21 @@ export const GLOBAL_STATE_KEYS = {
  * Can be overridden with RSPACK_BUILD_CONTEXT environment variable
  * @constant {string}
  */
-export const RSPACK_BUILD_CONTEXT = process.env.RSPACK_BUILD_CONTEXT || '_rspack';
+export const RSPACK_BUILD_CONTEXT = process.env.RSPACK_BUILD_CONTEXT || '_build';
 
 /**
  * Directory name for RSPack assets context
  * Can be overridden with RSPACK_ASSETS_CONTEXT environment variable
  * @constant {string}
  */
-export const RSPACK_ASSETS_CONTEXT = process.env.RSPACK_ASSETS_CONTEXT || '_rspack-assets';
+export const RSPACK_ASSETS_CONTEXT = process.env.RSPACK_ASSETS_CONTEXT || '_build-assets';
 
 /**
  * Directory name for RSPack bundles context
  * Can be overridden with RSPACK_ASSETS_CONTEXT environment variable
  * @constant {string}
  */
-export const RSPACK_BUNDLES_CONTEXT = process.env.RSPACK_BUNDLES_CONTEXT || '_rspack-bundles';
+export const RSPACK_BUNDLES_CONTEXT = process.env.RSPACK_BUNDLES_CONTEXT || '_build-bundles';
 
 /**
  * Regex pattern for hot update files

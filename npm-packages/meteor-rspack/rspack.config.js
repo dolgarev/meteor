@@ -144,7 +144,7 @@ export default function (inMeteor = {}, argv = {}) {
   const serverOutputDir = path.resolve(process.cwd(), 'server');
 
   // Determine context for bundles and assets
-  const buildContext = Meteor.buildContext || '_rspack';
+  const buildContext = Meteor.buildContext || '_build';
   const bundlesContext = Meteor.bundlesContext || 'bundles';
   const assetsContext = Meteor.assetsContext || 'assets';
 
@@ -187,7 +187,7 @@ export default function (inMeteor = {}, argv = {}) {
 
   // Base client config
   let clientConfig = {
-    name: Meteor.name,
+    name: '[client-rspack]',
     target: 'web',
     mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),
@@ -273,7 +273,7 @@ export default function (inMeteor = {}, argv = {}) {
 
   // Base server config
   let serverConfig = {
-    name: Meteor.name,
+    name: '[server-rspack]',
     target: 'node',
     mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),
