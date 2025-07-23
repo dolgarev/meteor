@@ -61,8 +61,15 @@ export function getMeteorInitialAppEntrypoints() {
   return {
     mainClient: meteorConfig?.mainModule?.client,
     mainServer: meteorConfig?.mainModule?.server,
-    testClient: meteorConfig?.testModule?.client || meteorConfig?.testModule,
-    testServer: meteorConfig?.testModule?.server || meteorConfig?.testModule,
+    ...meteorConfig?.testModule?.client && {
+      testClient: meteorConfig?.testModule?.client,
+    },
+    ...meteorConfig?.testModule?.server && {
+      testServer: meteorConfig?.testModule?.server,
+    },
+    ...!meteorConfig?.testModule?.client && !meteorConfig?.testModule?.server && {
+      testModule: meteorConfig?.testModule,
+    },
   };
 }
 
@@ -71,21 +78,32 @@ export function getMeteorInitialAppEntrypoints() {
  * @param {Object} options - The entry points configuration object.
  * @param {string} [options.mainClient] - The client main module path.
  * @param {string} [options.mainServer] - The server main module path.
+ * @param {string} [options.testModule] - The test module path.
  * @param {string} [options.testClient] - The client test module path.
  * @param {string} [options.testServer] - The server test module path.
  */
-export function setMeteorAppEntrypoints({ mainClient, mainServer, testClient, testServer }) {
+export function setMeteorAppEntrypoints({
+  mainClient,
+  mainServer,
+  testModule,
+  testClient,
+  testServer,
+}) {
   if (mainClient) {
     process.env.METEOR_CONFIG_CLIENT = mainClient;
   }
   if (mainServer) {
     process.env.METEOR_CONFIG_SERVER = mainServer;
   }
-  if (testClient) {
-    process.env.METEOR_CONFIG_TEST_CLIENT = testClient;
-  }
-  if (testServer) {
-    process.env.METEOR_CONFIG_TEST_SERVER = testServer;
+  if (testModule) {
+    process.env.METEOR_CONFIG_TEST = testModule;
+  } else {
+    if (testClient) {
+      process.env.METEOR_CONFIG_TEST_CLIENT = testClient;
+    }
+    if (testServer) {
+      process.env.METEOR_CONFIG_TEST_SERVER = testServer;
+    }
   }
   global.ensureMeteorConfigInitialized?.();
 }
@@ -122,6 +140,14 @@ export function isMeteorAppBuild() {
 export function isMeteorAppTest() {
   return Package?.meteor?.global?.currentCommand?.name === 'test'
     || Package?.meteor?.global?.currentCommand?.name === 'test-packages';
+}
+
+/**
+ * Checks if the current Meteor command is 'test' and is running in watch mode.
+ * @returns {boolean} True if the current command is 'test' and is running in watch mode, false otherwise.
+ */
+export function isMeteorAppTestWatch() {
+  return isMeteorAppTest() && !Package?.meteor?.global?.currentCommand?.options?.once;
 }
 
 /**

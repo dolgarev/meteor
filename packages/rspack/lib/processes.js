@@ -3,6 +3,7 @@
  * @description Functions for managing RSPack processes
  */
 import { RSPACK_BUILD_CONTEXT } from "./constants";
+import { getMeteorAppEntrypoints } from "../../tools-core/lib/meteor";
 
 const {
   spawnProcess,
@@ -77,20 +78,12 @@ export function getRSPackEnv({ isClient, isServer }) {
 
   const initialEntrypoints = getMeteorInitialAppEntrypoints();
   const entryKey = `${isMeteorAppTest() ? 'test' : 'main'}${isClient ? 'Client' : 'Server'}`;
-  const inputFilePath = initialEntrypoints[entryKey];
+  const inputFilePath = initialEntrypoints[entryKey] || `testModule`;
   const isTypescriptEnabled = inputFilePath.endsWith('.ts') || inputFilePath.endsWith('.tsx');
   const isTsxEnabled = inputFilePath.endsWith('.tsx');
   const isJsxEnabled = inputFilePath.endsWith('.jsx');
 
   const pairs = [
-    ['name',
-      `${RSPACK_BUILD_CONTEXT}/${getBuildFilePath({
-        ...env,
-        ...side,
-        isMain: true,
-        role: FILE_ROLE.output,
-      })}`,
-    ],
     ['isDevelopment', isMeteorAppDevelopment()],
     ['isProduction', isMeteorAppProduction()],
     ['isDebug', isMeteorAppDebug()],
@@ -240,10 +233,11 @@ export function startRSPackServerWatch(options = {}) {
  * @param {boolean} options.isClient - Whether this is a client build
  * @param {boolean} options.isServer - Whether this is a server build
  * @param {Function} options.onCompile - Callback function to be called when compilation is complete
+ * @param {boolean} options.watch - Whether to run RSPack in watch mode
  * @returns {Promise<void>} A promise that resolves when the build is complete
  * @throws {Error} If the build process fails
  */
-export async function runRSPackBuild({ isClient, isServer, onCompile } = {}) {
+export async function runRSPackBuild({ isClient, isServer, onCompile, watch } = {}) {
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
 
@@ -252,7 +246,17 @@ export async function runRSPackBuild({ isClient, isServer, onCompile } = {}) {
   logProgress(`Running RSPack build for ${endpoint}...`);
   // Use a promise to ensure Meteor waits until RSPack finishes
   return new Promise((resolve, reject) => {
-    const buildProcess = spawnProcess('npx', ['rspack', 'build', '--config', configFile, ...getRSPackEnv({ isClient, isServer })], {
+    spawnProcess(
+      'npx',
+      [
+        'rspack',
+        'build',
+        '--config',
+        configFile,
+        ...(watch && ['--watch']) || [],
+        ...getRSPackEnv({ isClient, isServer }),
+      ].filter(Boolean),
+      {
       cwd: appDir,
       onStdout: (data) => {
         logInfo(`[RSPack Build ${endpoint}] ${data}`);

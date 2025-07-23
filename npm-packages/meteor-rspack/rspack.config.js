@@ -161,7 +161,7 @@ export default function (inMeteor = {}, argv = {}) {
   });
   const externals = [
     /^meteor.*/,
-    ...(isReactEnabled ? [/^react$/, /^react-dom$/] : [])
+    ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
   ];
   const alias = {
     '/': path.resolve(process.cwd()),
@@ -194,7 +194,7 @@ export default function (inMeteor = {}, argv = {}) {
     output: {
       path: clientOutputDir,
       filename: () =>
-        isDev ? outputFilename : `../${buildContext}/${outputPath}`,
+        isRun && !isTest ? outputFilename : `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
       publicPath: '/',
       chunkFilename: `${bundlesContext}/[id].[chunkhash].js`,
@@ -256,8 +256,8 @@ export default function (inMeteor = {}, argv = {}) {
       }),
     ],
     watchOptions,
-    devtool: isDev ? 'source-map' : 'hidden-source-map',
-    ...(isRun && {
+    devtool: isDev || isTest ? 'source-map' : 'hidden-source-map',
+    ...(isRun && !isTest && {
       devServer: {
         static: { directory: clientOutputDir, publicPath: '/__rspack__/' },
         hot: true,
@@ -310,7 +310,7 @@ export default function (inMeteor = {}, argv = {}) {
     ],
     watchOptions,
     devtool: isRun ? 'source-map' : 'hidden-source-map',
-    ...(isRun &&
+    ...((isRun || isTest) &&
       createCacheStrategy(mode)
     ),
   };

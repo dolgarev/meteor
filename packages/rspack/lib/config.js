@@ -3,6 +3,7 @@
  * @description Functions for configuring Meteor for RSPack
  */
 import RSPACK_BUNDLES_CONTEXT from "./constants";
+import { getInitialEntrypoints } from "./build-context";
 
 const {
   getMeteorAppFilesAndFolders,
@@ -31,6 +32,8 @@ const {
  * @returns {void}
  */
 export function configureMeteorForRSPack() {
+  const initialEntrypoints = getInitialEntrypoints();
+
   // Ignore node_modules to prevent Meteor from processing them
   const projectFilesAndFolders = getMeteorAppFilesAndFolders({ recursive: false });
   const foldersToIgnore = [
@@ -66,16 +69,19 @@ export function configureMeteorForRSPack() {
   setMeteorAppEntrypoints({
     mainClient: `${RSPACK_BUILD_CONTEXT}/${mainClientModule}`,
     mainServer: `${RSPACK_BUILD_CONTEXT}/${mainServerModule}`,
-    testClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
-    testServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
+    ...(initialEntrypoints.testModule && {
+      testModule: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
+    } || {
+      testClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
+      testServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
+    }),
   });
 
   // Ensure module files exist
   ensureModuleFilesExist();
 
   // Write content to module files
-  if (isMeteorAppDevelopment()) {
-    // writeMainClientEntryForHMR();
+  if (isMeteorAppRun()) {
     setMeteorAppCustomScriptUrl(
       `/__rspack__/${getBuildFilePath({ ...env, isMain: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true })}`,
     );

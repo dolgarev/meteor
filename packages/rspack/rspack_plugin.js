@@ -21,7 +21,9 @@ const {
 
 const {
   ensureRSPackInstalled,
-  checkReactInstalled, ensureRSPackReactInstalled, checkCoffeescriptInstalled,
+  checkReactInstalled,
+  ensureRSPackReactInstalled,
+  checkCoffeescriptInstalled,
 } = require('./lib/dependencies');
 
 const {
@@ -52,7 +54,10 @@ const {
 const {
   isMeteorAppRun,
   isMeteorAppBuild,
-  getMeteorAppEntrypoints
+  getMeteorInitialAppEntrypoints,
+  getMeteorAppEntrypoints,
+  isMeteorAppTest,
+  isMeteorAppTestWatch,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -110,12 +115,57 @@ try {
 
     // Wait for first compilation to complete
     await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise);
+  } else if (isMeteorAppTest()) {
+    const initialEntrypoints = getMeteorInitialAppEntrypoints();
+
+    // Setup compilation tracking and callbacks
+    const {
+      clientFirstCompile,
+      serverFirstCompile,
+      clientFirstCompilePromise,
+      serverFirstCompilePromise,
+      onCompileClient,
+      onCompileServer,
+    } = setupCompilationTracking();
+
+    if (initialEntrypoints?.testModule && isMeteorAppTestWatch()) {
+      runRSPackBuild({
+        isServer: true,
+        isClient: false,
+        watch: isMeteorAppTestWatch(),
+        onCompile: onCompileServer,
+      });
+    } else if (initialEntrypoints?.testModule && !isMeteorAppTestWatch()) {
+      await runRSPackBuild({
+        isServer: true,
+        isClient: false,
+        onCompile: onCompileServer,
+      });
+    } else if (initialEntrypoints?.testModule?.client || initialEntrypoints?.testModule?.server) {
+      runRSPackBuild({
+        isClient: true,
+        isServer: false,
+        watch: isMeteorAppTestWatch(),
+        onCompile: onCompileClient,
+      });
+
+      runRSPackBuild({
+        isServer: true,
+        isClient: false,
+        watch: isMeteorAppTestWatch(),
+        onCompile: onCompileServer,
+      });
+
+      // Wait for first compilation to complete
+      await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise);
+    }
+
   } else if (isMeteorAppBuild()) {
     // For 'build' command, run RSPack build without watch mode
     // Run client and server builds in parallel and wait for both to complete
     await Promise.all([
       runRSPackBuild({ isClient: true, isServer: false }),
-      runRSPackBuild({ isServer: true, isClient: false })
+      runRSPackBuild({ isServer: true, isClient: false }),
     ]);
   }
 } catch (error) {

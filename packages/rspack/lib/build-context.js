@@ -16,7 +16,6 @@ const {
   isMeteorAppDevelopment,
   isMeteorAppRun,
   isMeteorAppBuild,
-  isMeteorBlazeProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -109,11 +108,11 @@ export function ensureModuleFilesExist() {
     outputFile: getBuildFilePath({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output, onlyFilename: true }),
   };
   const testClientFiles = {
-    entryFile: initialEntrypoints.testClient || '',
+    entryFile: initialEntrypoints.testClient || initialEntrypoints.testModule || '',
     outputFile: getBuildFilePath({ isTest: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true }),
   };
   const testServerFiles = {
-    entryFile: initialEntrypoints.testServer || '',
+    entryFile: initialEntrypoints.testServer || initialEntrypoints.testModule || '',
     outputFile: getBuildFilePath({ isTest: true, isServer: true, role: FILE_ROLE.output, onlyFilename: true }),
   };
 
