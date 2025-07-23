@@ -182,14 +182,45 @@ export function setupCompilationTracking() {
  * @param {Object} serverFirstCompile - Server first compilation state
  * @param {Promise} clientFirstCompilePromise - Promise for client first compilation
  * @param {Promise} serverFirstCompilePromise - Promise for server first compilation
+ * @param {Object} options - Options for waiting
+ * @param {string} options.target - Target to wait for: 'client', 'server', or 'both' (default)
+ * @param {string} options.version - Specific version to wait for (optional)
  * @returns {Promise<void>} A promise that resolves when first compilation is complete
  */
-export async function waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise) {
+export async function waitForFirstCompilation(
+  clientFirstCompile, 
+  serverFirstCompile, 
+  clientFirstCompilePromise, 
+  serverFirstCompilePromise,
+  options = { target: 'both' }
+) {
   const clientState = getGlobalState(GLOBAL_STATE_KEYS.CLIENT_FIRST_COMPILE, clientFirstCompile);
   const serverState = getGlobalState(GLOBAL_STATE_KEYS.SERVER_FIRST_COMPILE, serverFirstCompile);
-  if (!clientState?.resolved && !serverState?.resolved && !process.env.RSPACK_FIRST_COMPILATION_COMPLETE) {
-    // Wait for both client and server to complete their first compilation
-    await Promise.all([clientFirstCompilePromise, serverFirstCompilePromise]);
-    process.env.RSPACK_FIRST_COMPILATION_COMPLETE = true;
+
+  // If compilation is already complete, return immediately
+  if (process.env.RSPACK_FIRST_COMPILATION_COMPLETE) {
+    return;
   }
+
+  // Determine which compilation(s) to wait for based on target
+  switch (options.target) {
+    case 'client':
+      if (!clientState?.resolved) {
+        await clientFirstCompilePromise;
+      }
+      break;
+    case 'server':
+      if (!serverState?.resolved) {
+        await serverFirstCompilePromise;
+      }
+      break;
+    case 'both':
+    default:
+      if (!clientState?.resolved && !serverState?.resolved) {
+        await Promise.all([clientFirstCompilePromise, serverFirstCompilePromise]);
+      }
+      break;
+  }
+
+  process.env.RSPACK_FIRST_COMPILATION_COMPLETE = true;
 }

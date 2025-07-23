@@ -128,19 +128,14 @@ try {
       onCompileServer,
     } = setupCompilationTracking();
 
-    if (initialEntrypoints?.testModule && isMeteorAppTestWatch()) {
+    if (initialEntrypoints?.testModule) {
       runRSPackBuild({
         isServer: true,
         isClient: false,
         watch: isMeteorAppTestWatch(),
         onCompile: onCompileServer,
       });
-    } else if (initialEntrypoints?.testModule && !isMeteorAppTestWatch()) {
-      await runRSPackBuild({
-        isServer: true,
-        isClient: false,
-        onCompile: onCompileServer,
-      });
+      await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise, { target: 'server' });
     } else if (initialEntrypoints?.testModule?.client || initialEntrypoints?.testModule?.server) {
       runRSPackBuild({
         isClient: true,
