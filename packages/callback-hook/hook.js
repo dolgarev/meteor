@@ -36,23 +36,14 @@
 // callback will propagate up to the iterator function, and will
 // terminate calling the remaining callbacks if not caught.
 
-const hasOwn = Object.prototype.hasOwnProperty;
-
 export class Hook {
-  constructor(options) {
-    options = options || {};
-    this.nextCallbackId = 0;
-    this.callbacks = Object.create(null);
-    // Whether to wrap callbacks with Meteor.bindEnvironment
-    this.bindEnvironment = true;
-    if (options.bindEnvironment === false) {
-      this.bindEnvironment = false;
-    }
+  constructor(options = {}) {
+    this.callbacks = new Set();
 
-    this.wrapAsync = true;
-    if (options.wrapAsync === false) {
-      this.wrapAsync = false;
-    }
+    // Whether to wrap callbacks with Meteor.bindEnvironment
+    const { bindEnvironment = true, wrapAsync = true } = options;
+    this.bindEnvironment = !!bindEnvironment;
+    this.wrapAsync = !!wrapAsync;
 
     if (options.exceptionHandler) {
       this.exceptionHandler = options.exceptionHandler;
@@ -62,6 +53,10 @@ export class Hook {
       }
       this.exceptionHandler = options.debugPrintExceptions;
     }
+  }
+
+  clear() {
+    this.callbacks.clear();
   }
 
   register(callback) {
@@ -75,27 +70,21 @@ export class Hook {
     if (this.bindEnvironment) {
       callback = Meteor.bindEnvironment(callback, exceptionHandler);
     } else {
-      callback = dontBindEnvironment(callback, exceptionHandler);
+      callback = wrapHookWithErrorHandling(callback, exceptionHandler);
     }
 
     if (this.wrapAsync) {
       callback = Meteor.wrapFn(callback);
     }
 
-    const id = this.nextCallbackId++;
-    this.callbacks[id] = callback;
+    this.callbacks.add(callback);
 
     return {
       callback,
       stop: () => {
-        delete this.callbacks[id];
+        this.callbacks.delete(callback);
       }
     };
-  }
-
-  clear() {
-    this.nextCallbackId = 0;
-    this.callbacks = [];
   }
 
   /**
@@ -110,31 +99,8 @@ export class Hook {
    * @param iterator
    */
   forEach(iterator) {
-
-    const ids = Object.keys(this.callbacks);
-    for (let i = 0;  i < ids.length;  ++i) {
-      const id = ids[i];
-      // check to see if the callback was removed during iteration
-      if (hasOwn.call(this.callbacks, id)) {
-        const callback = this.callbacks[id];
-        if (! iterator(callback)) {
-          break;
-        }
-      }
-    }
-  }
-
-  async forEachAsync(iterator) {
-    const ids = Object.keys(this.callbacks);
-    for (let i = 0;  i < ids.length;  ++i) {
-      const id = ids[i];
-      // check to see if the callback was removed during iteration
-      if (hasOwn.call(this.callbacks, id)) {
-        const callback = this.callbacks[id];
-        if (!await iterator(callback)) {
-          break;
-        }
-      }
+    for (const callback of this.callbacks) {
+      if (!iterator(callback)) break;
     }
   }
 
@@ -147,16 +113,8 @@ export class Hook {
    * @see forEach
    */
   async forEachAsync(iterator) {
-    const ids = Object.keys(this.callbacks);
-    for (let i = 0;  i < ids.length;  ++i) {
-      const id = ids[i];
-      // check to see if the callback was removed during iteration
-      if (hasOwn.call(this.callbacks, id)) {
-        const callback = this.callbacks[id];
-        if (!await iterator(callback)) {
-          break;
-        }
-      }
+    for (const callback of this.callbacks) {
+      if (!await iterator(callback)) break;
     }
   }
 
@@ -170,24 +128,30 @@ export class Hook {
 }
 
 // Copied from Meteor.bindEnvironment and removed all the env stuff.
-function dontBindEnvironment(func, onException, _this) {
-  if (!onException || typeof(onException) === 'string') {
-    const description = onException || "callback of async function";
-    onException = function (error) {
-      Meteor._debug(
-        "Exception in " + description,
-        error
-      );
-    };
-  }
-
-  return function (...args) {
+function wrapHookWithErrorHandling(func, onException, _this) {
+  const exceptionHandler = normalizeHookExceptionHandler(onException);
+  return function executeHookWithErrorHandling(...args) {
     let ret;
     try {
       ret = func.apply(_this, args);
     } catch (e) {
-      onException(e);
+      exceptionHandler(e);
     }
     return ret;
   };
+}
+
+function normalizeHookExceptionHandler(exceptionHandler) {
+  if (typeof exceptionHandler === 'function') {
+    return exceptionHandler;
+  }
+
+  // TODO: The message "callback of async function" is not very useful and needs clarification.
+  const description = typeof exceptionHandler === 'string'
+    ? exceptionHandler
+    : "callback of async function";
+  
+  return function defaultHookExceptionHandler(error) {
+    Meteor._debug(`Exception in ${description}`, error);
+  }
 }
