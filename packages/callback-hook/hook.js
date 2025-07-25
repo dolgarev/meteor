@@ -59,6 +59,23 @@ export class Hook {
     this.callbacks.clear();
   }
 
+  size() {
+    return this.callbacks.size;
+  }
+
+  // WARN: This method is for test compatibility only.
+  _asArray() {
+    return Array.from(this.callbacks);
+  }
+
+  // WARN: This method is for test compatibility only.
+  _fromArray(arr) {
+    if (!Array.isArray(arr)) {
+      throw new Error("Method _fromArray expects an array");
+    }
+    this.callbacks = new Set(arr);
+  }
+
   register(callback) {
     const exceptionHandler = this.exceptionHandler || function (exception) {
       // Note: this relies on the undocumented fact that if bindEnvironment's
