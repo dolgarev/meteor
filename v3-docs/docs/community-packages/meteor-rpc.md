@@ -179,7 +179,7 @@ Meteor.publish("chatRooms", function () {
 
 `addSharedPublication(name: string, schema: ZodSchema, handler: (args: ZodTypeInput<ZodSchema>) => Array<Mongo.Cursor<any>> | Promise<Array<Mongo.Cursor<any>>> )`
 
-This is similar to `addPublication`, but it allows you to create an array of cursors, which can be useful for shared queries that need to return multiple collections or different queries.
+This is similar to [`addPublication`](#module-addpublication), but it allows you to create an array of cursors, which can be useful for shared queries that need to return multiple collections or different queries.
 
 ::: code-group
 
