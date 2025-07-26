@@ -562,7 +562,7 @@ Object.assign(Session.prototype, {
         setUserId(userId) {
           return self._setUserId(userId);
         },
-        unblock: unblock,
+        unblock,
         connection: self.connectionHandle,
         randomSeed: randomSeed,
         fence,
@@ -606,29 +606,45 @@ Object.assign(Session.prototype, {
         ));
       });
 
-      async function finish() {
-        await fence.arm();
-        unblock();
-      }
+      const invocationStartTime = process.hrtime.bigint();
+      const invocationResult = await awaitTo(promise);
+      const invocationEndTime = process.hrtime.bigint();
 
+      const [error, result] = invocationResult;
       const payload = {
         msg: "result",
+        ...(error !== null && { error: wrapInternalException(error, `while invoking method '${msg.method}'`)}),
+        ...(result !== undefined && { result }),
         id: msg.id
       };
-      return promise.then(async result => {
-        await finish();
-        if (result !== undefined) {
-          payload.result = result;
+
+      await fence.arm();
+      self.send(payload);
+
+      if (self.server.onDDPMethodInvocationHook.size() > 0) {
+        const hookData = {
+          connectionId: self.id,
+          messageId: msg.id,
+          methodName: msg.method,
+          methodParams: msg.params,
+          methodResult: invocationResult,
+          userId: self.userId,
+          elapsedNs: invocationEndTime - invocationStartTime
+        };
+
+        const hookPayload = { invocation, msg, payload };
+
+        try {
+          await self.server.onDDPMethodInvocationHook.forEachAsync(async function (callback) {
+            await promiseTry(callback, hookData, hookPayload);
+            return true;
+          });
+        } catch (e) {
+          // If the hook throws, we still want to send the result.
+          // We just log the error and continue.
+          Meteor._debug("Error in onDDPMethodInvocationHook: ", e);
         }
-        self.send(payload);
-      }, async (exception) => {
-        await finish();
-        payload.error = wrapInternalException(
-          exception,
-          `while invoking method '${msg.method}'`
-        );
-        self.send(payload);
-      });
+      }
     }
   },
 
@@ -831,6 +847,14 @@ Object.assign(Session.prototype, {
     return forwardedFor[forwardedFor.length - httpForwardedCount];
   }
 });
+
+async function awaitTo(promise) {
+  return promise.then(data => [null, data]).catch(err => [err]);
+}
+
+async function promiseTry(fn, ...args) {
+  return Promise.resolve().then(() => fn(...args));
+}
 
 /******************************************************************************/
 /* Subscription                                                               */
@@ -1263,6 +1287,10 @@ Server = function (options = {}) {
     debugPrintExceptions: "onConnection callback"
   });
 
+  self.onDDPMethodInvocationHook = new Hook({
+    debugPrintExceptions: "onDDPMethodInvocation callback"
+  });
+
   // Map of callbacks to call when a new message comes in.
   self.onMessageHook = new Hook({
     debugPrintExceptions: "onMessage callback"
@@ -1351,6 +1379,19 @@ Object.assign(Server.prototype, {
   },
 
   /**
+   * @summary Register a callback to be called when a DDP method is invoked on the server.
+   * @locus Server
+   * @param {function} callback The function to call when a DDP method is invoked.
+   * The callback will be passed the method name, arguments, and connection details.
+   * @memberOf Meteor
+   * @importFromPackage meteor
+   */
+  onDDPMethodInvocation(fn) {
+    var self = this;
+    return self.onDDPMethodInvocationHook.register(fn);
+  },
+
+  /**
    * @summary Set publication strategy for the given collection. Publications strategies are available from `DDPServer.publicationStrategies`. You call this method from `Meteor.server`, like `Meteor.server.setPublicationStrategy()`
    * @locus Server
    * @alias setPublicationStrategy
@@ -1361,7 +1402,7 @@ Object.assign(Server.prototype, {
    */
   setPublicationStrategy(collectionName, strategy) {
     if (!Object.values(publicationStrategies).includes(strategy)) {
-      throw new Error(`Invalid merge strategy: ${strategy} 
+      throw new Error(`Invalid merge strategy: ${strategy}
         for collection ${collectionName}`);
     }
     this._publicationStrategies[collectionName] = strategy;
