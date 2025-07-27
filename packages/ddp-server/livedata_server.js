@@ -635,10 +635,9 @@ Object.assign(Session.prototype, {
         const hookPayload = { invocation, msg, payload };
 
         try {
-          await self.server.onDDPMethodInvocationHook.forEachAsync(async function (callback) {
+          for (const callback of self.server.onDDPMethodInvocationHook) {
             await promiseTry(callback, hookData, hookPayload);
-            return true;
-          });
+          }
         } catch (e) {
           // If the hook throws, we still want to send the result.
           // We just log the error and continue.
