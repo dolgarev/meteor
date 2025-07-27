@@ -391,56 +391,51 @@ Object.assign(Session.prototype, {
       return;
     }
 
-    self.inQueue.push(msg_in);
-    if (self.workerRunning)
-      return;
-    self.workerRunning = true;
+    self.runDDPMessageQueueProcessor(msg_in);
+  },
 
-    var processNext = function () {
-      var msg = self.inQueue && self.inQueue.shift();
+  runDDPMessageQueueProcessor(ddpMessage) {
+    this.inQueue.push(ddpMessage);
+    if (this.workerRunning) return;
 
-      if (!msg) {
-        self.workerRunning = false;
+    const self = this;
+    (function processNextDDPMessage() {
+      self.workerRunning = true;
+      setImmediate(async () => {
+        const msg = self.inQueue?.shift();
+        if (msg) {
+          let { promise, resolve } = Promise.withResolvers();
+          self.processDDPMessage(msg, resolve).then(resolve);
+          await promise;
+          processNextDDPMessage();
+        } else {
+          self.workerRunning = false;
+        }
+      });
+    })();
+  },
+
+  async processDDPMessage(msg, unblockNextDDPMessage) {
+    if (this.server.onMessageHook.size() > 0) {
+      for (const callback of this.server.onMessageHook) {
+        await promiseTry(callback, msg, this);
+      }
+    }
+
+    try {
+      const handler = this.protocol_handlers[msg.msg];
+      if (typeof handler !== 'function') {
+        self.sendError('Bad request', msg);
         return;
       }
-
-      function runHandlers() {
-        var blocked = true;
-
-        var unblock = function () {
-          if (!blocked)
-            return; // idempotent
-          blocked = false;
-          setImmediate(processNext);
-        };
-
-        self.server.onMessageHook.each(function (callback) {
-          callback(msg, self);
-          return true;
-        });
-
-        if (msg.msg in self.protocol_handlers) {
-          const result = self.protocol_handlers[msg.msg].call(
-            self,
-            msg,
-            unblock
-          );
-
-          if (Meteor._isPromise(result)) {
-            result.finally(() => unblock());
-          } else {
-            unblock();
-          }
-        } else {
-          self.sendError('Bad request', msg);
-          unblock(); // in case the handler didn't already do it
-        }
-      }
-
-      runHandlers();
-    };
-
-    processNext();
+      const res = handler.call(this, msg, unblockNextDDPMessage);
+      await Promise.resolve(res);
+    } catch (err) {
+      Meteor._debug('Error processing DDP message', msg, err);
+      self.sendError('Processing error', msg);
+    } finally {
+      unblockNextDDPMessage(); // in case the handler didn't already do it
+    }
   },
 
   protocol_handlers: {
@@ -831,6 +826,10 @@ Object.assign(Session.prototype, {
     return forwardedFor[forwardedFor.length - httpForwardedCount];
   }
 });
+
+async function promiseTry(fn, ...args) {
+  return Promise.resolve().then(() => fn(...args));
+}
 
 /******************************************************************************/
 /* Subscription                                                               */
@@ -1361,7 +1360,7 @@ Object.assign(Server.prototype, {
    */
   setPublicationStrategy(collectionName, strategy) {
     if (!Object.values(publicationStrategies).includes(strategy)) {
-      throw new Error(`Invalid merge strategy: ${strategy} 
+      throw new Error(`Invalid merge strategy: ${strategy}
         for collection ${collectionName}`);
     }
     this._publicationStrategies[collectionName] = strategy;
