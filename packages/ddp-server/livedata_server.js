@@ -426,13 +426,13 @@ Object.assign(Session.prototype, {
       const handler = this.protocol_handlers[msg.msg];
       if (typeof handler !== 'function') {
         let handled = false;
-        if (this.server.onDDPCustomMessageHook.size() > 0) {
-          for (const callback of this.server.onDDPCustomMessageHook) {
-            handled = await promiseTry(callback, msg, this);
+        if (DDP.onDDPCustomMessageHook.size() > 0) {
+          for (const callback of DDP.onDDPCustomMessageHook) {
+            handled ||= await promiseTry(callback, msg, this, unblockNextDDPMessage);
           }
         }
         if (!handled) {
-          self.sendError('Bad request', msg);
+          this.sendError('Bad request', msg);
         }
         return;
       }
@@ -440,7 +440,7 @@ Object.assign(Session.prototype, {
       await Promise.resolve(res);
     } catch (err) {
       Meteor._debug('Error processing DDP message', msg, err);
-      self.sendError('Processing error', msg);
+      this.sendError('Processing error', msg);
     } finally {
       unblockNextDDPMessage(); // in case the handler didn't already do it
     }
@@ -1273,10 +1273,6 @@ Server = function (options = {}) {
   // Map of callbacks to call when a new message comes in.
   self.onMessageHook = new Hook({
     debugPrintExceptions: "onMessage callback"
-  });
-
-  self.onDDPCustomMessageHook = new Hook({
-    debugPrintExceptions: "onDDPCustomMessageHook callback"
   });
 
   self.publish_handlers = {};

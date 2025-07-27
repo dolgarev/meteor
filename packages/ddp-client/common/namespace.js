@@ -74,6 +74,18 @@ DDP.connect = (url, options) => {
 
 DDP._reconnectHook = new Hook({ bindEnvironment: false });
 
+if (Meteor.isServer) {
+  DDP.onDDPCustomMessageHook = new Hook({
+    debugPrintExceptions: "onDDPCustomMessageHook callback"
+  });
+} else {
+  DDP.onDDPCustomMessageHook = new Hook({ bindEnvironment: false });
+}
+
+DDP.onDDPCustomMessage = function onDDPCustomMessage (fn) {
+  return DDP.onDDPCustomMessageHook.register(fn);
+};
+
 /**
  * @summary Register a function to call as the first step of
  * reconnecting. This function can call methods which will be executed before

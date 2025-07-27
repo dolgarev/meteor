@@ -1,4 +1,5 @@
 import { DDPCommon } from 'meteor/ddp-common';
+import { DDP } from 'meteor/ddp-client';
 import { Meteor } from 'meteor/meteor';
 
 export class ConnectionStreamHandlers {
@@ -89,8 +90,25 @@ export class ConnectionStreamHandlers {
         break;
 
       default:
-        Meteor._debug('discarding unknown livedata message type', msg);
+        const handled = await this._handleDDPCustomMessage(msg);
+        if (!handled) {
+          Meteor._debug('discarding unknown livedata message type', msg);
+        }
     }
+  }
+
+  async _handleDDPCustomMessage(msg) {
+    let handled = false;
+    if (DDP.onDDPCustomMessageHook.size() > 0) {
+      try {
+        for (const callback of DDP.onDDPCustomMessageHook) {
+          handled = await promiseTry(callback, msg, this);
+        }
+      } catch (err) {
+        Meteor._debug('Error handling custom DDP message:', err);
+      }
+    }
+    return handled;
   }
 
   /**
@@ -199,4 +217,8 @@ export class ConnectionStreamHandlers {
       });
     });
   }
+}
+
+async function promiseTry(fn, ...args) {
+  return Promise.resolve().then(() => fn(...args));
 }
