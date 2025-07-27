@@ -425,7 +425,15 @@ Object.assign(Session.prototype, {
     try {
       const handler = this.protocol_handlers[msg.msg];
       if (typeof handler !== 'function') {
-        self.sendError('Bad request', msg);
+        let handled = false;
+        if (this.server.onDDPCustomMessageHook.size() > 0) {
+          for (const callback of this.server.onDDPCustomMessageHook) {
+            handled = await promiseTry(callback, msg, this);
+          }
+        }
+        if (!handled) {
+          self.sendError('Bad request', msg);
+        }
         return;
       }
       const res = handler.call(this, msg, unblockNextDDPMessage);
@@ -1265,6 +1273,10 @@ Server = function (options = {}) {
   // Map of callbacks to call when a new message comes in.
   self.onMessageHook = new Hook({
     debugPrintExceptions: "onMessage callback"
+  });
+
+  self.onDDPCustomMessageHook = new Hook({
+    debugPrintExceptions: "onDDPCustomMessageHook callback"
   });
 
   self.publish_handlers = {};
