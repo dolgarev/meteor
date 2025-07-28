@@ -53,6 +53,50 @@ export namespace Mongo {
     ? T
     : U;
 
+  /**
+   * Configuration options for Mongo Collection constructor
+   */
+  interface CollectionOptions<T = any, U = T> {
+    /**
+     * The server connection that will manage this collection. Uses the default connection if not specified. 
+     * Pass the return value of calling `DDP.connect` to specify a different server. Pass `null` to specify 
+     * no connection. Unmanaged (`name` is null) collections cannot specify a connection.
+     */
+    connection?: DDP.DDPStatic | null | undefined;
+    
+    /** 
+     * The method of generating the `_id` fields of new documents in this collection. Possible values:
+     * - **`'STRING'`**: random strings
+     * - **`'MONGO'`**: random [`Mongo.ObjectID`](#mongo_object_id) values
+     * 
+     * The default id generation technique is `'STRING'`.
+     */
+    idGeneration?: string | undefined;
+    
+    /**
+     * An optional transformation function. Documents will be passed through this function before being 
+     * returned from `fetch` or `findOne`, and before being passed to callbacks of `observe`, `map`, 
+     * `forEach`, `allow`, and `deny`. Transforms are *not* applied for the callbacks of `observeChanges` 
+     * or to cursors returned from publish functions.
+     */
+    transform?: (doc: T) => U;
+    
+    /** 
+     * Set to `false` to skip setting up the mutation methods that enable insert/update/remove from client code. 
+     * Default `true`. 
+     */
+    defineMutationMethods?: boolean | undefined;
+    
+    // Internal options (from normalizeOptions function)
+    /** @internal */
+    _driver?: any;
+    /** @internal */
+    _preventAutopublish?: boolean;
+    
+    // Allow additional properties for extensibility
+    [key: string]: any;
+  }
+
   var Collection: CollectionStatic;
   interface CollectionStatic {
     /**
@@ -61,27 +105,7 @@ export namespace Mongo {
      */
     new <T extends NpmModuleMongodb.Document, U = T>(
       name: string | null,
-      options?: {
-        /**
-         * The server connection that will manage this collection. Uses the default connection if not specified. Pass the return value of calling `DDP.connect` to specify a different
-         * server. Pass `null` to specify no connection. Unmanaged (`name` is null) collections cannot specify a connection.
-         */
-        connection?: DDP.DDPStatic | null | undefined;
-        /** The method of generating the `_id` fields of new documents in this collection.  Possible values:
-         * - **`'STRING'`**: random strings
-         * - **`'MONGO'`**:  random [`Mongo.ObjectID`](#mongo_object_id) values
-         *
-         * The default id generation technique is `'STRING'`.
-         */
-        idGeneration?: string | undefined;
-        /**
-         * An optional transformation function. Documents will be passed through this function before being returned from `fetch` or `findOne`, and before being passed to callbacks of
-         * `observe`, `map`, `forEach`, `allow`, and `deny`. Transforms are *not* applied for the callbacks of `observeChanges` or to cursors returned from publish functions.
-         */
-        transform?: (doc: T) => U;
-        /** Set to `false` to skip setting up the mutation methods that enable insert/update/remove from client code. Default `true`. */
-        defineMutationMethods?: boolean | undefined;
-      }
+      options?: CollectionOptions<T, U>
     ): Collection<T, U>;
 
     /**
@@ -98,7 +122,7 @@ export namespace Mongo {
      * Add a constructor extension function that runs when collections are created.
      * @param extension Extension function called with (name, options) and 'this' bound to collection instance
      */
-    addExtension(extension: (this: Collection<any, any>, name: string | null, options?: any) => void): void;
+    addExtension<T = any, U = T>(extension: (this: Collection<T, U>, name: string | null, options?: CollectionOptions<T, U>) => void): void;
 
     /**
      * Add a prototype method to all collection instances.
@@ -564,8 +588,8 @@ export namespace Mongo {
      * Add a constructor extension function that runs when collections are created.
      * @param extension Extension function called with (name, options) and 'this' bound to collection instance
      */
-    addExtension(extension: (this: Collection<any, any>, name: string | null, options?: any) => void): void;
-
+    addExtension<T = any, U = T>(extension: (this: Collection<T, U>, name: string | null, options?: CollectionOptions<T, U>) => void): void;
+    
     /**
      * Add a prototype method to all collection instances.
      * @param name The name of the method to add
