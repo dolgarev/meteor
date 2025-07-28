@@ -129,7 +129,7 @@ export namespace Mongo {
      * @param name The name of the method to add
      * @param method The method function, bound to the collection instance
      */
-    addPrototypeMethod(name: string, method: Function): void;
+    addPrototypeMethod<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
 
     /**
      * Backwards compatibility alias for lai:collection-extensions
@@ -137,7 +137,7 @@ export namespace Mongo {
      * @param method The method function, bound to the collection instance
      * @deprecated Use addPrototypeMethod instead
      */
-    addPrototype(name: string, method: Function): void;
+    addPrototype<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
 
     /**
      * Add a static method to the Mongo.Collection constructor.
@@ -595,7 +595,7 @@ export namespace Mongo {
      * @param name The name of the method to add
      * @param method The method function, bound to the collection instance
      */
-    addPrototypeMethod(name: string, method: Function): void;
+    addPrototypeMethod<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
 
     /**
      * Backwards compatibility alias for lai:collection-extensions
@@ -603,7 +603,7 @@ export namespace Mongo {
      * @param method The method function, bound to the collection instance
      * @deprecated Use addPrototypeMethod instead
      */
-    addPrototype(name: string, method: Function): void;
+    addPrototype<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
 
     /**
      * Add a static method to the Mongo.Collection constructor.
