@@ -258,8 +258,8 @@ if (module.hot) {
   const importContent = role === FILE_ROLE.entry
     ? `/* Link to ☄️ Meteor ${capitalizeFirstLetter(side)} Entry */
 import '../../${config?.entryFile}';`
-      : (role === FILE_ROLE.build || role === FILE_ROLE.run) &&
-        (config?.isServer || config?.isTest)
+      : role === FILE_ROLE.build ||
+        (role === FILE_ROLE.run && (config?.isServer || config?.isTest))
       ? `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
 import './${config?.outputFile || ''}';`
       : role === FILE_ROLE.run && config?.isClient && !config?.isTest
