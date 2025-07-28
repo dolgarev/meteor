@@ -2,8 +2,6 @@
  * @module processes
  * @description Functions for managing RSPack processes
  */
-import { RSPACK_BUILD_CONTEXT } from "./constants";
-import { getMeteorAppEntrypoints } from "../../tools-core/lib/meteor";
 
 const {
   spawnProcess,
@@ -28,6 +26,7 @@ const {
   isMeteorBlazeProject,
   isMeteorBlazeHotProject,
   getMeteorInitialAppEntrypoints,
+  isMeteorAppTestModule,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -65,20 +64,23 @@ export function getConfigFileName() {
 export function getRSPackEnv({ isClient, isServer }) {
   const RSPACK_BUILD_CONTEXT = require('./constants').RSPACK_BUILD_CONTEXT;
 
+  const initialEntrypoints = getMeteorInitialAppEntrypoints();
+  const isTest = isMeteorAppTest();
+  const isTestModule = initialEntrypoints.testModule != null;
+
   const module = isMeteorAppTest() ? { isTest: true } : { isMain: true };
   const env = isMeteorAppDevelopment()
     ? { isDevelopment: true }
     : { isProduction: true };
-  const side = isClient ? { isClient: true } : { isServer: true };
+  const side = isTest && isTestModule ? { isTestModule: true } : isClient ? { isClient: true } : { isServer: true };
   const commandRole = isMeteorAppRun()
     ? { role: FILE_ROLE.run }
     : isMeteorAppBuild()
       ? { role: FILE_ROLE.build }
       : { role: FILE_ROLE.run };
 
-  const initialEntrypoints = getMeteorInitialAppEntrypoints();
-  const entryKey = `${isMeteorAppTest() ? 'test' : 'main'}${isClient ? 'Client' : 'Server'}`;
-  const inputFilePath = initialEntrypoints[entryKey] || `testModule`;
+  const entryKey = `${isTest && isTestModule ? 'test' : 'main'}${isClient ? 'Client' : 'Server'}`;
+  const inputFilePath = isTest && isTestModule ? initialEntrypoints.testModule : initialEntrypoints[entryKey];
   const isTypescriptEnabled = inputFilePath.endsWith('.ts') || inputFilePath.endsWith('.tsx');
   const isTsxEnabled = inputFilePath.endsWith('.tsx');
   const isJsxEnabled = inputFilePath.endsWith('.jsx');
@@ -88,6 +90,7 @@ export function getRSPackEnv({ isClient, isServer }) {
     ['isProduction', isMeteorAppProduction()],
     ['isDebug', isMeteorAppDebug()],
     ['isTest', isMeteorAppTest()],
+    ['isTestModule', isTestModule],
     ['isRun', isMeteorAppRun()],
     ['isBuild', isMeteorAppBuild()],
     ['isClient', isClient],
@@ -140,9 +143,6 @@ export function startRSPackClientServe(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
-
-  logProgress(`[RSPack Client] Starting RSPack serve for client...`);
-
   const newClientProcess = spawnProcess(
     'npx',
     ['rspack', 'serve', '--config', configFile, ...getRSPackEnv({ isClient: true, isServer: false })], {
@@ -195,9 +195,6 @@ export function startRSPackServerWatch(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
-
-  logProgress(`[RSPack Server] Starting RSPack for server...`);
-
   const newServerProcess = spawnProcess(
     'npx',
     ['rspack', 'build', '--watch', '--config', configFile, ...getRSPackEnv({ isClient: false, isServer: true })], {
@@ -232,18 +229,17 @@ export function startRSPackServerWatch(options = {}) {
  * @param {Object} options - Options for the build
  * @param {boolean} options.isClient - Whether this is a client build
  * @param {boolean} options.isServer - Whether this is a server build
+ * @param {boolean} options.isTestModule - Whether this is a test module
  * @param {Function} options.onCompile - Callback function to be called when compilation is complete
  * @param {boolean} options.watch - Whether to run RSPack in watch mode
  * @returns {Promise<void>} A promise that resolves when the build is complete
  * @throws {Error} If the build process fails
  */
-export async function runRSPackBuild({ isClient, isServer, onCompile, watch } = {}) {
+export async function runRSPackBuild({ isClient, isServer, isTestModule, onCompile, watch, label = 'Build' } = {}) {
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
 
-  const endpoint = isClient ? 'Client' : 'Server';
-
-  logProgress(`Running RSPack build for ${endpoint}...`);
+  const endpoint = isTestModule ? 'Module' : isClient ? 'Client' : 'Server';
   // Use a promise to ensure Meteor waits until RSPack finishes
   return new Promise((resolve, reject) => {
     spawnProcess(
@@ -254,12 +250,12 @@ export async function runRSPackBuild({ isClient, isServer, onCompile, watch } = 
         '--config',
         configFile,
         ...(watch && ['--watch']) || [],
-        ...getRSPackEnv({ isClient, isServer }),
+        ...getRSPackEnv({ isClient, isServer, isTestModule }),
       ].filter(Boolean),
       {
       cwd: appDir,
       onStdout: (data) => {
-        logInfo(`[RSPack Build ${endpoint}] ${data}`);
+        logInfo(`[RSPack ${label} ${endpoint}] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
           onCompile(data);
         }
@@ -267,22 +263,22 @@ export async function runRSPackBuild({ isClient, isServer, onCompile, watch } = 
       onStderr: (data) => {
         // Check if this is actually an informational message (like webpack-dev-server messages)
         if (data.includes('Project is running at:')) {
-          logInfo(`[RSPack Build ${endpoint}] ${data}`);
+          logInfo(`[RSPack ${label} ${endpoint}] ${data}`);
         } else {
-          logError(`[RSPack Build Error ${endpoint}] ${data}`);
+          logError(`[RSPack ${label} Error ${endpoint}] ${data}`);
         }
       },
       onExit: (code) => {
         if (code === 0) {
           resolve();
         } else {
-          const error = new Error(`RSPack build failed in ${endpoint} with exit code ${code}`);
+          const error = new Error(`RSPack ${label} failed in ${endpoint} with exit code ${code}`);
           logError(error.message);
           reject(error);
         }
       },
       onError: (err) => {
-        logError(`RSPack Build ${endpoint} error: ${err.message}`);
+        logError(`RSPack ${label} ${endpoint} error: ${err.message}`);
         reject(err);
       }
     });

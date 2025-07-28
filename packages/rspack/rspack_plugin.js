@@ -130,10 +130,12 @@ try {
 
     if (initialEntrypoints?.testModule) {
       runRSPackBuild({
-        isServer: true,
+        isTestModule: true,
         isClient: false,
+        isServer: true,
         watch: isMeteorAppTestWatch(),
         onCompile: onCompileServer,
+        label: 'Test',
       });
       await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise, { target: 'server' });
     } else if (initialEntrypoints?.testModule?.client || initialEntrypoints?.testModule?.server) {
@@ -142,6 +144,7 @@ try {
         isServer: false,
         watch: isMeteorAppTestWatch(),
         onCompile: onCompileClient,
+        label: 'Test',
       });
 
       runRSPackBuild({
@@ -149,6 +152,7 @@ try {
         isClient: false,
         watch: isMeteorAppTestWatch(),
         onCompile: onCompileServer,
+        label: 'Test',
       });
 
       // Wait for first compilation to complete

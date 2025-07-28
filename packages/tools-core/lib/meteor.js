@@ -74,6 +74,14 @@ export function getMeteorInitialAppEntrypoints() {
 }
 
 /**
+ * Checks if the current Meteor project is configured as test module.
+ * @returns {boolean}
+ */
+export function isMeteorAppTestModule() {
+  return getMeteorInitialAppEntrypoints().testModule != null;
+}
+
+/**
  * Sets the Meteor application entry points in environment variables.
  * @param {Object} options - The entry points configuration object.
  * @param {string} [options.mainClient] - The client main module path.

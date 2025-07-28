@@ -116,6 +116,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isClient = Meteor.isClient;
   const isRun = Meteor.isRun;
   const isReactEnabled = Meteor.isReactEnabled;
+  const isTestModule = Meteor.isTestModule;
   const mode = isProd ? 'production' : 'development';
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
@@ -185,9 +186,26 @@ export default function (inMeteor = {}, argv = {}) {
 
   const reactRefreshModule = isReactEnabled ? safeRequire('@rspack/plugin-react-refresh') : null;
 
+  const requireExternalsPlugin = new RequireExternalsPlugin({
+    filePath: path.join(buildContext, runPath),
+    ...(Meteor.isBlazeEnabled && {
+      externals: /\.html$/,
+      externalMap: (module) => {
+        const { request, context } = module;
+        if (request.endsWith('.html')) {
+          const relContext = path.relative(process.cwd(), context);
+          const { name } = path.parse(request);
+          return `./${relContext}/template.${name}.js`;
+        }
+        return request;
+      },
+    }),
+  });
+
+  const clientNameConfig = `[${isTest && 'test-' || ''}${isTestModule && 'module' || 'client'}-rspack]`;
   // Base client config
   let clientConfig = {
-    name: '[client-rspack]',
+    name: clientNameConfig,
     target: 'web',
     mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),
@@ -221,28 +239,12 @@ export default function (inMeteor = {}, argv = {}) {
     resolve: { extensions, alias },
     externals,
     plugins: [
-      ...(isRun
-        ? [
-            ...(isReactEnabled && reactRefreshModule
-              ? [new reactRefreshModule()]
-              : []),
-            new RequireExternalsPlugin({
-              filePath: path.join(buildContext, runPath),
-              ...(Meteor.isBlazeEnabled && {
-                externals: /\.html$/,
-                externalMap: (module) => {
-                  const { request, context } = module;
-                  if (request.endsWith('.html')) {
-                    const relContext = path.relative(process.cwd(), context);
-                    const { name } = path.parse(request);
-                    return `./${relContext}/template.${name}.js`;
-                  }
-                  return request;
-                },
-              }),
-            }),
-          ].filter(Boolean)
-        : []),
+      ...[
+        ...(isReactEnabled && reactRefreshModule
+          ? [new reactRefreshModule()]
+          : []),
+        requireExternalsPlugin,
+      ].filter(Boolean),
       new DefinePlugin({
         'Meteor.isClient': JSON.stringify(true),
         'Meteor.isServer': JSON.stringify(false),
@@ -271,9 +273,10 @@ export default function (inMeteor = {}, argv = {}) {
     }),
   };
 
+  const serverNameConfig = `[${isTest && 'test-' || ''}${isTestModule && 'module' || 'server'}-rspack]`;
   // Base server config
   let serverConfig = {
-    name: '[server-rspack]',
+    name: serverNameConfig,
     target: 'node',
     mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),
@@ -313,6 +316,7 @@ export default function (inMeteor = {}, argv = {}) {
         banner: bannerOutput,
         entryOnly: true,
       }),
+      isTestModule && requireExternalsPlugin,
     ],
     watchOptions,
     devtool: isRun ? 'source-map' : 'hidden-source-map',
