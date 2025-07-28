@@ -6,6 +6,10 @@
  * prototype methods, and static methods.
  */
 
+if (Package['lai:collection-extensions']) {
+  console.warn('lai:collection-extensions is not deprecated. Use Mongo.Collection.addExtension instead.');
+}
+
 CollectionExtensions = {
   _extensions: [],
   _prototypeMethods: new Map(),
