@@ -138,7 +138,7 @@ export function isMeteorAppRun() {
  * @returns {boolean} True if the current command is 'build', false otherwise.
  */
 export function isMeteorAppBuild() {
-  return Package?.meteor?.global?.currentCommand?.name === 'build';
+  return ['build', 'deploy'].includes(Package?.meteor?.global?.currentCommand?.name);
 }
 
 /**
