@@ -39,7 +39,7 @@ Tinytest.add("spiderable - is not ready with a custom hook", function (test, exp
   test.equal(Spiderable._onReadyHook.size(), 2);
 
   //clear all/default callbacks
-  var callbacks = Spiderable._onReadyHook._asArray()
+  var callbacks = Spiderable._onReadyHook.asArray()
   Spiderable._onReadyHook.clear();
   test.equal(Spiderable._onReadyHook.size(), 0);
 
@@ -54,7 +54,7 @@ Tinytest.add("spiderable - is not ready with a custom hook", function (test, exp
   test.equal(Spiderable._onReadyHook.size(), 0);
 
   // restore callbacks
-  Spiderable._onReadyHook._fromArray(callbacks);
+  Spiderable._onReadyHook.fromArray(callbacks);
   test.equal(Spiderable._onReadyHook.size(), 2);
 });
 
@@ -62,7 +62,7 @@ Tinytest.add("spiderable - is ready with a custom hook", function (test, expect)
   test.equal(Spiderable._onReadyHook.size(), 2);
 
   //clear all callbacks
-  var callbacks = Spiderable._onReadyHook._asArray();
+  var callbacks = Spiderable._onReadyHook.asArray();
   Spiderable._onReadyHook.clear();
   test.equal(Spiderable._onReadyHook.size(), 0);
 
@@ -76,6 +76,6 @@ Tinytest.add("spiderable - is ready with a custom hook", function (test, expect)
   test.equal(Spiderable._onReadyHook.size(), 0);
 
   // restore callbacks
-  Spiderable._onReadyHook._fromArray(callbacks);
+  Spiderable._onReadyHook.fromArray(callbacks);
   test.equal(Spiderable._onReadyHook.size(), 2);
 });
