@@ -318,7 +318,7 @@ Object.assign(ProjectContext.prototype, {
    *
    * @return {Promise<*|undefined>}
    */
-  readProjectMetadata: function () {
+  readProjectMetadata: async function () {
     // don't generate a profiling report for this stage (Profile.run),
     // because all we do here is read a handful of files.
     return this._completeStagesThrough(STAGE.READ_PROJECT_METADATA);
@@ -328,7 +328,7 @@ Object.assign(ProjectContext.prototype, {
    * @return {Promise<*|undefined>}
    */
   initializeCatalog: function () {
-    return Profile.run('ProjectContext initializeCatalog', () => {
+    return Profile.run('ProjectContext initializeCatalog', async () => {
       return this._completeStagesThrough(STAGE.INITIALIZE_CATALOG);
     });
   },
@@ -337,7 +337,7 @@ Object.assign(ProjectContext.prototype, {
    * @return {Promise<*|undefined>}
    */
   resolveConstraints: function () {
-    return Profile.run('ProjectContext resolveConstraints', () => {
+    return Profile.run('ProjectContext resolveConstraints', async () => {
       return this._completeStagesThrough(STAGE.RESOLVE_CONSTRAINTS);
     });
   },
@@ -347,7 +347,7 @@ Object.assign(ProjectContext.prototype, {
    * @return {Promise<*|undefined>}
    */
   downloadMissingPackages: function () {
-    return Profile.run('ProjectContext downloadMissingPackages', () => {
+    return Profile.run('ProjectContext downloadMissingPackages', async () => {
       return this._completeStagesThrough(STAGE.DOWNLOAD_MISSING_PACKAGES);
     });
   },
@@ -356,7 +356,7 @@ Object.assign(ProjectContext.prototype, {
    * @return {Promise<*|undefined>}
    */
   buildLocalPackages: function () {
-    return Profile.run('ProjectContext buildLocalPackages', () => {
+    return Profile.run('ProjectContext buildLocalPackages', async () => {
       return this._completeStagesThrough(STAGE.BUILD_LOCAL_PACKAGES);
     });
   },
@@ -365,7 +365,7 @@ Object.assign(ProjectContext.prototype, {
    * @return {Promise<*|undefined>}
    */
   saveChangedMetadata: function () {
-    return Profile.run('ProjectContext saveChangedMetadata', () => {
+    return Profile.run('ProjectContext saveChangedMetadata', async () => {
       return this._completeStagesThrough(STAGE.SAVE_CHANGED_METADATA);
     });
   },
@@ -376,7 +376,7 @@ Object.assign(ProjectContext.prototype, {
   prepareProjectForBuild: function () {
     // This is the same as saveChangedMetadata, but if we insert stages after
     // that one it will continue to mean "fully finished".
-    return Profile.run('ProjectContext prepareProjectForBuild', () => {
+    return Profile.run('ProjectContext prepareProjectForBuild', async () => {
       return this._completeStagesThrough(STAGE.SAVE_CHANGED_METADATA);
     });
   },
@@ -1664,7 +1664,7 @@ Object.assign(exports.ReleaseFile.prototype, {
     if (this.isCheckout()) {
       // Only create .meteor/local/dev_bundle if .meteor/release refers to
       // an actual release, and remove it otherwise.
-      await files.rm_recursive(devBundleLink);
+      await files.rm_recursive_deferred(devBundleLink);
       return;
     }
 
@@ -1819,14 +1819,16 @@ export class MeteorConfig {
   // TODO Implement an API for setting these values?
   get(...keys) {
     let config = this._ensureInitialized();
+    let filteredConfig = keys.length ? {} : config;
     if (config) {
       keys.every(key => {
         if (config && _.has(config, key)) {
-          config = config[key];
+          filteredConfig = config[key];
           return true;
         }
+        return false;
       });
-      return config;
+      return filteredConfig;
     }
   }
 

@@ -82,6 +82,11 @@ export namespace Accounts {
     passwordEnrollTokenExpirationInDays?: number | undefined;
     ambiguousErrorMessages?: boolean | undefined;
     bcryptRounds?: number | undefined;
+    argon2Enabled?: string | false;
+    argon2Type?: string | undefined;
+    argon2TimeCost: number | undefined;
+    argon2MemoryCost: number | undefined;
+    argon2Parallelism: number | undefined;
     defaultFieldSelector?: { [key: string]: 0 | 1 } | undefined;
     collection?: string | undefined;
     loginTokenExpirationHours?: number | undefined;
@@ -182,6 +187,8 @@ export namespace Accounts {
   function addEmailAsync(userId: string, newEmail: string, verified?: boolean): Promise<void>;
 
   function removeEmail(userId: string, email: string): Promise<void>;
+
+  function replaceEmailAsync(userId: string, oldEmail: string, newEmail: string, verified?: boolean): Promise<void>;
 
   function onCreateUser(
     func: (options: { profile?: {} | undefined }, user: Meteor.User) => void
@@ -353,10 +360,10 @@ export namespace Accounts {
 
   /**
    *
-   * Check whether the provided password matches the bcrypt'ed password in
+   * Check whether the provided password matches the encrypted password in
    * the database user record. `password` can be a string (in which case
-   * it will be run through SHA256 before bcrypt) or an object with
-   * properties `digest` and `algorithm` (in which case we bcrypt
+   * it will be run through SHA256 before bcrypt or argon2) or an object with
+   * properties `digest` and `algorithm` (in which case we bcrypt/argon2
    * `password.digest`).
    */
   function _checkPasswordAsync(
