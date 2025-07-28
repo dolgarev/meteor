@@ -15,6 +15,7 @@ export const DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION = '5.0.0';
 
 export const DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION = '0.2.6';
 
+export const DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION = '0.5.17';
 /**
  * Global state keys used for storing and retrieving state across the application
  * @constant {Object}

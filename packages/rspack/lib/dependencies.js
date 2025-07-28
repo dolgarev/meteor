@@ -2,6 +2,7 @@
  * @module dependencies
  * @description Functions for managing dependencies for RSPack plugin
  */
+import { DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION } from "./constants";
 
 const {
   getGlobalState,
@@ -51,7 +52,7 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
   const appDir = getMeteorAppDir();
 
   // Filter dependencies that need to be installed (missing or wrong version)
-  const depsToInstall = dependencies.filter(dep => 
+  const allDepsToInstall = dependencies.filter(dep =>
     !checkNpmDependencyExists(dep.name, { cwd: appDir }) ||
     !checkNpmDependencyVersion(dep.name, {
       cwd: appDir,
@@ -61,20 +62,36 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
   );
 
   // Format dependencies for installation
-  const dependencyStrings = depsToInstall.map(dep => `${dep.name}@${dep.version}`);
+  const dependencyStrings = allDepsToInstall.map(dep => `${dep.name}@${dep.version}`);
 
-  if (depsToInstall.length > 0) {
+  if (allDepsToInstall.length > 0) {
+    let success;
     logProgress(
-      `Some ${packageName} dependencies need to be installed. Installing ${joinWithAnd(dependencyStrings)}...`,
+      `${packageName} dependencies need to be installed. Installing ${joinWithAnd(dependencyStrings)}...`,
     );
-    const success = await installNpmDependency(dependencyStrings, {
-      cwd: appDir,
-      dev: true,
-    });
+    // Install dev dependencies
+    const devDepsToInstall = allDepsToInstall.filter(dep => dep.dev === true || dep.dev == null);
+    if (devDepsToInstall.length > 0) {
+      const devDepsStrings = devDepsToInstall.map(dep => `${dep.name}@${dep.version}`);
+      success = await installNpmDependency(devDepsStrings, {
+        cwd: appDir,
+        dev: true,
+      });
+    }
+
+    const depsToInstall = allDepsToInstall.filter(dep => dep.dev === false);
+    if (depsToInstall.length > 0) {
+      const depsStrings = depsToInstall.map(dep => `${dep.name}@${dep.version}`);
+      const depsSuccess = await installNpmDependency(depsStrings, {
+        cwd: appDir,
+        dev: false,
+      });
+      success = success && depsSuccess;
+    }
 
     if (!success) {
       throw new Error(
-        `Failed to install ${packageName} dependencies. Please install them manually with: meteor npm install -D ${joinWithAnd(dependencyStrings)}`
+        `Failed to install ${packageName} dependencies. Please install them manually with: meteor npm install -D ${joinWithAnd(allDepsToInstall)}`
       );
     }
 
@@ -94,13 +111,14 @@ export async function ensureRSPackInstalled() {
   const dependencies = [
     { name: '@rspack/cli', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte' },
     { name: '@rspack/core', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte' },
-    { name: '@meteorjs/rspack', version: DEFAULT_METEOR_RSPACK_VERSION, semverCondition: 'gte' }
+    { name: '@meteorjs/rspack', version: DEFAULT_METEOR_RSPACK_VERSION, semverCondition: 'gte' },
+    { name: '@swc/helpers', version: DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION, semverCondition: 'gte', dev: false },
   ];
 
   await ensureDependenciesInstalled(
     dependencies,
     GLOBAL_STATE_KEYS.RSPACK_INSTALLATION_CHECKED,
-    'RSPack'
+    'RSPack',
   );
 }
 

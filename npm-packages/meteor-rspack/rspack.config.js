@@ -43,7 +43,7 @@ function createCacheStrategy(mode) {
 }
 
 // SWC loader rule (JSX/JS)
-function createSwcConfig({ isRun, isTypescriptEnabled, isJsxEnabled, isTsxEnabled }) {
+function createSwcConfig({ isRun, isTypescriptEnabled, isJsxEnabled, isTsxEnabled, externalHelpers }) {
   const defaultConfig = {
     jsc: {
       baseUrl: process.cwd(),
@@ -60,6 +60,7 @@ function createSwcConfig({ isRun, isTypescriptEnabled, isJsxEnabled, isTsxEnable
           refresh: isRun,
         },
       },
+      externalHelpers,
     },
   };
   const customConfig = getMeteorAppSwcConfig() || {};
@@ -117,6 +118,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isRun = Meteor.isRun;
   const isReactEnabled = Meteor.isReactEnabled;
   const isTestModule = Meteor.isTestModule;
+  const swcExternalHelpers = Meteor.swcExternalHelpers;
   const mode = isProd ? 'production' : 'development';
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
@@ -159,6 +161,7 @@ export default function (inMeteor = {}, argv = {}) {
     isTypescriptEnabled,
     isJsxEnabled,
     isTsxEnabled,
+    externalHelpers: swcExternalHelpers,
   });
   const externals = [
     /^meteor.*/,

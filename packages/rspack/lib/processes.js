@@ -2,6 +2,7 @@
  * @module processes
  * @description Functions for managing RSPack processes
  */
+import { checkNpmDependencyExists } from "../../tools-core/lib/npm";
 
 const {
   spawnProcess,
@@ -85,6 +86,8 @@ export function getRSPackEnv({ isClient, isServer }) {
   const isTsxEnabled = inputFilePath.endsWith('.tsx');
   const isJsxEnabled = inputFilePath.endsWith('.jsx');
 
+  const swcExternalHelpers = checkNpmDependencyExists('@swc/helpers');
+
   const pairs = [
     ['isDevelopment', isMeteorAppDevelopment()],
     ['isProduction', isMeteorAppProduction()],
@@ -118,6 +121,7 @@ export function getRSPackEnv({ isClient, isServer }) {
     ['isTsxEnabled', isTsxEnabled],
     ['isJsxEnabled', isJsxEnabled],
     ['isCoffeescriptEnabled', process.env.METEOR_COFFEESCRIPT_ENABLED],
+    ['swcExternalHelpers', swcExternalHelpers],
   ];
   return pairs.flatMap(([key, val]) => [
     '--env',
