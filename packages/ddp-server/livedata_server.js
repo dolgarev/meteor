@@ -6,7 +6,7 @@ import { SessionDocumentView } from './session_document_view';
 
 DDPServer = {};
 
-const DISABLE_ONDDPMETHODINVOCATION_HOOK = !!Meteor.settings?.packages?.['ddp-server']?.disableOnDDPMethodInvocationHook;
+const DISABLE_ON_DDP_METHOD_INVOCATION_HOOK = !!Meteor.settings?.packages?.['ddp-server']?.disableOnDDPMethodInvocationHook;
 
 // Publication strategies define how we handle data from published cursors at the collection level
 // This allows someone to:
@@ -623,7 +623,7 @@ Object.assign(Session.prototype, {
       self.send(payload);
 
       if (
-        !DISABLE_ONDDPMETHODINVOCATION_HOOK &&
+        !DISABLE_ON_DDP_METHOD_INVOCATION_HOOK &&
         self.server.onDDPMethodInvocationHook.size() > 0
       ) {
         const hookData = {
