@@ -422,7 +422,7 @@ Object.assign(Session.prototype, {
           await promiseTry(callback, msg, this);
         }
       } catch (error) {
-        Meteor._debug('Error processing onMessage hook', msg, error);
+        Meteor._debug('Error in onMessage hook', msg, error);
       }
     }
 
