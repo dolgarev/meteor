@@ -641,7 +641,7 @@ Object.assign(Session.prototype, {
         } catch (e) {
           // If the hook throws, we still want to send the result.
           // We just log the error and continue.
-          Meteor._debug("Error in onDDPMethodInvocationHook: ", e);
+          Meteor._debug("Error in onDDPMethodInvocation hook: ", e);
         }
       }
     }
