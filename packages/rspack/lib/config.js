@@ -12,7 +12,10 @@ const {
   isMeteorAppDevelopment,
   isMeteorAppRun,
   isMeteorAppBuild,
+  isMeteorAppDebug,
 } = require('meteor/tools-core/lib/meteor');
+
+const { logInfo } = require('meteor/tools-core/lib/log');
 
 const {
   RSPACK_BUILD_CONTEXT,
@@ -51,6 +54,10 @@ export function configureMeteorForRSPack() {
   const meteorAppIgnores = `${foldersToIgnore.join(' ')} ${filesToIgnore.join(' ')}`;
   setMeteorAppIgnore(meteorAppIgnores);
 
+  if (isMeteorAppDebug()) {
+    logInfo(`[i] Meteor app ignores: ${meteorAppIgnores}`);
+  }
+
   const env = isMeteorAppDevelopment()
     ? { isDevelopment: true }
     : { isProduction: true };
@@ -78,13 +85,20 @@ export function configureMeteorForRSPack() {
   // Set entry points in environment variables if they exist
   setMeteorAppEntrypoints(appEntrypoints);
 
+  if (isMeteorAppDebug()) {
+    logInfo(`[i] App entrypoints: ${JSON.stringify(appEntrypoints, null, 2)}`);
+  }
+
   // Ensure module files exist
   ensureModuleFilesExist();
 
   // Write content to module files
   if (isMeteorAppRun()) {
-    setMeteorAppCustomScriptUrl(
-      `/__rspack__/${getBuildFilePath({ ...env, isMain: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true })}`,
-    );
+    const customScriptUrl = `/__rspack__/${getBuildFilePath({ ...env, isMain: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true })}`;
+    setMeteorAppCustomScriptUrl(customScriptUrl);
+
+    if (isMeteorAppDebug()) {
+      logInfo(`[i] App custom script: ${customScriptUrl}`);
+    }
   }
 }

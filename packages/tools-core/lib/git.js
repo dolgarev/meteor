@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { logProgress, logSuccess, logInfo, logError } from './log';
 
 /**
  * Checks if the given directory is a git repository
@@ -37,10 +37,6 @@ export function gitignoreExists(dir) {
  * @returns {boolean} - True if .gitignore was created or already exists
  */
 export function ensureGitignoreExists(dir, initialEntries = []) {
-  if (!isGitRepository(dir)) {
-    return false;
-  }
-
   const gitignorePath = path.join(dir, '.gitignore');
 
   if (!gitignoreExists(dir)) {
@@ -88,10 +84,6 @@ export function getMissingGitignoreEntries(dir, entries) {
  * @returns {boolean} - True if entries were added successfully
  */
 export function addGitignoreEntries(dir, entries, context = '') {
-  if (!isGitRepository(dir)) {
-    return false;
-  }
-
   // Ensure .gitignore exists
   if (!ensureGitignoreExists(dir)) {
     return false;
@@ -103,6 +95,17 @@ export function addGitignoreEntries(dir, entries, context = '') {
   if (missingEntries.length === 0) {
     return true; // All entries already exist
   }
+
+  // Display a header for the gitignore entries addition
+  logProgress(`┌─────────────────────────────────────────────────`);
+  logProgress(`│ Adding Gitignore Entries${context ? ` for ${context}` : ''}`);
+  logProgress(`└─────────────────────────────────────────────────`);
+
+  // Show what entries will be added
+  logInfo(`The following entries will be added to .gitignore:`);
+  missingEntries.forEach(entry => {
+    logInfo(`  • ${entry}`);
+  });
 
   try {
     const gitignorePath = path.join(dir, '.gitignore');
@@ -122,9 +125,14 @@ export function addGitignoreEntries(dir, entries, context = '') {
     }
     content += missingEntries.join('\n') + '\n';
     fs.writeFileSync(gitignorePath, content, 'utf8');
+
+    logSuccess(`✅ Gitignore entries${context ? ` for ${context}` : ''} added`);
     return true;
   } catch (error) {
-    console.error(`Error adding entries to .gitignore file: ${error.message}`);
+    logError(`\n┌─────────────────────────────────────────────────`);
+    logError(`│ ❌ Failed to Add Gitignore Entries${context ? ` for ${context}` : ''}`);
+    logError(`└─────────────────────────────────────────────────`);
+    logError(`Error: ${error.message}`);
     return false;
   }
 }

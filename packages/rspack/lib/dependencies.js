@@ -11,6 +11,8 @@ const {
 const {
   logProgress,
   logSuccess,
+  logInfo,
+  logError,
 } = require('meteor/tools-core/lib/log');
 const {
   getMeteorAppDir,
@@ -65,10 +67,19 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
   const dependencyStrings = allDepsToInstall.map(dep => `${dep.name}@${dep.version}`);
 
   if (allDepsToInstall.length > 0) {
-    let success;
-    logProgress(
-      `${packageName} dependencies need to be installed. Installing ${joinWithAnd(dependencyStrings)}...`,
-    );
+    let success = true;
+
+    // Display a header for the installation process
+    logProgress(`┌─────────────────────────────────────────────────`);
+    logProgress(`│ ${packageName} Dependencies Installation`);
+    logProgress(`└─────────────────────────────────────────────────`);
+
+    // Show what dependencies will be installed
+    logInfo(`The following ${packageName} dependencies need to be installed:`);
+    dependencyStrings.forEach(dep => {
+      logInfo(`  • ${dep}`);
+    });
+
     // Install dev dependencies
     const devDepsToInstall = allDepsToInstall.filter(dep => dep.dev === true || dep.dev == null);
     if (devDepsToInstall.length > 0) {
@@ -79,6 +90,7 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
       });
     }
 
+    // Install regular dependencies
     const depsToInstall = allDepsToInstall.filter(dep => dep.dev === false);
     if (depsToInstall.length > 0) {
       const depsStrings = depsToInstall.map(dep => `${dep.name}@${dep.version}`);
@@ -86,16 +98,22 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
         cwd: appDir,
         dev: false,
       });
+
       success = success && depsSuccess;
     }
 
     if (!success) {
+      logError(`\n┌─────────────────────────────────────────────────`);
+      logError(`│ ❌ ${packageName} Installation Failed`);
+      logError(`└─────────────────────────────────────────────────`);
+      logError(`Run: meteor npm install -D ${joinWithAnd(dependencyStrings)}`);
+
       throw new Error(
-        `Failed to install ${packageName} dependencies. Please install them manually with: meteor npm install -D ${joinWithAnd(allDepsToInstall)}`
+        `Failed to install ${packageName} dependencies. Please install them manually with: meteor npm install -D ${joinWithAnd(dependencyStrings)}`
       );
     }
 
-    logSuccess(`${packageName} dependencies installed successfully.`);
+    logSuccess(`✅ ${packageName} dependencies installed`);
   }
 
   // Mark as checked
@@ -118,7 +136,7 @@ export async function ensureRSPackInstalled() {
   await ensureDependenciesInstalled(
     dependencies,
     GLOBAL_STATE_KEYS.RSPACK_INSTALLATION_CHECKED,
-    'RSPack',
+    'Rspack',
   );
 }
 
@@ -158,7 +176,7 @@ export async function ensureRSPackReactInstalled() {
   await ensureDependenciesInstalled(
     dependencies,
     GLOBAL_STATE_KEYS.RSPACK_REACT_INSTALLATION_CHECKED,
-    'RSPack React'
+    'Rspack React'
   );
 }
 
@@ -201,6 +219,6 @@ export async function ensureRSPackCoffeescriptInstalled() {
   await ensureDependenciesInstalled(
     dependencies,
     GLOBAL_STATE_KEYS.RSPACK_COFFEESCRIPT_INSTALLATION_CHECKED,
-    'RSPack Coffeescript'
+    'Rspack Coffeescript'
   );
 }
