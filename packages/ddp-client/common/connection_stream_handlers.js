@@ -2,15 +2,17 @@ import { DDPCommon } from 'meteor/ddp-common';
 import { DDP } from 'meteor/ddp-client';
 import { Meteor } from 'meteor/meteor';
 
-if (Meteor.isServer) {
-  const DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.packages?.['ddp-client']?.disableOnDDPCustomMessageHook;
-  const PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.packages?.['ddp-server']?.processAllOnDDPCustomMessageHook;
-  console.log('server')
-} else {
-  const DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.public?.packages?.['ddp-client']?.disableOnDDPCustomMessageHook;
-  const PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.public?.packages?.['ddp-server']?.processAllOnDDPCustomMessageHook;
-  console.log('client')
-}
+const DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK = !!(
+  Meteor.isServer
+    ? Meteor.settings?.packages?.['ddp-client']?.disableOnDDPCustomMessageHook
+    : Meteor.settings?.public?.packages?.['ddp-client']?.disableOnDDPCustomMessageHook
+);
+
+const PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK = !!(
+  Meteor.isServer
+    ? Meteor.settings?.packages?.['ddp-server']?.processAllOnDDPCustomMessageHook
+    : Meteor.settings?.public?.packages?.['ddp-server']?.processAllOnDDPCustomMessageHook
+);
 
 export class ConnectionStreamHandlers {
   constructor(connection) {
