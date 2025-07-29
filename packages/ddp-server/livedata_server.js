@@ -427,8 +427,12 @@ Object.assign(Session.prototype, {
       if (typeof handler !== 'function') {
         let handled = false;
         if (DDP.onDDPCustomMessageHook.size() > 0) {
-          for (const callback of DDP.onDDPCustomMessageHook) {
-            handled ||= await promiseTry(callback, msg, this, unblockNextDDPMessage);
+          try {
+            for (const callback of DDP.onDDPCustomMessageHook) {
+              handled ||= await promiseTry(callback, msg, this, unblockNextDDPMessage);
+            }
+          } catch (err) {
+            Meteor._debug('Error in onDDPCustomMessage hook', err);
           }
         }
         if (!handled) {

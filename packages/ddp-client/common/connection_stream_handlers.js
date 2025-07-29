@@ -102,10 +102,10 @@ export class ConnectionStreamHandlers {
     if (DDP.onDDPCustomMessageHook.size() > 0) {
       try {
         for (const callback of DDP.onDDPCustomMessageHook) {
-          handled = await promiseTry(callback, msg, this);
+          handled ||= await promiseTry(callback, msg, this);
         }
       } catch (err) {
-        Meteor._debug('Error handling custom DDP message:', err);
+        Meteor._debug('Error in onDDPCustomMessage hook', err);
       }
     }
     return handled;

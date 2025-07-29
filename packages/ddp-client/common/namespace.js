@@ -82,8 +82,8 @@ if (Meteor.isServer) {
   DDP.onDDPCustomMessageHook = new Hook({ bindEnvironment: false });
 }
 
-DDP.onDDPCustomMessage = function onDDPCustomMessage (fn) {
-  return DDP.onDDPCustomMessageHook.register(fn);
+DDP.onDDPCustomMessage = function onDDPCustomMessage (callback) {
+  return DDP.onDDPCustomMessageHook.register(callback);
 };
 
 /**
