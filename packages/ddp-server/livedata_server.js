@@ -640,7 +640,7 @@ Object.assign(Session.prototype, {
 
         try {
           for (const callback of self.server.onDDPMethodInvocationHook) {
-            await promiseTry(callback, hookData, hookPayload);
+            await promiseTry(callback, hookData, hookPayload, self);
           }
         } catch (e) {
           // If the hook throws, we still want to send the result.
