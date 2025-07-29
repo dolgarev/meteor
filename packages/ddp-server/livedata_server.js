@@ -417,8 +417,12 @@ Object.assign(Session.prototype, {
 
   async processDDPMessage(msg, unblockNextDDPMessage) {
     if (this.server.onMessageHook.size() > 0) {
-      for (const callback of this.server.onMessageHook) {
-        await promiseTry(callback, msg, this);
+      try {
+        for (const callback of this.server.onMessageHook) {
+          await promiseTry(callback, msg, this);
+        }
+      } catch (error) {
+        Meteor._debug('Error processing onMessage hook', msg, error);
       }
     }
 
