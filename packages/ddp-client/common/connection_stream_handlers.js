@@ -2,6 +2,16 @@ import { DDPCommon } from 'meteor/ddp-common';
 import { DDP } from 'meteor/ddp-client';
 import { Meteor } from 'meteor/meteor';
 
+if (Meteor.isServer) {
+  const DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.packages?.['ddp-client']?.disableOnDDPCustomMessageHook;
+  const PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.packages?.['ddp-server']?.processAllOnDDPCustomMessageHook;
+  console.log('server')
+} else {
+  const DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.public?.packages?.['ddp-client']?.disableOnDDPCustomMessageHook;
+  const PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.public?.packages?.['ddp-server']?.processAllOnDDPCustomMessageHook;
+  console.log('client')
+}
+
 export class ConnectionStreamHandlers {
   constructor(connection) {
     this._connection = connection;
@@ -99,10 +109,16 @@ export class ConnectionStreamHandlers {
 
   async _handleDDPCustomMessage(msg) {
     let handled = false;
-    if (DDP.onDDPCustomMessageHook.size() > 0) {
+    if (
+      !DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK &&
+      DDP.onDDPCustomMessageHook.size() > 0
+    ) {
       try {
         for (const callback of DDP.onDDPCustomMessageHook) {
           handled ||= await promiseTry(callback, msg, this);
+          if (handled && !PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK) {
+            break;
+          }
         }
       } catch (err) {
         Meteor._debug('Error in onDDPCustomMessage hook', err);

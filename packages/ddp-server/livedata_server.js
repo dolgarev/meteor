@@ -6,6 +6,8 @@ import { SessionDocumentView } from './session_document_view';
 
 DDPServer = {};
 
+const DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.packages?.['ddp-server']?.disableOnDDPCustomMessageHook;
+const PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK = !!Meteor.settings?.packages?.['ddp-server']?.processAllOnDDPCustomMessageHook;
 
 // Publication strategies define how we handle data from published cursors at the collection level
 // This allows someone to:
@@ -426,10 +428,16 @@ Object.assign(Session.prototype, {
       const handler = this.protocol_handlers[msg.msg];
       if (typeof handler !== 'function') {
         let handled = false;
-        if (DDP.onDDPCustomMessageHook.size() > 0) {
+        if (
+          !DISABLE_ON_DDP_CUSTOM_MESSAGE_HOOK &&
+          DDP.onDDPCustomMessageHook.size() > 0
+        ) {
           try {
             for (const callback of DDP.onDDPCustomMessageHook) {
               handled ||= await promiseTry(callback, msg, this, unblockNextDDPMessage);
+              if (handled && !PROCESS_ALL_ON_DDP_CUSTOM_MESSAGE_HOOK) {
+                break;
+              }
             }
           } catch (err) {
             Meteor._debug('Error in onDDPCustomMessage hook', err);
