@@ -2,6 +2,8 @@
  * @module config
  * @description Functions for configuring Meteor for RSPack
  */
+import { glob }  from 'glob';
+import path from 'path';
 import { getInitialEntrypoints } from "./build-context";
 
 const {
@@ -14,6 +16,9 @@ const {
   isMeteorAppBuild,
   isMeteorAppDebug,
   isMeteorAppConfigModernVerbose,
+  isMeteorBlazeProject,
+  isMeteorLessProject,
+  isMeteorScssProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const { logInfo } = require('meteor/tools-core/lib/log');
@@ -29,6 +34,63 @@ const {
 } = require('./build-context');
 
 /**
+ * Gets the list of file extensions to ignore based on project type
+ * For Blaze projects, it excludes .html as used by Blaze
+ * For Less projects, it excludes .less files
+ * For SCSS projects, it excludes .scss files
+ * @returns {string[]} Array of file extensions to ignore
+ */
+function getFileExtensionsToIgnore() {
+  const allFiles = glob.sync('**/*', {
+    nodir: true,
+    dot: true,
+    ignore: ['node_modules/**', '.meteor/**'],
+  });
+  const existingExts = Array.from(
+    new Set(
+      allFiles.map(f => path.extname(f).toLowerCase())
+    )
+  );
+
+  // Base extensions to ignore
+  const baseExtensions = [
+    '.coffee',
+    '.ts',
+    '.tsx',
+    '.js',
+    '.jsx',
+    '.mjs',
+    '.cjs',
+    '.json',
+  ];
+
+  // Filter existing extensions based on project type
+  let filteredExts = existingExts;
+
+  // For Blaze projects, exclude .html files
+  if (isMeteorBlazeProject()) {
+    filteredExts = existingExts.filter(ext => ext !== '.html');
+  }
+
+  // Check for Less projects and exclude .less files
+  if (isMeteorLessProject()) {
+    filteredExts = filteredExts.filter(ext => ext !== '.less');
+  }
+
+  // Check for SCSS projects and exclude .scss files
+  if (isMeteorScssProject()) {
+    filteredExts = filteredExts.filter(ext => ext !== '.scss');
+  }
+
+  return Array.from(
+    new Set([
+      ...baseExtensions,
+      ...filteredExts,
+    ]),
+  ).filter(ext => ext !== '');
+}
+
+/**
  * Configures Meteor settings for RSPack
  * Sets up file ignores, entry points, and custom script URL
  * Creates necessary module files and writes content to them
@@ -38,19 +100,33 @@ export function configureMeteorForRSPack() {
   const initialEntrypoints = getInitialEntrypoints();
 
   // Ignore node_modules to prevent Meteor from processing them
-  const projectFilesAndFolders = getMeteorAppFilesAndFolders({ recursive: false });
-  const foldersToIgnore = [
-    'node_modules/**',
-      ...projectFilesAndFolders.directories
-      .filter(dir => !['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT].includes(dir))
-      .map(dir => `${dir}/**`),
-      ...projectFilesAndFolders.directories
-        .filter(dir => !['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT].includes(dir))
-        .map(dir => `!${dir}/**/*.html`),
+  const projectRootFilesAndFolders = getMeteorAppFilesAndFolders({ recursive: false });
+
+  const includedDirs = ['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT];
+  const ignoredDirs = projectRootFilesAndFolders.directories
+    .filter(dir => !includedDirs.includes(dir));
+
+  let extraFoldersToIgnore = ignoredDirs;
+  let extraFilesToIgnore = [];
+
+  // Get extensions to ignore based on project type
+  const extensionsToIgnore = getFileExtensionsToIgnore();
+
+  // If we have extensions to ignore, apply them to the ignored directories
+  if (extensionsToIgnore.length > 0) {
+    extraFilesToIgnore = ignoredDirs
+      .flatMap(dir => extensionsToIgnore.map(ext => `${dir}/**/*${ext}`));
+    extraFoldersToIgnore = [];
+  }
+
+  const foldersToIgnore = ['node_modules/**', ...extraFoldersToIgnore];
+  const rootFilesToIgnore = [
+    ...projectRootFilesAndFolders.files
+      .filter(file => !['package.json', '.meteorignore'].includes(file)),
   ];
   const filesToIgnore = [
-    ...projectFilesAndFolders.files
-      .filter(file => !['package.json', '.meteorignore'].includes(file)),
+    ...rootFilesToIgnore,
+    ...extraFilesToIgnore,
   ];
   const meteorAppIgnores = `${foldersToIgnore.join(' ')} ${filesToIgnore.join(' ')}`;
   setMeteorAppIgnore(meteorAppIgnores);

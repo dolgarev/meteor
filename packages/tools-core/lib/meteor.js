@@ -43,7 +43,7 @@ export function getMeteorAppConfigModern() {
  */
 export function isMeteorAppConfigModernVerbose() {
   return getMeteorAppConfigModern()?.verbose ||
-    getMeteorAppConfigModern()?.transpiler?.verbose;
+    getMeteorAppConfigModern()?.transpiler?.verbose || false;
 }
 
 /**
@@ -326,7 +326,7 @@ export function getMeteorToolsRequire(filePath) {
  * @returns {boolean} True if the application is a Blaze project, false otherwise.
  */
 export function isMeteorBlazeProject() {
-  return getMeteorAppPackages().includes('blaze');
+  return getMeteorAppPackages().includes('blaze') || getMeteorAppPackages().includes('blaze-html-templates');
 }
 
 /**
@@ -334,7 +334,7 @@ export function isMeteorBlazeProject() {
  * @returns {boolean} True if the application is a Blaze Hot project, false otherwise.
  */
 export function isMeteorBlazeHotProject() {
-  return getMeteorAppPackages().includes('blaze-hot');
+  return isMeteorBlazeProject() && getMeteorAppPackages().includes('blaze-hot');
 }
 
 /**
@@ -343,4 +343,20 @@ export function isMeteorBlazeHotProject() {
  */
 export function isMeteorCoffeescriptProject() {
   return getMeteorAppPackages().includes('coffeescript');
+}
+
+/**
+ * Checks if the Meteor application is a Less project.
+ * @returns {boolean} True if the application has the 'less' package, false otherwise.
+ */
+export function isMeteorLessProject() {
+  return getMeteorAppPackages().includes('less');
+}
+
+/**
+ * Checks if the Meteor application is a SCSS project.
+ * @returns {boolean} True if the application has any package containing 'scss', false otherwise.
+ */
+export function isMeteorScssProject() {
+  return getMeteorAppPackages().some(pkg => pkg.includes('scss'));
 }

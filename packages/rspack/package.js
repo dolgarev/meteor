@@ -13,9 +13,6 @@ Package.registerBuildPlugin({
     'lib/config.js',
     'rspack_plugin.js',
   ],
-  npmDependencies: {
-    'webpack-merge': '6.0.1',
-  },
   use: ['modules@0.8.2', 'ecmascript', 'tools-core'],
 });
 
