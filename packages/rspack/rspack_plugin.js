@@ -58,6 +58,8 @@ const {
   getMeteorAppEntrypoints,
   isMeteorAppTest,
   isMeteorAppTestWatch,
+  isMeteorAppDevelopment,
+  isMeteorAppProduction,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -110,8 +112,23 @@ try {
     } = setupCompilationTracking();
 
     // For 'run' command, start RSPack in appropriate modes with distinct callbacks
-    startRSPackClientServe({ onCompile: onCompileClient });
-    startRSPackServerWatch({ onCompile: onCompileServer });
+    if (isMeteorAppDevelopment()) {
+      startRSPackClientServe({ onCompile: onCompileClient });
+      startRSPackServerWatch({ onCompile: onCompileServer });
+    } else if (isMeteorAppProduction()) {
+      runRSPackBuild({
+        isClient: true,
+        isServer: false,
+        watch: true,
+        onCompile: onCompileClient,
+      });
+      runRSPackBuild({
+        isServer: true,
+        isClient: false,
+        watch: true,
+        onCompile: onCompileServer,
+      });
+    }
 
     // Wait for first compilation to complete
     await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise);

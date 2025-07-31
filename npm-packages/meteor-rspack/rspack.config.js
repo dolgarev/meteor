@@ -43,7 +43,7 @@ function createCacheStrategy(mode) {
 }
 
 // SWC loader rule (JSX/JS)
-function createSwcConfig({ isRun, isTypescriptEnabled, isJsxEnabled, isTsxEnabled, externalHelpers }) {
+function createSwcConfig({ isTypescriptEnabled, isJsxEnabled, isTsxEnabled, externalHelpers, isDevEnvironment }) {
   const defaultConfig = {
     jsc: {
       baseUrl: process.cwd(),
@@ -56,8 +56,8 @@ function createSwcConfig({ isRun, isTypescriptEnabled, isJsxEnabled, isTsxEnable
       target: 'es2015',
       transform: {
         react: {
-          development: isRun,
-          refresh: isRun,
+          development: isDevEnvironment,
+          refresh: isDevEnvironment,
         },
       },
       externalHelpers,
@@ -156,16 +156,18 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
+  const isDevEnvironment = isRun && isDev && !isTest;
   const swcConfigRule = createSwcConfig({
-    isRun,
     isTypescriptEnabled,
     isJsxEnabled,
     isTsxEnabled,
     externalHelpers: swcExternalHelpers,
+    isDevEnvironment,
   });
   const externals = [
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
+    './imports/ui/layouts/body/template.body.js',
   ];
   const alias = {
     '/': path.resolve(process.cwd()),
@@ -210,12 +212,12 @@ export default function (inMeteor = {}, argv = {}) {
   let clientConfig = {
     name: clientNameConfig,
     target: 'web',
-    mode,
+    mode: 'development',
     entry: path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: clientOutputDir,
       filename: () =>
-        isRun && !isTest ? outputFilename : `../${buildContext}/${outputPath}`,
+        isDevEnvironment ? outputFilename : `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
       publicPath: '/',
       chunkFilename: `${bundlesContext}/[id].[chunkhash].js`,
@@ -243,7 +245,7 @@ export default function (inMeteor = {}, argv = {}) {
     externals,
     plugins: [
       ...[
-        ...(isReactEnabled && reactRefreshModule
+        ...(isReactEnabled && reactRefreshModule && isDevEnvironment
           ? [new reactRefreshModule()]
           : []),
         requireExternalsPlugin,
@@ -261,8 +263,8 @@ export default function (inMeteor = {}, argv = {}) {
       }),
     ],
     watchOptions,
-    devtool: isDev || isTest ? 'source-map' : 'hidden-source-map',
-    ...(isRun && !isTest && {
+    devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
+    ...(isDevEnvironment && {
       devServer: {
         static: { directory: clientOutputDir, publicPath: '/__rspack__/' },
         hot: true,
@@ -322,8 +324,8 @@ export default function (inMeteor = {}, argv = {}) {
       isTestModule && requireExternalsPlugin,
     ],
     watchOptions,
-    devtool: isRun ? 'source-map' : 'hidden-source-map',
-    ...((isRun || isTest) &&
+    devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
+    ...((isDevEnvironment || isTest) &&
       createCacheStrategy(mode)
     ),
   };

@@ -259,7 +259,7 @@ if (module.hot) {
     ? `/* Link to ☄️ Meteor ${capitalizeFirstLetter(side)} Entry */
 import '../../${config?.entryFile}';`
       : config?.outputFile &&
-        (role === FILE_ROLE.build ||
+        (role === FILE_ROLE.build || config?.isProduction ||
           (role === FILE_ROLE.run && (config?.isServer || config?.isTest)))
       ? `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
 import './${config?.outputFile || ''}';`

@@ -41,6 +41,11 @@ const {
  * @returns {string[]} Array of file extensions to ignore
  */
 function getFileExtensionsToIgnore() {
+  const isAnyCompilerProject = isMeteorBlazeProject() || isMeteorLessProject() || isMeteorScssProject();
+  if (!isAnyCompilerProject) {
+    return [];
+  }
+
   const allFiles = glob.sync('**/*', {
     nodir: true,
     dot: true,
@@ -106,12 +111,18 @@ export function configureMeteorForRSPack() {
   const ignoredDirs = projectRootFilesAndFolders.directories
     .filter(dir => !includedDirs.includes(dir));
 
-  let extraFoldersToIgnore = ignoredDirs;
-  let extraFilesToIgnore = [];
+  let extraFoldersToIgnore = [
+    ...ignoredDirs.filter(dir => !['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT].includes(dir))
+      .map(dir => `${dir}/**`)
+  ];
+  let extraFilesToIgnore = [
+    ...ignoredDirs
+      .filter(dir => !['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT].includes(dir))
+      .map(dir => `!${dir}/**/*.html`),
+  ];
 
   // Get extensions to ignore based on project type
   const extensionsToIgnore = getFileExtensionsToIgnore();
-
   // If we have extensions to ignore, apply them to the ignored directories
   if (extensionsToIgnore.length > 0) {
     extraFilesToIgnore = ignoredDirs
@@ -170,7 +181,7 @@ export function configureMeteorForRSPack() {
   ensureModuleFilesExist();
 
   // Write content to module files
-  if (isMeteorAppRun()) {
+  if (isMeteorAppRun() && isMeteorAppDevelopment()) {
     const customScriptUrl = `/__rspack__/${getBuildFilePath({ ...env, isMain: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true })}`;
     setMeteorAppCustomScriptUrl(customScriptUrl);
 

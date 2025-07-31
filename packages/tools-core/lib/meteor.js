@@ -360,3 +360,11 @@ export function isMeteorLessProject() {
 export function isMeteorScssProject() {
   return getMeteorAppPackages().some(pkg => pkg.includes('scss'));
 }
+
+/**
+ * Checks if the Meteor application is a Bundle Visualizer project.
+ * @returns {boolean}
+ */
+export function isMeteorBundleVisualizerProject() {
+  return getMeteorAppPackages().includes('bundle-visualizer');
+}
