@@ -29,6 +29,9 @@ export class RequireExternalsPlugin {
     // If provided, it will be called with the package name and should return true for eager imports
     // If not provided or returns false, the import will be lazy (default behavior)
     isEagerImport = null,
+    // Array of module paths that should always be imported at the end of the file
+    // These will be treated as eager imports but will always be placed after all other imports
+    lastImports = null,
   } = {}) {
     this.pluginName = 'RequireExternalsPlugin';
 
@@ -37,6 +40,7 @@ export class RequireExternalsPlugin {
     this._externalMap = externalMap;
     this._enableGlobalPolyfill = enableGlobalPolyfill;
     this._isEagerImport = isEagerImport;
+    this._lastImports = lastImports;
     this._defaultExternalPrefix = 'external ';
 
     // Prepare paths
@@ -174,27 +178,38 @@ export class RequireExternalsPlugin {
         // Strip out any now-empty helper functions:
         //   function lazyExternalImportsX() {
         //   }
-        // or
-        //   (function eagerExternalImportsX() {
-        //   })();
+        // or new format:
+        //   // (function eagerExternalImportsX() {
+        //   // })
+        // or lastImports format:
+        //   // (function lastImports() {
+        //   // })
         const emptyLazyFnRe = /^function\s+lazyExternalImports\d+\s*\(\)\s*{\s*}\s*(\r?\n)?/gm;
-        const emptyEagerFnRe = /^\(function\s+eagerExternalImports\d+\s*\(\)\s*{\s*}\s*\)\(\);\s*(\r?\n)?/gm;
+        const emptyEagerFnRe = /^\/\/\s*\(function\s+eagerExternalImports\d+\s*\(\)\s*{\s*\n\/\/\s*\}\)\s*(\r?\n)?/gm;
+        const emptyLastFnRe = /^\/\/\s*\(function\s+lastImports(?:\d+)?\s*\(\)\s*{\s*\n\/\/\s*\}\)\s*(\r?\n)?/gm;
         content = content.replace(emptyLazyFnRe, '');
         content = content.replace(emptyEagerFnRe, '');
+        content = content.replace(emptyLastFnRe, '');
 
         // Write the cleaned file back
         fs.writeFileSync(this.filePath, content, 'utf-8');
 
         // Re-populate `existing` so the add-diff is accurate
         existing.clear();
+        // Check for require statements
         for (const match of content.matchAll(/require\('([^']+)'\)/g)) {
+          existing.add(match[1]);
+        }
+        // Also check for import statements (used in the new format)
+        for (const match of content.matchAll(/import\s+'([^']+)'/g)) {
           existing.add(match[1]);
         }
       }
 
-      // 3) Collect any new externals from this build and separate into eager and lazy
+      // 3) Collect any new externals from this build and separate into eager, lazy, and last
       const newLazyRequires = [];
       const newEagerRequires = [];
+      const newLastRequires = [];
 
       for (const module of info.modules) {
         const name = module.name;
@@ -205,8 +220,12 @@ export class RequireExternalsPlugin {
         if (pkg && !existing.has(pkg)) {
           existing.add(pkg);
 
+          // Check if this should be a last import
+          if (this._lastImports && Array.isArray(this._lastImports) && this._lastImports.includes(pkg)) {
+            newLastRequires.push(`require('${pkg}')`);
+          }
           // Check if this should be an eager import
-          if (this._isEagerImport && typeof this._isEagerImport === 'function' && this._isEagerImport(pkg)) {
+          else if (this._isEagerImport && typeof this._isEagerImport === 'function' && this._isEagerImport(pkg)) {
             newEagerRequires.push(`require('${pkg}')`);
           } else {
             // Default to lazy import
@@ -230,13 +249,150 @@ export class RequireExternalsPlugin {
       // 5) Append new eager imports if any
       if (newEagerRequires.length) {
         const fnName = `eagerExternalImports${this._funcCount++}`;
-        const body = newEagerRequires.map(req => `  ${req};`).join('\n');
-        // Immediately invoked function for eager imports
-        const fnCode = `\n(function ${fnName}() {\n${body}\n})();\n`;
+        // Convert require statements to import statements
+        const body = newEagerRequires
+          .map(req => {
+            // Extract the module path from require('path')
+            const modulePath = req.match(/require\('([^']+)'\)/)[1];
+            return `import '${modulePath}';`;
+          })
+          .join('\n');
+        // Use comments instead of actual function
+        const fnCode = `\n// (function ${fnName}() {\n${body}\n// })\n`;
         try {
           fs.appendFileSync(this.filePath, fnCode);
         } catch (err) {
           console.error(`Failed to append eager imports to ${this.filePath}:`, err);
+        }
+      }
+
+      // 6) Handle lastImports - these should always be at the end of the file
+      // First, check if lastImports already exist in the file
+      let lastImportsExist = false;
+      let lastImportsAtEnd = false;
+      let content = '';
+
+      if (fs.existsSync(this.filePath)) {
+        content = fs.readFileSync(this.filePath, 'utf-8');
+
+        // Check if lastImports exist in the file
+        const lastImportsRe = /\/\/\s*\(function\s+lastImports(?:\d+)?\s*\(\)\s*{\s*\n([\s\S]*?)\/\/\s*\}\)/g;
+        const match = lastImportsRe.exec(content);
+
+        if (match) {
+          lastImportsExist = true;
+
+          // Check if lastImports are at the end of the file
+          // We'll consider them at the end if there's only whitespace after them
+          const afterLastImports = content.substring(match.index + match[0].length);
+          if (/^\s*$/.test(afterLastImports)) {
+            lastImportsAtEnd = true;
+          }
+        }
+      }
+
+      // If lastImports exist but are not at the end, move them to the end
+      if (lastImportsExist && !lastImportsAtEnd) {
+        // Remove the existing lastImports
+        const lastImportsRe = /\/\/\s*\(function\s+lastImports(?:\d+)?\s*\(\)\s*{\s*\n[\s\S]*?\/\/\s*\}\)\s*(\r?\n)?/g;
+        content = content.replace(lastImportsRe, '');
+
+        // Extract the imports from the existing lastImports
+        const importRe = /import\s+'([^']+)'/g;
+        const existingLastImports = [];
+        let match;
+
+        while ((match = importRe.exec(content)) !== null) {
+          if (this._lastImports && Array.isArray(this._lastImports) && this._lastImports.includes(match[1])) {
+            existingLastImports.push(`import '${match[1]}';`);
+          }
+        }
+
+        // Add any new lastImports
+        if (this._lastImports && Array.isArray(this._lastImports)) {
+          for (const pkg of this._lastImports) {
+            if (!existingLastImports.some(imp => imp === `import '${pkg}';`) && existing.has(pkg)) {
+              existingLastImports.push(`import '${pkg}';`);
+            }
+          }
+        }
+
+        // Add the lastImports to the end of the file
+        if (existingLastImports.length > 0) {
+          const body = existingLastImports.join('\n');
+          const fnCode = `\n// (function lastImports() {\n${body}\n// })\n`;
+          fs.writeFileSync(this.filePath, content + fnCode);
+        } else {
+          fs.writeFileSync(this.filePath, content);
+        }
+      }
+      // If lastImports don't exist, add them if needed
+      else if (!lastImportsExist) {
+        // Collect all lastImports
+        const allLastImports = [];
+
+        // Add any new lastImports from this build
+        if (newLastRequires.length) {
+          for (const req of newLastRequires) {
+            const modulePath = req.match(/require\('([^']+)'\)/)[1];
+            allLastImports.push(`import '${modulePath}';`);
+          }
+        }
+
+        // Add any existing lastImports from the configuration
+        if (this._lastImports && Array.isArray(this._lastImports)) {
+          for (const pkg of this._lastImports) {
+            if (!allLastImports.some(imp => imp === `import '${pkg}';`) && !existing.has(pkg)) {
+              allLastImports.push(`import '${pkg}';`);
+            }
+          }
+        }
+
+        // Add the lastImports to the end of the file
+        if (allLastImports.length > 0) {
+          const body = allLastImports.join('\n');
+          const fnCode = `\n// (function lastImports() {\n${body}\n// })\n`;
+          try {
+            fs.appendFileSync(this.filePath, fnCode);
+          } catch (err) {
+            console.error(`Failed to append last imports to ${this.filePath}:`, err);
+          }
+        }
+      }
+      // If lastImports exist and are already at the end, add any new ones
+      else if (lastImportsExist && lastImportsAtEnd && newLastRequires.length) {
+        // Extract the existing lastImports
+        const lastImportsRe = /\/\/\s*\(function\s+lastImports(?:\d+)?\s*\(\)\s*{\s*\n([\s\S]*?)\/\/\s*\}\)/;
+        const match = lastImportsRe.exec(content);
+
+        if (match) {
+          const existingBody = match[1];
+          const existingImports = new Set();
+
+          // Extract the imports from the existing lastImports
+          const importRe = /import\s+'([^']+)'/g;
+          let importMatch;
+
+          while ((importMatch = importRe.exec(existingBody)) !== null) {
+            existingImports.add(importMatch[1]);
+          }
+
+          // Add any new lastImports
+          let newBody = existingBody;
+          for (const req of newLastRequires) {
+            const modulePath = req.match(/require\('([^']+)'\)/)[1];
+            if (!existingImports.has(modulePath)) {
+              newBody += `import '${modulePath}';\n`;
+            }
+          }
+
+          // Replace the existing lastImports with the updated ones
+          const updatedContent = content.replace(
+            lastImportsRe,
+            `// (function lastImports() {\n${newBody}// })`
+          );
+
+          fs.writeFileSync(this.filePath, updatedContent);
         }
       }
     });
@@ -247,9 +403,12 @@ export class RequireExternalsPlugin {
     if (fs.existsSync(this.filePath)) {
       try {
         const content = fs.readFileSync(this.filePath, 'utf-8');
-        // Check for both lazy and eager external imports functions
+        // Check for lazy, eager, and last external imports functions
         const lazyFnRe = /function\s+lazyExternalImports(\d+)\s*\(\)/g;
-        const eagerFnRe = /function\s+eagerExternalImports(\d+)\s*\(\)/g;
+        // Only match the new commented format
+        const eagerFnRe = /\/\/\s*\(function\s+eagerExternalImports(\d+)\s*\(\)/g;
+        // Match the lastImports format
+        const lastFnRe = /\/\/\s*\(function\s+lastImports(\d+)?\s*\(\)/g;
 
         let match;
         // Check lazy imports
@@ -262,6 +421,14 @@ export class RequireExternalsPlugin {
         while ((match = eagerFnRe.exec(content)) !== null) {
           const n = parseInt(match[1], 10);
           if (n > max) max = n;
+        }
+
+        // Check last imports
+        while ((match = lastFnRe.exec(content)) !== null) {
+          if (match[1]) {
+            const n = parseInt(match[1], 10);
+            if (n > max) max = n;
+          }
         }
       } catch {
         // ignore read errors
@@ -299,9 +466,16 @@ export class RequireExternalsPlugin {
     const existing = new Set();
     try {
       const content = fs.readFileSync(this.filePath, 'utf-8');
+      // Check for require statements
       const requireRegex = /require\('([^']+)'\)/g;
       let match;
       while ((match = requireRegex.exec(content)) !== null) {
+        existing.add(match[1]);
+      }
+
+      // Also check for import statements (used in the new format)
+      const importRegex = /import\s+'([^']+)'/g;
+      while ((match = importRegex.exec(content)) !== null) {
         existing.add(match[1]);
       }
     } catch {

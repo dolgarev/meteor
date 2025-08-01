@@ -194,16 +194,10 @@ export default function (inMeteor = {}, argv = {}) {
     filePath: path.join(buildContext, runPath),
     ...(Meteor.isBlazeEnabled && {
       externals: /\.html$/,
-      externalMap: (module) => {
-        const { request, context } = module;
-        if (request.endsWith('.html')) {
-          const relContext = path.relative(process.cwd(), context);
-          const { name } = path.parse(request);
-          return `./${relContext}/template.${name}.js`;
-        }
-        return request;
+      isEagerImport: (module) => module.endsWith('.html'),
+      ...isProd && {
+        lastImports: [`./${outputFilename}`],
       },
-      isEagerImport: (module) => module.endsWith('.html')
     }),
     enableGlobalPolyfill: isDevEnvironment,
   });

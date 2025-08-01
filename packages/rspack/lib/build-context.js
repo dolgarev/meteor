@@ -260,10 +260,15 @@ if (module.hot) {
     ? `/* Link to ☄️ Meteor ${capitalizeFirstLetter(side)} Entry */
 import '../../${config?.entryFile}';`
       : config?.outputFile &&
-        (role === FILE_ROLE.build || (config?.isProduction && !isMeteorBlazeProject()) ||
+        (role === FILE_ROLE.build || config?.isProduction ||
           (role === FILE_ROLE.run && (config?.isServer || config?.isTest)))
       ? `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
-import './${config?.outputFile || ''}';`
+${
+  (isMeteorBlazeProject() && config?.isClient && '// In Blaze, import happens last so HTML files preload first') ||
+  `import './${config?.outputFile || ''}';`
+}`
+      : role === FILE_ROLE.run && config?.isServer && !config?.isTest
+      ? '/* No link to ☄️ Meteor Server App as served by HMR server */'
       : role === FILE_ROLE.run && config?.isClient && !config?.isTest
       ? '/* No link to ⚡ Rspack Client App as served by HMR server */'
       : role === FILE_ROLE.output && config?.isClient && !config?.isTest
