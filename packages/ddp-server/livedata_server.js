@@ -426,6 +426,24 @@ Object.assign(Session.prototype, {
       }
     }
 
+    if (this.server.onDDPIncomingMessageDenyHook.size() > 0) {
+      try {
+        let denied = false;
+        for (const callback of this.server.onDDPIncomingMessageDenyHook) {
+          denied = !!await promiseTry(callback, msg, this);
+          if (denied) {
+            break;
+          }
+        }
+        if (denied) {
+          self.sendError('Request denied', msg);
+          return;
+        }
+      } catch (error) {
+        Meteor._debug('Error in onDDPIncomingMessageDeny hook', msg, error);
+      }
+    }
+
     try {
       const handler = this.protocol_handlers[msg.msg];
       if (typeof handler !== 'function') {
@@ -1271,6 +1289,11 @@ Server = function (options = {}) {
     debugPrintExceptions: "onMessage callback"
   });
 
+  // Map of callbacks to call when an incoming DDP message is to be denied.
+  self.onDDPIncomingMessageDenyHook = new Hook({
+    debugPrintExceptions: "onDDPIncomingMessageDeny callback"
+  });
+
   self.publish_handlers = {};
   self.universal_publish_handlers = [];
 
@@ -1392,8 +1415,18 @@ Object.assign(Server.prototype, {
    * @importFromPackage meteor
    */
   onMessage: function (fn) {
-    var self = this;
-    return self.onMessageHook.register(fn);
+    return this.onMessageHook.register(fn);
+  },
+
+  /**
+   * @summary Register a callback to be called when an incoming DDP message is to be denied.
+   * @locus Server
+   * @param {function(Object, Session): boolean} fn The function to call when an incoming DDP message is received. This function should return a truthy value to deny the message from being processed further.
+   * @memberOf Meteor.server
+   * @importFromPackage meteor
+   */
+  onDDPIncomingMessageDeny (fn) {
+    return this.onDDPIncomingMessageDenyHook.register(fn);
   },
 
   _handleConnect: function (socket, msg) {
