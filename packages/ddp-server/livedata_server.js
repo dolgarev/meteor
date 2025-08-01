@@ -428,15 +428,20 @@ Object.assign(Session.prototype, {
 
     if (this.server.onDDPIncomingMessageDenyHook.size() > 0) {
       try {
+        const hookMetadata = {
+          connection: this.connectionHandle,
+          userId: this.userId
+        };
+
         let denied = false;
         for (const callback of this.server.onDDPIncomingMessageDenyHook) {
-          denied = !!await promiseTry(callback, msg, this);
+          denied = !!await promiseTry(callback, msg, hookMetadata, this);
           if (denied) {
             break;
           }
         }
         if (denied) {
-          self.sendError('Request denied', msg);
+          this.sendError('Request denied', msg);
           return;
         }
       } catch (error) {
