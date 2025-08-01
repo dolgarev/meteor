@@ -452,14 +452,14 @@ Object.assign(Session.prototype, {
     try {
       const handler = this.protocol_handlers[msg.msg];
       if (typeof handler !== 'function') {
-        self.sendError('Bad request', msg);
+        this.sendError('Bad request', msg);
         return;
       }
       const res = handler.call(this, msg, unblockNextDDPMessage);
       await Promise.resolve(res);
     } catch (err) {
       Meteor._debug('Error processing DDP message', msg, err);
-      self.sendError('Processing error', msg);
+      this.sendError('Processing error', msg);
     } finally {
       unblockNextDDPMessage(); // in case the handler didn't already do it
     }
