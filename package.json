@@ -13,6 +13,7 @@
   },
   "homepage": "https://github.com/meteor/meteor#readme",
   "scripts": {
+    "install:modern": "npx playwright install --with-deps",
     "test:modern": "jest --config tools/modern-tests/jest.config.js"
   },
   "devDependencies": {
