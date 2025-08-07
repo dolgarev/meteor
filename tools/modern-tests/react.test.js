@@ -171,7 +171,7 @@ describe('React App Bundling /', () => {
       await appendFileContent(tempDir, 'client/main.jsx', {
         content: 'if (Meteor.isDevelopment) console.log("Hello from dev client");',
       });
-      await waitForPlaywrightConsole(page, 'Hello from dev client');
+      await waitForPlaywrightConsole('Hello from dev client');
 
       // Update the server code
       await appendFileContent(tempDir, 'server/main.js', {
@@ -224,7 +224,7 @@ describe('React App Bundling /', () => {
       await appendFileContent(tempDir, 'client/main.jsx', {
         content: 'if (Meteor.isProduction) console.log("Hello from prod client");',
       });
-      await waitForPlaywrightConsole(page, 'Hello from prod client');
+      await waitForPlaywrightConsole('Hello from prod client');
 
       // Update the server code
       await appendFileContent(tempDir, 'server/main.js', {

@@ -490,7 +490,13 @@ export async function runMeteorTests(tempDir, port, options = {}) {
   return { meteorProcess, outputLines };
 }
 
-export async function waitForPlaywrightConsole(page, pattern, options = {}) {
+/**
+ * Helper function to wait for a console message matching a pattern
+ * @param {string|RegExp} pattern
+ * @param {Object} options - Additional options
+ * @returns {Promise<unknown>}
+ */
+export async function waitForPlaywrightConsole(pattern, options = {}) {
   const timeout = options.timeout || 30000; // Default 30 seconds timeout
   const checkInterval = options.checkInterval || 100; // Check every 100ms by default
 
