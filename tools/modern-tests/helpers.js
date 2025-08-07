@@ -422,14 +422,81 @@ export async function appendFileContent(tempDir, filePath, options = {}) {
 }
 
 /**
- * Helper function to wait for a specific console message from a Playwright page
- * @param {Object} page - The Playwright page object
- * @param {string|RegExp} pattern - String or RegExp pattern to wait for in console messages
- * @param {Object} options - Options for waiting
- * @param {number} options.timeout - Maximum time to wait in milliseconds (default: 30000)
- * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 100)
- * @returns {Promise<string>} - A promise that resolves with the matched console message
+ * Helper function to run Meteor tests with the meteortesting:mocha driver package
+ * @param {string} tempDir - Path to the directory containing the app
+ * @param {number} port - Port to run the tests on
+ * @param {Object} options - Additional options
+ * @param {string|RegExp} options.waitForOutput - Output pattern to wait for
+ * @param {Object} options.waitOptions - Options for waitForMeteorOutput
+ * @param {string[]} options.commandOptions - Additional command line options for the test command
+ * @param {boolean} options.checkTestResults - Whether to check test results and propagate failures to Jest
+ * @returns {Object} - The meteor process and output lines
  */
+export async function runMeteorTests(tempDir, port, options = {}) {
+  // Start Meteor tests
+  console.log(`Starting Meteor tests on port ${port}...`);
+
+  // Determine if we need to capture output
+  const captureOutput = !!options.waitForOutput || !!options.checkTestResults;
+
+  // Combine base options with any additional command options
+  const args = ['--port', port.toString(), '--driver-package', 'meteortesting:mocha'];
+  if (options.commandOptions && Array.isArray(options.commandOptions)) {
+    args.push(...options.commandOptions);
+  }
+
+  // Run the meteor test command
+  const { meteorProcess, outputLines } = await runMeteorCommand(
+    'test', 
+    args, 
+    tempDir,
+    {
+      env: {
+        ...process.env,
+        TEST_BROWSER_DRIVER: 'playwright'
+      }
+    },
+    captureOutput
+  );
+
+  // If a specific output pattern is requested, wait for it
+  if (options.waitForOutput) {
+    await waitForMeteorOutput(
+      outputLines,
+      options.waitForOutput,
+      options
+    );
+  }
+
+  // Wait for server to be up
+  console.log(`Waiting for test server to be available on port ${port}...`);
+  await waitOn({
+    resources: [`http-get://localhost:${port}`],
+    timeout: 60000
+  });
+
+  // If we're checking test results, wait for the process to complete and check for failures
+  if (options.checkTestResults) {
+    console.log('Waiting for Meteor tests to complete...');
+
+    // Create a promise that resolves when the process exits
+    const processResult = await new Promise((resolve) => {
+      meteorProcess.on('exit', (code) => {
+        resolve({ code, outputLines });
+      });
+    });
+
+    // Check for test failures in the output
+    const hasFailures = processResult.code !== 0;
+    if (hasFailures) {
+      // Throw an error with the failure messages, which will cause the Jest test to fail
+      throw new Error(`Meteor tests failed:\n${failureMessages.join('\n')}`);
+    }
+  }
+
+  return { meteorProcess, outputLines };
+}
+
 export async function waitForPlaywrightConsole(page, pattern, options = {}) {
   const timeout = options.timeout || 30000; // Default 30 seconds timeout
   const checkInterval = options.checkInterval || 100; // Check every 100ms by default

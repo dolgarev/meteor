@@ -9,14 +9,14 @@ import {
   wait,
   appendFileContent,
   waitForMeteorOutput,
-  waitForPlaywrightConsole,
+  waitForPlaywrightConsole, runMeteorTests
 } from "./helpers";
 import { assertMeteorReactApp, assertRspackScriptTag, assertFileExist } from './assertions';
 import fs from 'fs-extra';
 import path from 'path';
 
-describe('React App Bundling', () => {
-  describe('Meteor Creator', () => {
+describe('React App Bundling /', () => {
+  describe('Meteor Creator /', () => {
     const PORT = 3100;
 
     beforeAll(async () => {
@@ -66,7 +66,7 @@ describe('React App Bundling', () => {
     });
   });
 
-  describe('Meteor Bundler', () => {
+  describe('Meteor Bundler /', () => {
     const PORT = 3101;
     let meteorProcess;
     let tempDir;
@@ -99,7 +99,7 @@ describe('React App Bundling', () => {
     });
   });
 
-  describe('Meteor+Rspack Bundler', () => {
+  describe('Meteor+Rspack Bundler /', () => {
     const PORT = 3102;
     let meteorProcess;
     let tempDir;
@@ -129,14 +129,11 @@ describe('React App Bundling', () => {
       meteorProcess = result.meteorProcess;
 
       // Wait for a margin
-      await wait(500);
+      await wait(1000);
 
       // Assert that the config files exists
       await assertFileExist(tempDir, '.gitignore', { content: '_build' });
       await assertFileExist(tempDir, 'rspack.config.js', { content: '@meteorjs/rspack' });
-
-      // Wait for a margin
-      await wait(500);
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
@@ -243,6 +240,31 @@ describe('React App Bundling', () => {
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
+
+      // Ensure any process on the port is killed
+      await killProcessByPort(PORT);
+      await killProcessByPort('8080');
+    });
+
+    test(`"meteor test" / should run tests with Rspack`, async () => {
+      // Run the Meteor app and wait for "restarted at" output
+      const result = await runMeteorTests(tempDir, PORT, {
+        waitForOutput: "=> App running at:",
+        commandOptions: ['--once'],
+        checkTestResults: true,
+      });
+      meteorProcess = result.meteorProcess;
+
+      // Wait for a margin
+      await wait(500);
+
+      // Assert that the app files exists
+      await assertFileExist(tempDir, '_build/test/test-entry.js');
+      await assertFileExist(tempDir, '_build/test/test-rspack.js');
+      await assertFileExist(tempDir, '_build/test/test-meteor.js');
+
+      // Note: We don't need to kill the meteor process here as it should have completed
+      // when using --once and checkTestResults: true
 
       // Ensure any process on the port is killed
       await killProcessByPort(PORT);
