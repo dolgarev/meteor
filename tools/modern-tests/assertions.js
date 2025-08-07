@@ -8,19 +8,25 @@ import path from 'path';
 /**
  * Helper function to assert that a Meteor React app is running correctly
  * @param {number} port - Port where the app is running
+ * @param {Object} options - Options for the assertion
+ * @param {string} options.title - Expected content in the title (default: "react")
+ * @param {string} options.h1 - Expected content in the h1 element (default: "Welcome to Meteor!")
  * @returns {Promise<void>}
  */
-export async function assertMeteorReactApp(port) {
+export async function assertMeteorReactApp(port, options = {}) {
+  // Extract options with default values
+  const { title: inTitle = "react", h1: inH1 = "Welcome to Meteor!" } = options;
+
   // Navigate to the app
   await page.goto(`http://localhost:${port}`);
 
   // Check the title
   const title = await page.title();
-  expect(title).toMatch(/react/);
+  expect(title).toMatch(new RegExp(inTitle));
 
   // Check for static content
   const h1Text = await page.$eval('h1', el => el.textContent);
-  expect(h1Text).toMatch(/Welcome to Meteor!/);
+  expect(h1Text).toMatch(new RegExp(inH1));
 }
 
 /**

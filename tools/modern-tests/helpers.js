@@ -326,3 +326,164 @@ export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
     checkForPattern();
   });
 }
+
+/**
+ * Helper function to replace specific text within a file in a temporary directory
+ * This is useful for triggering file change detection in tests
+ * @param {string} tempDir - Path to the temporary directory
+ * @param {string} filePath - Path to the file relative to tempDir
+ * @param {Object} options - Additional options
+ * @param {string} options.searchText - Text to search for in the file
+ * @param {string} options.replaceText - Text to replace the searchText with
+ * @param {boolean} options.createIfNotExists - Create the file if it doesn't exist (default: true)
+ * @returns {Promise<void>} - A promise that resolves when the file has been updated
+ */
+export async function replaceFileContent(tempDir, filePath, options = {}) {
+  const { searchText, replaceText, createIfNotExists = true } = options;
+  const fullPath = path.join(tempDir, filePath);
+
+  console.log(`Replacing text in file: ${fullPath}`);
+
+  try {
+    // Check if file exists
+    const fileExists = await fs.pathExists(fullPath);
+
+    if (!fileExists) {
+      if (!createIfNotExists) {
+        throw new Error(`File does not exist: ${fullPath}`);
+      }
+      // Create directory structure if it doesn't exist
+      await fs.ensureDir(path.dirname(fullPath));
+      // Create an empty file
+      await fs.writeFile(fullPath, '', 'utf8');
+    } else {
+      // Read the existing content
+      const content = await fs.readFile(fullPath, 'utf8');
+
+      // Replace the specified text
+      const newContent = content.replace(searchText, replaceText);
+
+      // Write the modified content back to the file
+      await fs.writeFile(fullPath, newContent, 'utf8');
+    }
+
+    console.log(`Successfully replaced text in file: ${fullPath}`);
+  } catch (err) {
+    console.error(`Error replacing text in file ${fullPath}:`, err);
+    throw err;
+  }
+}
+
+/**
+ * Helper function to append content to a file in a temporary directory
+ * This is useful for adding code to files during tests
+ * @param {string} tempDir - Path to the temporary directory
+ * @param {string} filePath - Path to the file relative to tempDir
+ * @param {string} content - Content to append to the file
+ * @param {Object} options - Additional options
+ * @param {boolean} options.createIfNotExists - Create the file if it doesn't exist (default: true)
+ * @param {string} options.separator - Separator to add before the appended content (default: '\n')
+ * @returns {Promise<void>} - A promise that resolves when the file has been updated
+ */
+export async function appendFileContent(tempDir, filePath, options = {}) {
+  const { createIfNotExists = true, separator = '\n', content = '' } = options;
+  const fullPath = path.join(tempDir, filePath);
+
+  console.log(`Appending content to file: ${fullPath}`);
+
+  try {
+    // Check if file exists
+    const fileExists = await fs.pathExists(fullPath);
+
+    if (!fileExists) {
+      if (!createIfNotExists) {
+        throw new Error(`File does not exist: ${fullPath}`);
+      }
+      // Create directory structure if it doesn't exist
+      await fs.ensureDir(path.dirname(fullPath));
+      // Create the file with the content
+      await fs.writeFile(fullPath, content, 'utf8');
+    } else {
+      // Read the existing content
+      const existingContent = await fs.readFile(fullPath, 'utf8');
+
+      // Append the new content with a separator
+      const newContent = existingContent + separator + content;
+
+      // Write the modified content back to the file
+      await fs.writeFile(fullPath, newContent, 'utf8');
+    }
+
+    console.log(`Successfully appended content to file: ${fullPath}`);
+  } catch (err) {
+    console.error(`Error appending content to file ${fullPath}:`, err);
+    throw err;
+  }
+}
+
+/**
+ * Helper function to wait for a specific console message from a Playwright page
+ * @param {Object} page - The Playwright page object
+ * @param {string|RegExp} pattern - String or RegExp pattern to wait for in console messages
+ * @param {Object} options - Options for waiting
+ * @param {number} options.timeout - Maximum time to wait in milliseconds (default: 30000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 100)
+ * @returns {Promise<string>} - A promise that resolves with the matched console message
+ */
+export async function waitForPlaywrightConsole(page, pattern, options = {}) {
+  const timeout = options.timeout || 30000; // Default 30 seconds timeout
+  const checkInterval = options.checkInterval || 100; // Check every 100ms by default
+
+  console.log(`Waiting for console message matching: ${pattern}`);
+
+  // Array to collect console messages
+  const consoleMessages = [];
+
+  // Create a named listener function so we can remove it later
+  const consoleListener = (msg) => {
+    const text = msg.text();
+    consoleMessages.push(text);
+    console.log(`Browser console: ${text}`);
+  };
+
+  // Set up console message listener
+  page.on('console', consoleListener);
+
+  const startTime = Date.now();
+
+  return new Promise((resolve, reject) => {
+    // Function to check for the pattern in the console messages
+    const checkForPattern = () => {
+      // Check if we've exceeded the timeout
+      if (Date.now() - startTime > timeout) {
+        // Remove the listener before rejecting
+        page.removeListener('console', consoleListener);
+        reject(new Error(`Timeout waiting for console message matching: ${pattern}`));
+        return;
+      }
+
+      // Check each message for the pattern
+      for (const message of consoleMessages) {
+        if (typeof pattern === 'string' && message.includes(pattern)) {
+          console.log(`Found console message matching string: ${pattern}`);
+          // Remove the listener before resolving
+          page.removeListener('console', consoleListener);
+          resolve(message);
+          return;
+        } else if (pattern instanceof RegExp && pattern.test(message)) {
+          console.log(`Found console message matching regex: ${pattern}`);
+          // Remove the listener before resolving
+          page.removeListener('console', consoleListener);
+          resolve(message);
+          return;
+        }
+      }
+
+      // If we didn't find a match, check again after the interval
+      setTimeout(checkForPattern, checkInterval);
+    };
+
+    // Start checking
+    checkForPattern();
+  });
+}

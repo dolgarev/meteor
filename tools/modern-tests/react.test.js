@@ -5,12 +5,15 @@ import {
   cleanupTempDir,
   killMeteorProcess,
   createMeteorApp,
-  runMeteorCommand, wait
+  runMeteorCommand,
+  wait,
+  appendFileContent,
+  waitForMeteorOutput,
+  waitForPlaywrightConsole,
 } from "./helpers";
 import { assertMeteorReactApp, assertRspackScriptTag, assertFileExist } from './assertions';
 import fs from 'fs-extra';
 import path from 'path';
-import waitOn from "wait-on";
 
 describe('React App Bundling', () => {
   describe('Meteor Creator', () => {
@@ -164,6 +167,24 @@ describe('React App Bundling', () => {
       // Assert that the app is using Rspack
       await assertRspackScriptTag(PORT, true);
 
+      // Update the client code
+      await appendFileContent(tempDir, 'client/main.jsx', {
+        content: 'if (Meteor.isDevelopment) console.log("Hello from dev client");',
+      });
+      await waitForPlaywrightConsole(page, 'Hello from dev client');
+
+      // Update the server code
+      await appendFileContent(tempDir, 'server/main.js', {
+        content: 'if (Meteor.isDevelopment) console.log("Hello from dev server");',
+      });
+      await waitForMeteorOutput(
+        result.outputLines,
+        'Hello from dev server'
+      );
+
+      // Wait for a margin
+      await wait(500);
+
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
 
@@ -198,6 +219,24 @@ describe('React App Bundling', () => {
 
       // Assert that the app is using Rspack
       await assertRspackScriptTag(PORT, false);
+
+      // Update the client code
+      await appendFileContent(tempDir, 'client/main.jsx', {
+        content: 'if (Meteor.isProduction) console.log("Hello from prod client");',
+      });
+      await waitForPlaywrightConsole(page, 'Hello from prod client');
+
+      // Update the server code
+      await appendFileContent(tempDir, 'server/main.js', {
+        content: 'if (Meteor.isProduction) console.log("Hello from prod server");',
+      });
+      await waitForMeteorOutput(
+        result.outputLines,
+        'Hello from prod server'
+      );
+
+      // Wait for a margin
+      await wait(500);
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
