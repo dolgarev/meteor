@@ -468,13 +468,6 @@ export async function runMeteorTests(tempDir, port, options = {}) {
     );
   }
 
-  // Wait for server to be up
-  console.log(`Waiting for test server to be available on port ${port}...`);
-  await waitOn({
-    resources: [`http-get://localhost:${port}`],
-    timeout: 60000
-  });
-
   // If we're checking test results, wait for the process to complete and check for failures
   if (options.checkTestResults) {
     console.log('Waiting for Meteor tests to complete...');
