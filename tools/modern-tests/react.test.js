@@ -7,7 +7,7 @@ import {
   createMeteorApp,
   runMeteorCommand, wait
 } from "./helpers";
-import { assertMeteorReactApp, assertRspackScriptTag } from './assertions';
+import { assertMeteorReactApp, assertRspackScriptTag, assertFileExist } from './assertions';
 import fs from 'fs-extra';
 import path from 'path';
 import waitOn from "wait-on";
@@ -15,6 +15,11 @@ import waitOn from "wait-on";
 describe('React App Bundling', () => {
   describe.skip('Meteor Creator', () => {
     const PORT = 3100;
+
+    beforeAll(async () => {
+      // Ensure any process on the port is killed
+      await killProcessByPort(PORT);
+    });
 
     test('"meteor create" should create a new Meteor app with --react example', async () => {
       // Create a new Meteor app with --react example
@@ -64,6 +69,9 @@ describe('React App Bundling', () => {
     let tempDir;
 
     beforeAll(async () => {
+      // Ensure any process on the port is killed
+      await killProcessByPort(PORT);
+
       // Setup the Meteor app
       tempDir = (await setupMeteorApp('react'))?.tempDir;
     });
@@ -120,6 +128,10 @@ describe('React App Bundling', () => {
       // Wait for a margin
       await wait(500);
 
+      // Assert that the config files exists
+      await assertFileExist(tempDir, '.gitignore', { content: '_build' });
+      await assertFileExist(tempDir, 'rspack.config.js', { content: '@meteorjs/rspack' });
+
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
 
@@ -137,6 +149,14 @@ describe('React App Bundling', () => {
 
       // Wait for a margin
       await wait(500);
+
+      // Assert that the app files exists
+      await assertFileExist(tempDir, '_build/main-dev/client-entry.js');
+      await assertFileExist(tempDir, '_build/main-dev/client-rspack.js');
+      await assertFileExist(tempDir, '_build/main-dev/client-meteor.js');
+      await assertFileExist(tempDir, '_build/main-dev/server-entry.js');
+      await assertFileExist(tempDir, '_build/main-dev/server-rspack.js');
+      await assertFileExist(tempDir, '_build/main-dev/server-meteor.js');
 
       // Assert that the Meteor React app is running correctly
       await assertMeteorReactApp(PORT);
@@ -162,6 +182,16 @@ describe('React App Bundling', () => {
 
       // Wait for a margin
       await wait(500);
+
+      // Assert that the app files exists
+      await assertFileExist(tempDir, '_build/main-prod/client-entry.js');
+      await assertFileExist(tempDir, '_build/main-prod/client-rspack.js');
+      await assertFileExist(tempDir, '_build/main-prod/client-meteor.js');
+      await assertFileExist(tempDir, '_build/main-prod/server-entry.js');
+      await assertFileExist(tempDir, '_build/main-prod/server-rspack.js');
+      await assertFileExist(tempDir, '_build/main-prod/server-meteor.js');
+
+      await assertFileExist(tempDir, 'server/main.js');
 
       // Assert that the Meteor React app is running correctly
       await assertMeteorReactApp(PORT);
