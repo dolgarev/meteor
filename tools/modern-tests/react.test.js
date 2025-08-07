@@ -13,7 +13,7 @@ import path from 'path';
 import waitOn from "wait-on";
 
 describe('React App Bundling', () => {
-  describe.skip('Meteor Creator', () => {
+  describe('Meteor Creator', () => {
     const PORT = 3100;
 
     beforeAll(async () => {
@@ -21,7 +21,7 @@ describe('React App Bundling', () => {
       await killProcessByPort(PORT);
     });
 
-    test('"meteor create" should create a new Meteor app with --react example', async () => {
+    test('"meteor create" should create a new Meteor react app', async () => {
       // Create a new Meteor app with --react example
       const result = await createMeteorApp('react', 'react');
       const newAppTempDir = result.tempDir;
@@ -63,7 +63,7 @@ describe('React App Bundling', () => {
     });
   });
 
-  describe.skip('Meteor Bundler', () => {
+  describe('Meteor Bundler', () => {
     const PORT = 3101;
     let meteorProcess;
     let tempDir;
@@ -81,7 +81,7 @@ describe('React App Bundling', () => {
       await cleanupTempDir(tempDir);
     });
 
-    test(`"meteor run" should start the app at "http://localhost:${PORT}"`, async () => {
+    test(`"meteor run" should start the app`, async () => {
       // Run the Meteor app
       meteorProcess = (await runMeteorApp(tempDir, PORT))?.meteorProcess;
 
