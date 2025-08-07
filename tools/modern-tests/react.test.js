@@ -24,7 +24,7 @@ describe('React App Bundling', () => {
       await killProcessByPort(PORT);
     });
 
-    test('"meteor create" should create a new Meteor react app', async () => {
+    test('"meteor create" / should create a new Meteor react app', async () => {
       // Create a new Meteor app with --react example
       const result = await createMeteorApp('react', 'react');
       const newAppTempDir = result.tempDir;
@@ -84,7 +84,7 @@ describe('React App Bundling', () => {
       await cleanupTempDir(tempDir);
     });
 
-    test(`"meteor run" should start the app`, async () => {
+    test(`"meteor run" / should start the app`, async () => {
       // Run the Meteor app
       meteorProcess = (await runMeteorApp(tempDir, PORT))?.meteorProcess;
 
@@ -121,7 +121,7 @@ describe('React App Bundling', () => {
       await cleanupTempDir(tempDir);
     });
 
-    test(`"meteor run" should install Rspack and restart the app`, async () => {
+    test(`"meteor run" / should install Rspack and restart the app`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, PORT, {
         waitForOutput: "=> Meteor server restarted at:",
@@ -135,6 +135,9 @@ describe('React App Bundling', () => {
       await assertFileExist(tempDir, '.gitignore', { content: '_build' });
       await assertFileExist(tempDir, 'rspack.config.js', { content: '@meteorjs/rspack' });
 
+      // Wait for a margin
+      await wait(500);
+
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
 
@@ -143,7 +146,7 @@ describe('React App Bundling', () => {
       await killProcessByPort('8080');
     });
 
-    test(`"meteor run" should run the app with Rspack`, async () => {
+    test(`"meteor run" / should run the app with Rspack`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, PORT, {
         waitForOutput: "=> App running at:",
@@ -193,7 +196,7 @@ describe('React App Bundling', () => {
       await killProcessByPort('8080');
     });
 
-    test(`"meteor run --production" should run the app with Rspack in production`, async () => {
+    test(`"meteor run --production" / should run the app with Rspack in production`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, PORT, {
         waitForOutput: "=> App running at:",
