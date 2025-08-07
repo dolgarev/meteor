@@ -145,7 +145,7 @@ export async function ensureRSPackInstalled() {
  * Sets global state and environment variables based on React detection
  * @returns {Promise<void>} A promise that resolves when the check is complete
  */
-export async function checkReactInstalled() {
+export function checkReactInstalled() {
   // Skip if already checked
   if (getGlobalState(GLOBAL_STATE_KEYS.REACT_CHECKED, false)) {
     return;
@@ -185,7 +185,7 @@ export async function ensureRSPackReactInstalled() {
  * Sets global state and environment variables based on Coffeescript detection
  * @returns {Promise<void>} A promise that resolves when the check is complete
  */
-export async function checkCoffeescriptInstalled() {
+export function checkCoffeescriptInstalled() {
   // Skip if already checked
   if (getGlobalState(GLOBAL_STATE_KEYS.COFFEESCRIPT_CHECKED, false)) {
     return;

@@ -57,15 +57,35 @@ export async function setupMeteorApp(appName) {
  * Helper function to run a Meteor app
  * @param {string} tempDir - Path to the directory containing the app
  * @param {number} port - Port to run the app on
- * @returns {Object} - The meteor process
+ * @param {Object} options - Additional options
+ * @param {string|RegExp} options.waitForOutput - Output pattern to wait for
+ * @param {Object} options.waitOptions - Options for waitForMeteorOutput
+ * @returns {Object} - The meteor process and output lines
  */
-export async function runMeteorApp(tempDir, port) {
+export async function runMeteorApp(tempDir, port, options = {}) {
   // Start Meteor CLI in dev mode
   console.log(`Starting Meteor app on port ${port}...`);
-  const meteorProcess = execa(METEOR_EXECUTABLE, ['run', '--port', port.toString()], {
-    cwd: tempDir,
-    stdio: 'inherit',
-  });
+
+  // Determine if we need to capture output
+  const captureOutput = !!options.waitForOutput;
+
+  // Run the meteor command
+  const { meteorProcess, outputLines } = await runMeteorCommand(
+    'run', 
+    ['--port', port.toString()], 
+    tempDir,
+    {},
+    captureOutput
+  );
+
+  // If a specific output pattern is requested, wait for it
+  if (options.waitForOutput) {
+    await waitForMeteorOutput(
+      outputLines,
+      options.waitForOutput,
+      options
+    );
+  }
 
   // Wait for server to be up
   console.log(`Waiting for app to be available on port ${port}...`);
@@ -74,7 +94,7 @@ export async function runMeteorApp(tempDir, port) {
     timeout: 60000
   });
 
-  return { meteorProcess };
+  return { meteorProcess, outputLines };
 }
 
 /**
@@ -127,6 +147,90 @@ export async function killProcessByPort(port) {
 }
 
 /**
+ * Helper function to run any Meteor command
+ * @param {string} command - The Meteor command to run (e.g., 'run', 'build', 'test')
+ * @param {string[]} args - Additional arguments for the command
+ * @param {string} cwd - Working directory where the command should be executed
+ * @param {Object} options - Additional options for execa
+ * @param {boolean} captureOutput - Whether to capture the command's output
+ * @returns {Object} - The meteor process and output lines if capturing output
+ */
+export async function runMeteorCommand(command, args = [], cwd, options = {}, captureOutput = false) {
+  console.log(`Running Meteor command: ${command} ${args.join(' ')}...`);
+
+  const execaOptions = {
+    cwd,
+    ...options
+  };
+
+  // If we're capturing output, set up stdio accordingly
+  if (captureOutput) {
+    execaOptions.stdio = ['inherit', 'pipe', 'pipe'];
+  } else {
+    execaOptions.stdio = 'inherit';
+  }
+
+  const meteorProcess = execa(METEOR_EXECUTABLE, [command, ...args], execaOptions);
+
+  // If we're capturing output, set up the output collection
+  let outputLines = [];
+  if (captureOutput && meteorProcess.stdout && meteorProcess.stderr) {
+    meteorProcess.stdout.on('data', (data) => {
+      const lines = data.toString().split('\n').filter(line => line.trim());
+      outputLines.push(...lines);
+      // Still log to console for visibility
+      process.stdout.write(data);
+    });
+
+    meteorProcess.stderr.on('data', (data) => {
+      const lines = data.toString().split('\n').filter(line => line.trim());
+      outputLines.push(...lines);
+      // Still log to console for visibility
+      process.stderr.write(data);
+    });
+  }
+
+  return { meteorProcess, outputLines };
+}
+
+/**
+ * Helper function to create a new Meteor app with a specific example
+ * @param {string} appName - Name of the new app
+ * @param {string} example - Example to use (e.g., 'react', 'vue')
+ * @param {Object} options - Additional options for execa
+ * @returns {Object} - The path to the new app and the meteor process
+ */
+export async function createMeteorApp(appName, example, options = {}) {
+  // Create a unique temporary directory that will be the app directory directly
+  const randomSuffix = Math.random().toString(36).substring(2, 10);
+  const tempAppName= `${appName}-${randomSuffix}`;
+  const tempDir = path.join(os.tmpdir(), tempAppName);
+
+  console.log(`Creating new Meteor app '${appName}' with example '${example}' in ${tempDir}...`);
+
+  // Create the destination directory if it doesn't exist
+  if (!fs.existsSync(tempDir)) {
+    await fs.mkdir(tempDir, { recursive: true });
+  }
+
+  // Run 'meteor create --react myapp' command
+  const args = ['create'];
+
+  // Add example option if provided
+  if (example) {
+    args.push(`--${example}`);
+  }
+
+  // Add app name
+  args.push(tempAppName);
+
+  // Run the command in the temporary directory
+  const { meteorProcess } = await runMeteorCommand(args[0], args.slice(1), os.tmpdir(), options);
+
+  return { tempDir, meteorProcess };
+}
+
+/**
  * Helper function to clean up a temporary directory
  * @param {string} tempDir - Path to the temporary directory to clean up
  * @returns {Promise<void>}
@@ -137,7 +241,81 @@ export async function cleanupTempDir(tempDir) {
       rimraf.sync(tempDir, { disableGlob: true, maxRetries: 5, retryDelay: 500 });
       console.log(`Removed temporary directory: ${tempDir}`);
     } catch (err) {
-      console.log(`Sync removal failed, trying async removal: ${err}`);
+      // Implement async removal as a fallback
+      return new Promise((resolve, reject) => {
+        rimraf(tempDir, { disableGlob: true, maxRetries: 5, retryDelay: 500 }, (error) => {
+          if (error) {
+            console.error(`Async removal also failed: ${error}`);
+            reject(error);
+          } else {
+            console.log(`Removed temporary directory: ${tempDir}`);
+            resolve();
+          }
+        });
+      });
     }
   }
+}
+
+/**
+ * Helper function to wait for a specific number of milliseconds
+ * @param {number} ms - The number of milliseconds to wait
+ * @returns {Promise<void>} - A promise that resolves after the specified time
+ */
+export async function wait(ms) {
+  console.log(`Waiting for ${ms} milliseconds...`);
+  return new Promise(resolve => {
+    setTimeout(() => {
+      console.log(`Finished waiting for ${ms} milliseconds`);
+      resolve();
+    }, ms);
+  });
+}
+
+/**
+ * Helper function to wait for specific output from a Meteor process
+ * @param {string[]} outputLines - Array that will be populated with output lines
+ * @param {string|RegExp} pattern - String or RegExp pattern to wait for
+ * @param {Object} options - Options for waiting
+ * @param {number} options.timeout - Maximum time to wait in milliseconds
+ * @param {number} options.checkInterval - Interval between checks in milliseconds
+ * @returns {Promise<string>} - A promise that resolves with the matched line
+ */
+export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
+  const timeout = options.timeout || 60000; // Default 1 minute timeout
+  const checkInterval = options.checkInterval || 100; // Check every 100ms by default
+
+  console.log(`Waiting for output matching: ${pattern}`);
+
+  const startTime = Date.now();
+
+  return new Promise((resolve, reject) => {
+    // Function to check for the pattern in the output lines
+    const checkForPattern = () => {
+      // Check if we've exceeded the timeout
+      if (Date.now() - startTime > timeout) {
+        reject(new Error(`Timeout waiting for output matching: ${pattern}`));
+        return;
+      }
+
+      // Check each line for the pattern
+      for (const line of outputLines) {
+        if (typeof pattern === 'string' && line.includes(pattern)) {
+          console.log(`Found output matching string: ${pattern}`);
+          resolve(line);
+          return;
+        } else if (pattern instanceof RegExp && pattern.test(line)) {
+          console.log(`Found output matching regex: ${pattern}`);
+          resolve(line);
+          return;
+        }
+      }
+
+      // If we didn't find a match, check again after the interval
+      setTimeout(checkForPattern, checkInterval);
+    };
+
+    // Start checking
+    checkForPattern();
+  });
 }

@@ -23,7 +23,7 @@ const {
   ensureRSPackInstalled,
   checkReactInstalled,
   ensureRSPackReactInstalled,
-  checkCoffeescriptInstalled,
+  checkCoffeescriptInstalled, ensureRSPackCoffeescriptInstalled,
 } = require('./lib/dependencies');
 
 const {
@@ -80,7 +80,7 @@ try {
   }
 
   if (checkCoffeescriptInstalled()) {
-    await checkCoffeescriptInstalled();
+    await ensureRSPackCoffeescriptInstalled();
   }
 
   // Ensure the RSPack build context directory exists
