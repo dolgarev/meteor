@@ -299,7 +299,7 @@ describe('React App Bundling /', () => {
       await killProcessByPort(PORT);
     });
 
-    test.only(`"meteor build" / should build the app with Rspack`, async () => {
+    test(`"meteor build" / should build the app with Rspack`, async () => {
       // Build the app with Rspack
       const { buildOutputDir, processResult } = await buildMeteorApp(tempDir, {
         commandOptions: ['--directory'],
