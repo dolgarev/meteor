@@ -186,19 +186,6 @@ Object.assign(Mongo.Collection, {
   },
 
   /**
-   * @summary Backwards compatibility alias for lai:collection-extensions
-   * @locus Anywhere
-   * @memberof Mongo.Collection
-   * @static
-   * @param {String} name The name of the method to add
-   * @param {Function} method The method function, bound to the collection instance
-   * @deprecated Use addPrototypeMethod instead
-   */
-  addPrototype(name, method) {
-    return CollectionExtensions.addPrototype(name, method);
-  },
-
-  /**
    * @summary Add a static method to the Mongo.Collection constructor.
    * @locus Anywhere
    * @memberof Mongo.Collection
@@ -230,18 +217,6 @@ Object.assign(Mongo.Collection, {
    */
   removePrototypeMethod(name) {
     return CollectionExtensions.removePrototypeMethod(name);
-  },
-
-  /**
-   * @summary Backwards compatibility alias for lai:collection-extensions
-   * @locus Anywhere
-   * @memberof Mongo.Collection
-   * @static
-   * @param {String} name The name of the method to remove
-   * @deprecated Use removePrototypeMethod instead
-   */
-  removePrototype(name) {
-    return CollectionExtensions.removePrototype(name);
   },
 
   /**

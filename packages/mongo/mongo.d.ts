@@ -132,14 +132,6 @@ export namespace Mongo {
     addPrototypeMethod<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
 
     /**
-     * Backwards compatibility alias for lai:collection-extensions
-     * @param name The name of the method to add
-     * @param method The method function, bound to the collection instance
-     * @deprecated Use addPrototypeMethod instead
-     */
-    addPrototype<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
-
-    /**
      * Add a static method to the Mongo.Collection constructor.
      * @param name The name of the static method to add
      * @param method The static method function
@@ -157,13 +149,6 @@ export namespace Mongo {
      * @param name The name of the method to remove
      */
     removePrototypeMethod(name: string): void;
-
-    /**
-     * Backwards compatibility alias for lai:collection-extensions
-     * @param name The name of the method to remove
-     * @deprecated Use removePrototypeMethod instead
-     */
-    removePrototype(name: string): void;
 
     /**
      * Remove a static method from the Mongo.Collection constructor.
@@ -598,14 +583,6 @@ export namespace Mongo {
     addPrototypeMethod<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
 
     /**
-     * Backwards compatibility alias for lai:collection-extensions
-     * @param name The name of the method to add
-     * @param method The method function, bound to the collection instance
-     * @deprecated Use addPrototypeMethod instead
-     */
-    addPrototype<T = any, U = T>(name: string, method: (this: Collection<T, U>, ...args: any[]) => any): void;
-
-    /**
      * Add a static method to the Mongo.Collection constructor.
      * @param name The name of the static method to add
      * @param method The static method function
@@ -623,13 +600,6 @@ export namespace Mongo {
      * @param name The name of the method to remove
      */
     removePrototypeMethod(name: string): void;
-
-    /**
-     * Backwards compatibility alias for lai:collection-extensions
-     * @param name The name of the method to remove
-     * @deprecated Use removePrototypeMethod instead
-     */
-    removePrototype(name: string): void;
 
     /**
      * Remove a static method from the Mongo.Collection constructor.

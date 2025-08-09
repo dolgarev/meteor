@@ -40,14 +40,6 @@ CollectionExtensions = {
     
     this._prototypeMethods.set(name, method);
   },
-
-  /**
-   * Backwards compatibility alias for lai:collection-extensions
-   * @deprecated Use addPrototypeMethod instead
-   */
-  addPrototype(name, method) {
-    return this.addPrototypeMethod(name, method);
-  },
   
   /**
    * Add a static method to the Mongo.Collection constructor
@@ -78,14 +70,6 @@ CollectionExtensions = {
    */
   removePrototypeMethod(name) {
     this._prototypeMethods.delete(name);
-  },
-
-  /**
-   * Backwards compatibility alias for lai:collection-extensions
-   * @deprecated Use removePrototypeMethod instead
-   */
-  removePrototype(name) {
-    return this.removePrototypeMethod(name);
   },
   
   /**
