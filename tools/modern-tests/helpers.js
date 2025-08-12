@@ -18,7 +18,7 @@ const METEOR_EXECUTABLE = path.join(REPO_ROOT, 'meteor');
 export async function setupMeteorApp(appName) {
   // Create a unique temporary directory
   const randomSuffix = Math.random().toString(36).substring(2, 10);
-  const tempDir = path.join(os.tmpdir(), `${appName}-${randomSuffix}`);
+  const tempDir = path.join(os.tmpdir(), `meteortest-${appName}-${randomSuffix}`);
 
   // Source app directory
   const sourceAppDir = path.join(__dirname, 'apps', appName);
@@ -230,7 +230,7 @@ export async function runMeteorCommand(command, args = [], cwd, options = {}) {
 export async function createMeteorApp(appName, example, options = {}) {
   // Create a unique temporary directory that will be the app directory directly
   const randomSuffix = Math.random().toString(36).substring(2, 10);
-  const tempAppName= `${appName}-${randomSuffix}`;
+  const tempAppName= `meteortest-${appName}-${randomSuffix}`;
   const tempDir = path.join(os.tmpdir(), tempAppName);
 
   console.log(`Creating new Meteor app '${appName}' with example '${example}' in ${tempDir}...`);
