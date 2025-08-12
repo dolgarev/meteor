@@ -1,7 +1,7 @@
 Package.describe({
   name: "babel-compiler",
   summary: "Parser/transpiler for ECMAScript 2015+ syntax",
-  version: '7.12.1-rc331.2',
+  version: '7.12.1',
 });
 
 Npm.depends({
