@@ -22,8 +22,14 @@ describe('TypeScript App Bundling /', () => {
         await waitForTypeScriptEnvs(result.outputLines, { isTsxEnabled: true });
         await waitForTypeScriptErrorFree(result.outputLines);
       },
+      afterRunRebuildClient: async ({ allConsoleLogs }) => {
+        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/);
+      },
       afterRunProduction: async ({ result }) => {
         await waitForTypeScriptEnvs(result.outputLines, { isTsxEnabled: true });
+      },
+      afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
+        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/, { negate: true });
       },
       afterTest: async ({ result }) => {
         await waitForTypeScriptEnvs(result.outputLines);
