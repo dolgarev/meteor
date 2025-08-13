@@ -17,7 +17,7 @@ import {
   runMeteorTests,
   buildMeteorApp
 } from "./helpers";
-import { assertMeteorReactApp, assertRspackScriptTag, assertFileExist } from './assertions';
+import { assertMeteorReactApp, assertRspackScriptTag, assertFileExist, assertBodyStyles } from './assertions';
 import fs from 'fs-extra';
 import path from 'path';
 import execa from 'execa';
@@ -188,6 +188,12 @@ export function testMeteorRspackBundler(options) {
       // Assert that the app is using Rspack
       await assertRspackScriptTag(port, true);
 
+      // Assert that the body has the expected CSS styles
+      await assertBodyStyles({
+        'padding': '10px',
+        'font-family': 'sans-serif'
+      });
+
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRun) {
         await customAssertions.afterRun({ tempDir, port, meteorProcess, result });
@@ -272,6 +278,12 @@ export function testMeteorRspackBundler(options) {
 
       // Assert that the app is using Rspack
       await assertRspackScriptTag(port, false);
+
+      // Assert that the body has the expected CSS styles
+      await assertBodyStyles({
+        'padding': '10px',
+        'font-family': 'sans-serif'
+      });
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRunProduction) {

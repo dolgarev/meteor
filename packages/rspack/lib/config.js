@@ -107,6 +107,10 @@ export function configureMeteorForRspack() {
   // Ignore node_modules to prevent Meteor from processing them
   const projectRootFilesAndFolders = getMeteorAppFilesAndFolders({ recursive: false });
 
+  const initialEntrypointContexts = [
+    initialEntrypoints.mainClient,
+    initialEntrypoints.mainServer
+  ].map(entrypoint => path.dirname(entrypoint));
   const includedDirs = ['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT];
   const ignoredDirs = projectRootFilesAndFolders.directories
     .filter(dir => !includedDirs.includes(dir));
@@ -116,9 +120,10 @@ export function configureMeteorForRspack() {
       .map(dir => `${dir}/**`)
   ];
   let extraFilesToIgnore = [
-    ...ignoredDirs
-      .filter(dir => !['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT].includes(dir))
-      .map(dir => `!${dir}/**/*.html`),
+    ...initialEntrypointContexts.flatMap(entrypoint => [
+      `!${entrypoint}/*.html`,
+      `!${entrypoint}/*.css`
+    ]),
   ];
 
   // Get extensions to ignore based on project type

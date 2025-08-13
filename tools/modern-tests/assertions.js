@@ -142,3 +142,100 @@ export async function assertFileExist(tempDir, filePath, options = {}) {
   // Start checking
   await checkFile();
 }
+
+/**
+ * Helper function to evaluate JavaScript code in the browser console and assert the result
+ * @param {string} code - JavaScript code to evaluate in the browser console
+ * @param {any} expectedResult - Expected result of the evaluation
+ * @param {Object} options - Additional options
+ * @param {boolean} options.exactMatch - Whether to check for exact equality (default: true)
+ * @param {number} options.timeout - Maximum time to wait in milliseconds (default: 5000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 100)
+ * @returns {Promise<any>} - A promise that resolves with the evaluation result
+ */
+export async function assertConsoleEval(code, expectedResult, options = {}) {
+  const { exactMatch = true, timeout = 5000, checkInterval = 100 } = options;
+
+  console.log(`Evaluating code in browser console: ${code}`);
+
+  const startTime = Date.now();
+
+  // Function to evaluate code and check result
+  const evaluateAndCheck = async () => {
+    try {
+      // Evaluate the code in the browser context
+      const result = await page.evaluate(code);
+
+      if (exactMatch) {
+        // Check for exact match
+        if (JSON.stringify(result) !== JSON.stringify(expectedResult)) {
+          // If result doesn't match and we haven't exceeded the timeout, wait and retry
+          if (Date.now() - startTime < timeout) {
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            return evaluateAndCheck();
+          }
+          // If we've exceeded the timeout, fail the test
+          expect(result).toEqual(expectedResult);
+          return null;
+        }
+      } else {
+        // Check for partial match (contains)
+        const resultStr = JSON.stringify(result);
+        const expectedStr = JSON.stringify(expectedResult);
+
+        if (!resultStr.includes(expectedStr)) {
+          // If result doesn't include the expected result and we haven't exceeded the timeout, wait and retry
+          if (Date.now() - startTime < timeout) {
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+            return evaluateAndCheck();
+          }
+          // If we've exceeded the timeout, fail the test
+          expect(resultStr).toContain(expectedStr);
+          return null;
+        }
+      }
+
+      console.log(`✅ Console evaluation successful. Result: ${JSON.stringify(result)}`);
+      return result;
+    } catch (error) {
+      // If evaluation fails and we haven't exceeded the timeout, wait and retry
+      if (Date.now() - startTime < timeout) {
+        await new Promise(resolve => setTimeout(resolve, checkInterval));
+        return evaluateAndCheck();
+      }
+      // If we've exceeded the timeout, fail the test
+      throw new Error(`Error evaluating code in console: ${error.message}`);
+    }
+  };
+
+  // Start evaluating
+  return await evaluateAndCheck();
+}
+
+/**
+ * Helper function to assert that the body element has the expected CSS styles
+ * @param {Object} expectedStyles - Expected CSS styles as key-value pairs
+ * @param {Object} options - Additional options for assertConsoleEval
+ * @returns {Promise<Object>} - A promise that resolves with the computed styles
+ */
+export async function assertBodyStyles(expectedStyles, options = {}) {
+  console.log(`Asserting body styles: ${JSON.stringify(expectedStyles)}`);
+
+  // Create a JavaScript code string that evaluates the computed styles
+  const code = `
+    (() => {
+      const computedStyle = getComputedStyle(document.body);
+      const result = {};
+      ${Object.keys(expectedStyles).map(prop => 
+        `result['${prop}'] = computedStyle.getPropertyValue('${prop}');`
+      ).join('\n')}
+      return result;
+    })()
+  `;
+
+  // Use assertConsoleEval to evaluate the code and check the result
+  return await assertConsoleEval(code, expectedStyles, { 
+    exactMatch: false,
+    ...options
+  });
+}
