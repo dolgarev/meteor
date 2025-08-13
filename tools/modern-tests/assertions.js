@@ -24,12 +24,14 @@ export async function assertMeteorApp(port, options = {}) {
   if (inTitle) {
     const title = await page.title();
     expect(title).toMatch(new RegExp(inTitle));
+    console.log(`✅ Title: ${title}`);
   }
 
   // Check for static content if specified
   if (inH1) {
     const h1Text = await page.$eval('h1', el => el.textContent);
     expect(h1Text).toMatch(new RegExp(inH1));
+    console.log(`✅ H1: ${h1Text}`);
   }
 }
 

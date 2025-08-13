@@ -105,6 +105,13 @@ export function testMeteorRspackBundler(options) {
       prodServer: "Hello from prod server",
       test: "Hello from test"
     },
+    customUpdates = {
+      devClient: (message) => `if (Meteor.isDevelopment) console.log("${message}");`,
+      devServer: (message) => `if (Meteor.isDevelopment) console.log("${message}");`,
+      prodClient: (message) => `if (Meteor.isProduction) console.log("${message}");`,
+      prodServer: (message) => `if (Meteor.isProduction) console.log("${message}");`,
+      test: (message) => `console.log("${message}");`
+    },
     customAssertions,
     // Some existing tests may fail if this is not set
     verbose = true,
@@ -188,7 +195,7 @@ export function testMeteorRspackBundler(options) {
 
       // Update the client code
       await appendFileContent(tempDir, filePaths.client, {
-        content: `if (Meteor.isDevelopment) console.log("${customMessages.devClient}");`,
+        content: customUpdates.devClient(customMessages.devClient),
       });
       const consoleLogs = await waitForPlaywrightConsole(customMessages.devClient, { returnAllLogs: true });
 
@@ -205,7 +212,7 @@ export function testMeteorRspackBundler(options) {
 
       // Update the server code
       await appendFileContent(tempDir, filePaths.server, {
-        content: `if (Meteor.isDevelopment) console.log("${customMessages.devServer}");`,
+        content: customUpdates.devServer(customMessages.devServer),
       });
       await waitForMeteorOutput(
         result.outputLines,
@@ -273,7 +280,7 @@ export function testMeteorRspackBundler(options) {
 
       // Update the client code
       await appendFileContent(tempDir, filePaths.client, {
-        content: `if (Meteor.isProduction) console.log("${customMessages.prodClient}");`,
+        content: customUpdates.prodClient(customMessages.prodClient),
       });
       const consoleLogs = await waitForPlaywrightConsole(customMessages.prodClient, { returnAllLogs: true });
 
@@ -290,7 +297,7 @@ export function testMeteorRspackBundler(options) {
 
       // Update the server code
       await appendFileContent(tempDir, filePaths.server, {
-        content: `if (Meteor.isProduction) console.log("${customMessages.prodServer}");`,
+        content: customUpdates.prodServer(customMessages.prodServer),
       });
       await waitForMeteorOutput(
         result.outputLines,
@@ -347,7 +354,7 @@ export function testMeteorRspackBundler(options) {
 
       // Update the test code
       await appendFileContent(tempDir, filePaths.test, {
-        content: `console.log("${customMessages.test}");`,
+        content: customUpdates.test(customMessages.test),
       });
       await waitForMeteorOutput(
         result.outputLines,
