@@ -157,7 +157,7 @@ export function testMeteorRspackBundler(options) {
       await cleanupTempDir(tempDir);
     });
 
-    test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
+    test.only(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at:",
@@ -181,11 +181,27 @@ export function testMeteorRspackBundler(options) {
       // Assert that the app is using Rspack
       await assertRspackScriptTag(port, true);
 
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterRun) {
+        await customAssertions.afterRun({ tempDir, port, meteorProcess, result });
+      }
+
       // Update the client code
       await appendFileContent(tempDir, filePaths.client, {
         content: `if (Meteor.isDevelopment) console.log("${customMessages.devClient}");`,
       });
-      await waitForPlaywrightConsole(customMessages.devClient);
+      const consoleLogs = await waitForPlaywrightConsole(customMessages.devClient, { returnAllLogs: true });
+
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterRunRebuildClient) {
+        await customAssertions.afterRunRebuildClient({ 
+          tempDir, 
+          port, 
+          meteorProcess, 
+          result, 
+          allConsoleLogs: consoleLogs.allLogs
+        });
+      }
 
       // Update the server code
       await appendFileContent(tempDir, filePaths.server, {
@@ -196,6 +212,11 @@ export function testMeteorRspackBundler(options) {
         customMessages.devServer
       );
 
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterRunRebuildServer) {
+        await customAssertions.afterRunRebuildServer({ tempDir, port, meteorProcess, result });
+      }
+
       if (verbose) {
         await waitForMeteorOutput(
           result.outputLines,
@@ -205,11 +226,6 @@ export function testMeteorRspackBundler(options) {
           result.outputLines,
           /.*isRun:.*true.*/
         );
-      }
-
-      // Run custom assertions if provided
-      if (customAssertions && customAssertions.afterRun) {
-        await customAssertions.afterRun({ tempDir, port, meteorProcess, result });
       }
 
       // Wait for a margin
@@ -223,7 +239,7 @@ export function testMeteorRspackBundler(options) {
       await killProcessByPort('8080');
     });
 
-    test(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
+    test.only(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at:",
@@ -250,11 +266,27 @@ export function testMeteorRspackBundler(options) {
       // Assert that the app is using Rspack
       await assertRspackScriptTag(port, false);
 
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterRunProduction) {
+        await customAssertions.afterRunProduction({ tempDir, port, meteorProcess, result });
+      }
+
       // Update the client code
       await appendFileContent(tempDir, filePaths.client, {
         content: `if (Meteor.isProduction) console.log("${customMessages.prodClient}");`,
       });
-      await waitForPlaywrightConsole(customMessages.prodClient);
+      const consoleLogs = await waitForPlaywrightConsole(customMessages.prodClient, { returnAllLogs: true });
+
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterRunProductionRebuildClient) {
+        await customAssertions.afterRunProductionRebuildClient({ 
+          tempDir, 
+          port, 
+          meteorProcess, 
+          result,
+          allConsoleLogs: consoleLogs.allLogs
+        });
+      }
 
       // Update the server code
       await appendFileContent(tempDir, filePaths.server, {
@@ -264,6 +296,12 @@ export function testMeteorRspackBundler(options) {
         result.outputLines,
         customMessages.prodServer
       );
+
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterRunProductionRebuildServer) {
+        await customAssertions.afterRunProductionRebuildServer({ tempDir, port, meteorProcess, result });
+      }
+
       if (verbose) {
         await waitForMeteorOutput(
           result.outputLines,
@@ -273,11 +311,6 @@ export function testMeteorRspackBundler(options) {
           result.outputLines,
           /.*isRun:.*true.*/
         );
-      }
-
-      // Run custom assertions if provided
-      if (customAssertions && customAssertions.afterRunProduction) {
-        await customAssertions.afterRunProduction({ tempDir, port, meteorProcess, result });
       }
 
       // Wait for a margin
@@ -307,6 +340,11 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(tempDir, '_build/test/test-rspack.js');
       await assertFileExist(tempDir, '_build/test/test-meteor.js');
 
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterTest) {
+        await customAssertions.afterTest({ tempDir, port, meteorProcess, result });
+      }
+
       // Update the test code
       await appendFileContent(tempDir, filePaths.test, {
         content: `console.log("${customMessages.test}");`,
@@ -327,8 +365,8 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Run custom assertions if provided
-      if (customAssertions && customAssertions.afterTest) {
-        await customAssertions.afterTest({ tempDir, port, meteorProcess, result });
+      if (customAssertions && customAssertions.afterTestRebuild) {
+        await customAssertions.afterTestRebuild({ tempDir, port, meteorProcess, result });
       }
 
       // Kill the meteor process

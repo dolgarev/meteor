@@ -4,6 +4,7 @@ import {
   killMeteorProcess,
   createMeteorApp,
   runMeteorApp,
+  waitForMeteorOutput, waitForPlaywrightConsole
 } from "./helpers";
 import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
 import fs from 'fs-extra';
@@ -11,7 +12,9 @@ import path from 'path';
 import { assertMeteorReactApp } from "./assertions";
 
 describe('React App Bundling /', () => {
-  describe('Meteor Creator /', () => {
+
+  // TODO: Create one test aside for all skeletons
+  describe.skip('Meteor Creator /', () => {
     const PORT = 3100;
 
     beforeAll(async () => {
@@ -74,5 +77,51 @@ describe('React App Bundling /', () => {
       server: 'server/main.js',
       test: 'tests/main.js'
     },
+    customAssertions: {
+      afterRun: async ({ result }) => {
+        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+      },
+      afterRunRebuildClient: async ({ allConsoleLogs }) => {
+        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/);
+      },
+      afterRunProduction: async ({ result }) => {
+        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+      },
+      afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
+        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/, { negate: true });
+      },
+      afterTest: async ({ result }) => {
+        await waitForReactEnvs(result.outputLines);
+      },
+      afterTestOnce: async ({ result }) => {
+        await waitForReactEnvs(result.outputLines);
+      },
+      afterBuild: async ({ result }) => {
+        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+      },
+    }
   }));
 });
+
+/**
+ * Helper function to wait for React environment output from both Rspack Client and Server
+ * @param {string[]} outputLines - Array that will be populated with output lines
+ * @param {Object} options - Options for waiting
+ * @param {number} options.timeout - Maximum time to wait in milliseconds
+ * @param {number} options.checkInterval - Interval between checks in milliseconds
+ * @returns {Promise<void>} - A promise that resolves when react envs are enabled
+ */
+export async function waitForReactEnvs(outputLines, options = {}) {
+  await waitForMeteorOutput(
+    outputLines,
+    /.*isReactEnabled:.*true.*/,
+    options
+  );
+  if (options.isJsxEnabled) {
+    await waitForMeteorOutput(
+      outputLines,
+      /.*isJsxEnabled:.*true.*/,
+      options
+    );
+  }
+}

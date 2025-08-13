@@ -309,13 +309,15 @@ export async function wait(ms) {
  * @param {Object} options - Options for waiting
  * @param {number} options.timeout - Maximum time to wait in milliseconds
  * @param {number} options.checkInterval - Interval between checks in milliseconds
+ * @param {boolean} options.negate - If true, wait until the pattern is NOT found in any output line
  * @returns {Promise<string>} - A promise that resolves with the matched line
  */
 export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
   const timeout = options.timeout || 90000; // Default 1 minute timeout
   const checkInterval = options.checkInterval || 100; // Check every 100ms by default
+  const negate = options.negate || false; // Default is to check for presence, not absence
 
-  console.log(`Waiting for output matching: ${pattern}`);
+  console.log(`Waiting for output ${negate ? 'NOT ' : ''}matching: ${pattern}`);
 
   const startTime = Date.now();
 
@@ -324,20 +326,41 @@ export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
     const checkForPattern = () => {
       // Check if we've exceeded the timeout
       if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for output matching: ${pattern}`));
+        reject(new Error(`Timeout waiting for output ${negate ? 'NOT ' : ''}matching: ${pattern}`));
         return;
       }
 
-      // Check each line for the pattern
-      for (const line of outputLines) {
-        if (typeof pattern === 'string' && line.includes(pattern)) {
-          console.log(`Found output matching string: ${pattern}`);
-          resolve(line);
-          return;
-        } else if (pattern instanceof RegExp && pattern.test(line)) {
-          console.log(`Found output matching regex: ${pattern}`);
-          resolve(line);
-          return;
+      if (negate) {
+        // In negation mode, we need to check all lines and make sure none match
+        // If we've processed all lines and none match, we can resolve
+        if (outputLines.length > 0) {
+          let allLinesPass = true;
+          for (const line of outputLines) {
+            const matches = (typeof pattern === 'string' && line.includes(pattern)) || 
+                           (pattern instanceof RegExp && pattern.test(line));
+            if (matches) {
+              allLinesPass = false;
+              break;
+            }
+          }
+          if (allLinesPass) {
+            console.log(`Confirmed no output matching: ${pattern}`);
+            resolve(null);
+            return;
+          }
+        }
+      } else {
+        // Check each line for the pattern (original behavior)
+        for (const line of outputLines) {
+          if (typeof pattern === 'string' && line.includes(pattern)) {
+            console.log(`Found output matching string: ${pattern}`);
+            resolve(line);
+            return;
+          } else if (pattern instanceof RegExp && pattern.test(line)) {
+            console.log(`Found output matching regex: ${pattern}`);
+            resolve(line);
+            return;
+          }
         }
       }
 
@@ -499,15 +522,27 @@ export async function runMeteorTests(tempDir, port, options = {}) {
 
 /**
  * Helper function to wait for a console message matching a pattern
- * @param {string|RegExp} pattern
+ * @param {string|RegExp} pattern - Pattern to match in console messages
  * @param {Object} options - Additional options
- * @returns {Promise<unknown>}
+ * @param {number} options.timeout - Maximum time to wait in milliseconds
+ * @param {number} options.checkInterval - Interval between checks in milliseconds
+ * @param {boolean} options.negate - If true, wait until the pattern is NOT found in any console message
+ * @param {boolean} options.returnAllLogs - If true, returns an object with both the matching message and all collected logs
+ * @param {boolean} options.collectAllLogs - If true, collects all logs for the specified timeout period without waiting for a pattern match
+ * @returns {Promise<string|{message: string, allLogs: string[]}>} - Returns the matching message or an object with message and allLogs if returnAllLogs is true
  */
 export async function waitForPlaywrightConsole(pattern, options = {}) {
   const timeout = options.timeout || 30000; // Default 30 seconds timeout
   const checkInterval = options.checkInterval || 100; // Check every 100ms by default
+  const negate = options.negate || false; // Default is to check for presence, not absence
+  const returnAllLogs = options.returnAllLogs || false; // Default is to return just the matching message
+  const collectAllLogs = options.collectAllLogs || false; // Default is to wait for a pattern match
 
-  console.log(`Waiting for console message matching: ${pattern}`);
+  if (collectAllLogs) {
+    console.log(`Collecting all console logs for ${timeout}ms`);
+  } else {
+    console.log(`Waiting for console message ${negate ? 'NOT ' : ''}matching: ${pattern}`);
+  }
 
   // Array to collect console messages
   const consoleMessages = [];
@@ -525,30 +560,75 @@ export async function waitForPlaywrightConsole(pattern, options = {}) {
   const startTime = Date.now();
 
   return new Promise((resolve, reject) => {
+    // If we're just collecting all logs, set a timeout to resolve after the specified time
+    if (collectAllLogs) {
+      setTimeout(() => {
+        console.log(`Collected ${consoleMessages.length} console logs in ${timeout}ms`);
+        page.removeListener('console', consoleListener);
+        resolve({ message: null, allLogs: [...consoleMessages] });
+      }, timeout);
+      return;
+    }
+
     // Function to check for the pattern in the console messages
     const checkForPattern = () => {
       // Check if we've exceeded the timeout
       if (Date.now() - startTime > timeout) {
         // Remove the listener before rejecting
         page.removeListener('console', consoleListener);
-        reject(new Error(`Timeout waiting for console message matching: ${pattern}`));
+        reject(new Error(`Timeout waiting for console message ${negate ? 'NOT ' : ''}matching: ${pattern}`));
         return;
       }
 
-      // Check each message for the pattern
-      for (const message of consoleMessages) {
-        if (typeof pattern === 'string' && message.includes(pattern)) {
-          console.log(`Found console message matching string: ${pattern}`);
-          // Remove the listener before resolving
-          page.removeListener('console', consoleListener);
-          resolve(message);
-          return;
-        } else if (pattern instanceof RegExp && pattern.test(message)) {
-          console.log(`Found console message matching regex: ${pattern}`);
-          // Remove the listener before resolving
-          page.removeListener('console', consoleListener);
-          resolve(message);
-          return;
+      if (negate) {
+        // In negation mode, we need to check all messages and make sure none match
+        // If we've received messages and none match, we can resolve
+        if (consoleMessages.length > 0) {
+          let allMessagesPass = true;
+          for (const message of consoleMessages) {
+            const matches = (typeof pattern === 'string' && message.includes(pattern)) || 
+                           (pattern instanceof RegExp && pattern.test(message));
+            if (matches) {
+              allMessagesPass = false;
+              break;
+            }
+          }
+          if (allMessagesPass) {
+            console.log(`Confirmed no console message matching: ${pattern}`);
+            // Remove the listener before resolving
+            page.removeListener('console', consoleListener);
+            if (returnAllLogs) {
+              resolve({ message: null, allLogs: [...consoleMessages] });
+            } else {
+              resolve(null);
+            }
+            return;
+          }
+        }
+      } else {
+        // Check each message for the pattern (original behavior)
+        for (const message of consoleMessages) {
+          if (typeof pattern === 'string' && message.includes(pattern)) {
+            console.log(`Found console message matching string: ${pattern}`);
+            // Remove the listener before resolving
+            page.removeListener('console', consoleListener);
+            if (returnAllLogs) {
+              resolve({ message, allLogs: [...consoleMessages] });
+            } else {
+              resolve(message);
+            }
+            return;
+          } else if (pattern instanceof RegExp && pattern.test(message)) {
+            console.log(`Found console message matching regex: ${pattern}`);
+            // Remove the listener before resolving
+            page.removeListener('console', consoleListener);
+            if (returnAllLogs) {
+              resolve({ message, allLogs: [...consoleMessages] });
+            } else {
+              resolve(message);
+            }
+            return;
+          }
         }
       }
 
