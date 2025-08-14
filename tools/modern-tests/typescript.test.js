@@ -24,7 +24,7 @@ describe('TypeScript App Bundling /', () => {
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
-        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/);
+        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:.*/);
       },
       afterRunProduction: async ({ result }) => {
         await waitForTypeScriptEnvs(result.outputLines, { isTsxEnabled: true });

@@ -19,23 +19,41 @@ describe('Babel App Bundling /', () => {
     },
     customAssertions: {
       afterRun: async ({ result }) => {
+        await assertFileExtensionModuleRules(result.outputLines);
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
-        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/);
+        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:.*/);
       },
       afterRunProduction: async ({ result }) => {
+        await assertFileExtensionModuleRules(result.outputLines);
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR to not be enabled in production-like mode
         await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/, { negate: true });
       },
       afterTest: async ({ result }) => {
+        await assertFileExtensionModuleRules(result.outputLines);
       },
       afterTestOnce: async ({ result }) => {
+        await assertFileExtensionModuleRules(result.outputLines);
       },
       afterBuild: async ({ result }) => {
+        await assertFileExtensionModuleRules(result.outputLines);
       },
     }
   }));
 });
+
+/**
+ * Helper function to assert that output contains expected file extension moduel rules
+ * @param {string[]} outputLines - Array of output lines to check
+ * @returns {Promise<void>}
+ */
+export async function assertFileExtensionModuleRules(outputLines) {
+  // Check for custom and residual rules
+  await waitForMeteorOutput(outputLines, '/\\.(js|jsx)$/');
+  await waitForMeteorOutput(outputLines, '/\\.(tsx|ts|mts|cts|mjs|cjs)$/');
+  await waitForMeteorOutput(outputLines, '/\\.(graphql|gql)$/');
+  await waitForMeteorOutput(outputLines, '/\\.(?:[mc]?js|jsx|[mc]?ts|tsx)$/i', { negate: true });
+}

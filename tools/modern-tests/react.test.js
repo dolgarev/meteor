@@ -83,7 +83,7 @@ describe('React App Bundling /', () => {
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
-        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/);
+        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:.*/);
       },
       afterRunProduction: async ({ result }) => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
