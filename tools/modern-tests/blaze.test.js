@@ -3,7 +3,7 @@ import {
 } from "./helpers";
 import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
 
-describe('Blaze App Bundling /', () => {
+describe('BasicBlaze App Bundling /', () => {
   describe('Meteor Bundler /', testMeteorBundler({
     appName: 'blaze',
     port: 3121

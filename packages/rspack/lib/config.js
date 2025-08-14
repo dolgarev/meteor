@@ -119,12 +119,7 @@ export function configureMeteorForRspack() {
     ...ignoredDirs.filter(dir => !['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT].includes(dir))
       .map(dir => `${dir}/**`)
   ];
-  let extraFilesToIgnore = [
-    ...initialEntrypointContexts.flatMap(entrypoint => [
-      `!${entrypoint}/*.html`,
-      `!${entrypoint}/*.css`
-    ]),
-  ];
+  let extraFilesToIgnore = [];
 
   // Get extensions to ignore based on project type
   const extensionsToIgnore = getFileExtensionsToIgnore();
@@ -134,6 +129,15 @@ export function configureMeteorForRspack() {
       .flatMap(dir => extensionsToIgnore.map(ext => `${dir}/**/*${ext}`));
     extraFoldersToIgnore = [];
   }
+
+  // Skip immediate html and css children from intial entrypoint contexts
+  extraFilesToIgnore = [
+    ...extraFilesToIgnore,
+    ...initialEntrypointContexts.flatMap(entrypoint => [
+      `!${entrypoint}/*.html`,
+      `!${entrypoint}/*.css`
+    ]),
+  ];
 
   const foldersToIgnore = ['node_modules/**', ...extraFoldersToIgnore];
   const rootFilesToIgnore = [
