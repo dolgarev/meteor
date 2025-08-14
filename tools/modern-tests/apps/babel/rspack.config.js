@@ -24,7 +24,7 @@ export default defineConfig(Meteor => {
         {
           test: /\.(graphql|gql)$/,
           exclude: /node_modules/,
-          loader: 'webpack-graphql-loader',
+          loader: '@graphql-tools/webpack-loader',
         },
       ],
     },
