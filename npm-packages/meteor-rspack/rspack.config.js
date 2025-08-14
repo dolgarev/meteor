@@ -156,7 +156,7 @@ export default function (inMeteor = {}, argv = {}) {
   // Set watch options
   const watchOptions = {
     ...defaultWatchOptions,
-    ...isTestEager && {
+    ...isTest && isTestEager && {
       ignored: [
         ...defaultWatchOptions.ignored,
         '**/_build/**',
@@ -296,7 +296,7 @@ export default function (inMeteor = {}, argv = {}) {
     name: serverNameConfig,
     target: 'node',
     mode,
-    entry: isTestEager
+    entry: isTest && isTestEager
       ? "node_modules/@meteorjs/rspack/entries/eager-tests.js"
       : path.resolve(process.cwd(), buildContext, entryPath),
     output: {
@@ -325,7 +325,7 @@ export default function (inMeteor = {}, argv = {}) {
     externals,
     plugins: [
       new DefinePlugin(
-        isTestModule || isTestEager
+        isTest && (isTestModule || isTestEager)
           ? {
               "Meteor.isTest": JSON.stringify(isTest),
               "Meteor.isDevelopment": JSON.stringify(isDev),
