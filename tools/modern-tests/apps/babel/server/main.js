@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { LinksCollection } from '/imports/api/links';
+import { LinksCollection } from '@api/links';
 import { startApolloServer } from './apollo';
 
 async function insertLink({ title, url }) {
@@ -36,4 +36,3 @@ Meteor.startup(async () => {
     });
   }
 });
-
