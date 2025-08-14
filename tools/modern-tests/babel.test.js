@@ -52,8 +52,8 @@ describe('Babel App Bundling /', () => {
  */
 export async function assertFileExtensionModuleRules(outputLines) {
   // Check for custom and residual rules
-  await waitForMeteorOutput(outputLines, '/\\.(js|jsx)$/');
-  await waitForMeteorOutput(outputLines, '/\\.(tsx|ts|mts|cts|mjs|cjs)$/');
-  await waitForMeteorOutput(outputLines, '/\\.(graphql|gql)$/');
+  await waitForMeteorOutput(outputLines, '/\\.(js|jsx)$/i');
+  await waitForMeteorOutput(outputLines, '/\\.(tsx|ts|mts|cts|mjs|cjs)$/i');
+  await waitForMeteorOutput(outputLines, '/\\.(graphql|gql)$/i');
   await waitForMeteorOutput(outputLines, '/\\.(?:[mc]?js|jsx|[mc]?ts|tsx)$/i', { negate: true });
 }

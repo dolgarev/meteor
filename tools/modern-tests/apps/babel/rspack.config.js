@@ -15,14 +15,14 @@ export default defineConfig(Meteor => {
     module: {
       rules: [
         {
-          test: /\.(js|jsx)$/,
+          test: /\.(js|jsx)$/i,
           exclude: /node_modules|\.meteor\/local/,
           use: {
             loader: 'babel-loader',
           },
         },
         {
-          test: /\.(graphql|gql)$/,
+          test: /\.(graphql|gql)$/i,
           exclude: /node_modules/,
           loader: '@graphql-tools/webpack-loader',
         },
