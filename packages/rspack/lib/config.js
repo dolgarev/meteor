@@ -140,7 +140,6 @@ export function configureMeteorForRspack() {
     ]),
   ];
 
-
   const testIgnorePath = `${RSPACK_BUILD_CONTEXT}/${path.dirname(
     getBuildFilePath({
       isTest: true,

@@ -4,6 +4,7 @@
 
 import fs from 'fs-extra';
 import path from 'path';
+import { wait } from "./helpers";
 
 /**
  * Helper function to assert that a Meteor app is running correctly
@@ -29,6 +30,7 @@ export async function assertMeteorApp(port, options = {}) {
 
   // Check for static content if specified
   if (inH1) {
+    await page.waitForSelector('h1');
     const h1Text = await page.$eval('h1', el => el.textContent);
     expect(h1Text).toMatch(new RegExp(inH1));
     console.log(`✅ H1: ${h1Text}`);

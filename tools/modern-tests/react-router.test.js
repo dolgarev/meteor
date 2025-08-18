@@ -92,10 +92,12 @@ async function assert404Page(port, options = {}) {
   await page.goto(`http://localhost:${port}/not-found`);
 
   // Check for 404 message
+  await page.waitForSelector('h1');
   const notFoundText = await page.$eval('h1', el => el.textContent);
   expect(notFoundText).toBe('404 - Page Not Found');
 
   // Check for additional text
+  await page.waitForSelector('p');
   const paragraphText = await page.$eval('p', el => el.textContent);
   expect(paragraphText).toBe('The page you are looking for does not exist.');
 

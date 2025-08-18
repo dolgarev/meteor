@@ -181,6 +181,7 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(tempDir, '_build/main-dev/server-entry.js');
       await assertFileExist(tempDir, '_build/main-dev/server-rspack.js');
       await assertFileExist(tempDir, '_build/main-dev/server-meteor.js');
+      await assertFileExist(tempDir, '_build/main-dev/index.html');
 
       // Assert that the Meteor app is running correctly
       await assertMeteorReactApp(port, { title: appName });
@@ -270,6 +271,7 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(tempDir, '_build/main-prod/server-entry.js');
       await assertFileExist(tempDir, '_build/main-prod/server-rspack.js');
       await assertFileExist(tempDir, '_build/main-prod/server-meteor.js');
+      await assertFileExist(tempDir, '_build/main-prod/index.html');
 
       await assertFileExist(tempDir, filePaths.server);
 
