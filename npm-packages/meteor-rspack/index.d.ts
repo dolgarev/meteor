@@ -25,6 +25,12 @@ type MeteorEnv = Record<string, any> & {
   isReactEnabled: boolean;
   isBlazeEnabled: boolean;
   isBlazeHotEnabled: boolean;
+  /**
+   * A function that creates an instance of HtmlRspackPlugin with default options.
+   * @param options - Optional configuration options that will be merged with defaults
+   * @returns An instance of HtmlRspackPlugin
+   */
+  HtmlRspackPlugin: (options?: HtmlRspackPluginOptions) => HtmlRspackPlugin;
 }
 
 export type ConfigFactory = (

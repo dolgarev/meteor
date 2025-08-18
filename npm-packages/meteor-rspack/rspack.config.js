@@ -161,6 +161,28 @@ export default function (inMeteor = {}, argv = {}) {
   const buildOutputDir = path.resolve(process.cwd(), buildContext, outputDir);
   Meteor.buildOutputDir = buildOutputDir;
 
+  // Add HtmlRspackPlugin function to Meteor
+  Meteor.HtmlRspackPlugin = (options = {}) => {
+    return new HtmlRspackPlugin({
+      inject: false,
+      cache: true,
+      filename: `../${buildContext}/${outputDir}/index.html`,
+      templateContent: `
+          <head>
+            <% for tag in htmlRspackPlugin.tags.headTags { %>
+              <%= toHtml(tag) %>
+            <% } %>
+          </head>
+          <body>
+            <% for tag in htmlRspackPlugin.tags.bodyTags { %>
+              <%= toHtml(tag) %>
+            <% } %>
+          </body>
+        `,
+      ...options
+    });
+  };
+
   // Set watch options
   const watchOptions = {
     ...defaultWatchOptions,
@@ -291,23 +313,7 @@ export default function (inMeteor = {}, argv = {}) {
         banner: bannerOutput,
         entryOnly: true,
       }),
-      new HtmlRspackPlugin({
-        inject: false,
-        cache: true,
-        filename: `../${buildContext}/${outputDir}/index.html`,
-        templateContent: `
-            <head>
-              <% for tag in htmlRspackPlugin.tags.headTags { %>
-                <%= toHtml(tag) %>
-              <% } %>
-            </head>
-            <body>
-              <% for tag in htmlRspackPlugin.tags.bodyTags { %>
-                <%= toHtml(tag) %>
-              <% } %>
-            </body>
-          `,
-      }),
+      // Meteor.HtmlRspackPlugin(),
     ],
     watchOptions,
     devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
