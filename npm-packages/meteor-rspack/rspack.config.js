@@ -313,7 +313,7 @@ export default function (inMeteor = {}, argv = {}) {
         banner: bannerOutput,
         entryOnly: true,
       }),
-      // Meteor.HtmlRspackPlugin(),
+      Meteor.HtmlRspackPlugin(),
     ],
     watchOptions,
     devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
@@ -374,8 +374,8 @@ export default function (inMeteor = {}, argv = {}) {
               "Meteor.isDevelopment": JSON.stringify(isDev),
             }
           : {
-              "Meteor.isClient": JSON.stringify(true),
-              "Meteor.isServer": JSON.stringify(false),
+              "Meteor.isClient": JSON.stringify(false),
+              "Meteor.isServer": JSON.stringify(true),
               "Meteor.isTest": JSON.stringify(isTest),
               "Meteor.isDevelopment": JSON.stringify(isDev),
               "Meteor.isProduction": JSON.stringify(isProd),

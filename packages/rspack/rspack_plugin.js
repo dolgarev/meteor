@@ -146,7 +146,7 @@ try {
       onCompileServer,
     } = setupCompilationTracking();
 
-    if (initialEntrypoints?.testModule?.client || initialEntrypoints?.testModule?.server) {
+    if (initialEntrypoints?.testClient || initialEntrypoints?.testServer) {
       runRspackBuild({
         isClient: true,
         isServer: false,
@@ -156,8 +156,8 @@ try {
       });
 
       runRspackBuild({
-        isServer: true,
         isClient: false,
+        isServer: true,
         watch: isMeteorAppTestWatch(),
         onCompile: onCompileServer,
         label: 'Test',

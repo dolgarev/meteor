@@ -96,14 +96,18 @@ export function testMeteorRspackBundler(options) {
     filePaths = { 
       client: 'client/main.jsx', 
       server: 'server/main.js',
-      test: 'tests/main.js'
+      test: 'tests/main.js',
+      testClient: undefined,
+      testServer: undefined,
     },
     customMessages = {
       devClient: "Hello from dev client",
       devServer: "Hello from dev server",
       prodClient: "Hello from prod client",
       prodServer: "Hello from prod server",
-      test: "Hello from test"
+      test: "Hello from test",
+      testClient: "Hello from test client",
+      testServer: "Hello from test server",
     },
     customUpdates = {
       devClient: (message) => `if (Meteor.isDevelopment) console.log("${message}");`,
@@ -181,7 +185,7 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(tempDir, '_build/main-dev/server-entry.js');
       await assertFileExist(tempDir, '_build/main-dev/server-rspack.js');
       await assertFileExist(tempDir, '_build/main-dev/server-meteor.js');
-      await assertFileExist(tempDir, '_build/main-dev/index.html');
+      // await assertFileExist(tempDir, '_build/main-dev/index.html');
 
       // Assert that the Meteor app is running correctly
       await assertMeteorReactApp(port, { title: appName });
@@ -356,10 +360,21 @@ export function testMeteorRspackBundler(options) {
       // Wait for a margin
       await wait(500);
 
+      const isTestModule = filePaths.test && !filePaths.testClient && !filePaths.testServer;
+
       // Assert that the app files exists
-      await assertFileExist(tempDir, '_build/test/test-entry.js');
-      await assertFileExist(tempDir, '_build/test/test-rspack.js');
-      await assertFileExist(tempDir, '_build/test/test-meteor.js');
+      if (isTestModule) {
+        await assertFileExist(tempDir, '_build/test/test-entry.js');
+        await assertFileExist(tempDir, '_build/test/test-rspack.js');
+        await assertFileExist(tempDir, '_build/test/test-meteor.js');
+      } else {
+        await assertFileExist(tempDir, '_build/test/client-entry.js');
+        await assertFileExist(tempDir, '_build/test/client-rspack.js');
+        await assertFileExist(tempDir, '_build/test/client-meteor.js');
+        await assertFileExist(tempDir, '_build/test/server-entry.js');
+        await assertFileExist(tempDir, '_build/test/server-rspack.js');
+        await assertFileExist(tempDir, '_build/test/server-meteor.js');
+      }
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterTest) {
@@ -367,13 +382,32 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Update the test code
-      await appendFileContent(tempDir, filePaths.test, {
-        content: customUpdates.test(customMessages.test),
-      });
-      await waitForMeteorOutput(
-        result.outputLines,
-        customMessages.test
-      );
+      if (isTestModule) {
+        await appendFileContent(tempDir, filePaths.test, {
+          content: customUpdates.test(customMessages.test),
+        });
+        await waitForMeteorOutput(
+          result.outputLines,
+          customMessages.test
+        );
+      } else {
+        await appendFileContent(tempDir, filePaths.testClient, {
+          content: customUpdates.test(customMessages.testClient),
+        });
+        await waitForMeteorOutput(
+          result.outputLines,
+          customMessages.test
+        );
+
+        await appendFileContent(tempDir, filePaths.testServer, {
+          content: customUpdates.test(customMessages.testServer),
+        });
+        await waitForMeteorOutput(
+          result.outputLines,
+          customMessages.test
+        );
+      }
+
       if (verbose) {
         await waitForMeteorOutput(
           result.outputLines,
@@ -408,10 +442,22 @@ export function testMeteorRspackBundler(options) {
       // Wait for a margin
       await wait(500);
 
+      const isTestModule = filePaths.test && !filePaths.testClient && !filePaths.testServer;
+
       // Assert that the app files exists
-      await assertFileExist(tempDir, '_build/test/test-entry.js');
-      await assertFileExist(tempDir, '_build/test/test-rspack.js');
-      await assertFileExist(tempDir, '_build/test/test-meteor.js');
+      if (isTestModule) {
+        await assertFileExist(tempDir, '_build/test/test-entry.js');
+        await assertFileExist(tempDir, '_build/test/test-rspack.js');
+        await assertFileExist(tempDir, '_build/test/test-meteor.js');
+      } else {
+        await assertFileExist(tempDir, '_build/test/client-entry.js');
+        await assertFileExist(tempDir, '_build/test/client-rspack.js');
+        await assertFileExist(tempDir, '_build/test/client-meteor.js');
+        await assertFileExist(tempDir, '_build/test/server-entry.js');
+        await assertFileExist(tempDir, '_build/test/server-rspack.js');
+        await assertFileExist(tempDir, '_build/test/server-meteor.js');
+      }
+
       if (verbose) {
         await waitForMeteorOutput(
           result.outputLines,

@@ -15,7 +15,8 @@ describe('TypeScript App Bundling /', () => {
     filePaths: { 
       client: 'client/main.tsx', 
       server: 'server/main.ts',
-      test: 'tests/main.ts'
+      testClient: 'tests/client.ts',
+      testServer: 'tests/server.ts',
     },
     customAssertions: {
       afterRun: async ({ result }) => {
