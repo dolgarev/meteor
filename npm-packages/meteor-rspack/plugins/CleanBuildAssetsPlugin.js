@@ -17,7 +17,6 @@ export default class CleanBuildAssetsPlugin {
   constructor(options = {}) {
     const defaults = [
       'public/_build-assets',
-      'public/_build-bundles',
       'private/_build-assets',
     ];
 

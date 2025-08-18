@@ -243,6 +243,7 @@ export default function (inMeteor = {}, argv = {}) {
       cssChunkFilename: `${assetsContext}/[id]${
         isProd ? '.[contenthash]' : ''
       }.css`,
+      clean: isProd,
     },
     optimization: {
       usedExports: true,
@@ -302,7 +303,7 @@ export default function (inMeteor = {}, argv = {}) {
             </body>
           `,
       }),
-      new RspackMeteorHtmlPlugin({}),
+      new RspackMeteorHtmlPlugin(),
     ],
     watchOptions,
     devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
