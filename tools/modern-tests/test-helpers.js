@@ -396,7 +396,7 @@ export function testMeteorRspackBundler(options) {
         });
         await waitForMeteorOutput(
           result.outputLines,
-          customMessages.test
+          customMessages.testClient
         );
 
         await appendFileContent(tempDir, filePaths.testServer, {
@@ -404,7 +404,7 @@ export function testMeteorRspackBundler(options) {
         });
         await waitForMeteorOutput(
           result.outputLines,
-          customMessages.test
+          customMessages.testServer
         );
       }
 
