@@ -1,15 +1,6 @@
-import {
-  killProcessByPort,
-  cleanupTempDir,
-  killMeteorProcess,
-  createMeteorApp,
-  runMeteorApp,
-  waitForMeteorOutput, waitForPlaywrightConsole
-} from "./helpers";
-import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
-import fs from 'fs-extra';
-import path from 'path';
-import { assertBodyStyles, assertMeteorReactApp } from "./assertions";
+import { waitForMeteorOutput } from "./helpers";
+import { testMeteorRspackBundler } from './test-helpers';
+import { assertBodyStyles, assertMetaTags } from "./assertions";
 
 describe('ReactRouter App Bundling /', () => {
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
@@ -30,10 +21,10 @@ describe('ReactRouter App Bundling /', () => {
         await assertBodyStyles({
           'white-space': 'break-spaces',
         });
-        // TODO assert
-        // await assertMetaTags({
-        //   'theme-color': '#4285f4',
-        // });
+        // Custom html rspack plugin options
+        await assertMetaTags({
+          'theme-color': '#4285f4',
+        });
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
@@ -47,10 +38,10 @@ describe('ReactRouter App Bundling /', () => {
         await assertBodyStyles({
           'white-space': 'break-spaces',
         });
-        // TODO assert
-        // await assertMetaTags({
-        //   'theme-color': '#4285f4',
-        // });
+        // Custom html rspack plugin options
+        await assertMetaTags({
+          'theme-color': '#4285f4',
+        });
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR to not be enabled in production-like mode
