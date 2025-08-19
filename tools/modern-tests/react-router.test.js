@@ -18,8 +18,9 @@ describe('ReactRouter App Bundling /', () => {
     filePaths: { 
       client: 'client/main.jsx', 
       server: 'server/main.js',
-      test: 'tests/main.js'
+      test: 'tests/main.app-test.js',
     },
+    testFullApp: true,
     customAssertions: {
       afterRun: async ({ result, port }) => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });

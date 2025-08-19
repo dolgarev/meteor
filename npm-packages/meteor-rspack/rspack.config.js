@@ -120,16 +120,16 @@ export default function (inMeteor = {}, argv = {}) {
     }
   }
 
-  const isProd = Meteor.isProduction || argv.mode === 'production';
-  const isDev = Meteor.isDevelopment || !isProd;
-  const isTest = Meteor.isTest;
-  const isClient = Meteor.isClient;
-  const isRun = Meteor.isRun;
-  const isReactEnabled = Meteor.isReactEnabled;
-  const isTestModule = Meteor.isTestModule;
-  const isTestEager = Meteor.isTestEager;
-  const isTestFullApp = Meteor.isTestFullApp;
-  const swcExternalHelpers = Meteor.swcExternalHelpers;
+  const isProd = !!Meteor.isProduction || argv.mode === 'production';
+  const isDev = !!Meteor.isDevelopment || !isProd;
+  const isTest = !!Meteor.isTest;
+  const isClient = !!Meteor.isClient;
+  const isRun = !!Meteor.isRun;
+  const isReactEnabled = !!Meteor.isReactEnabled;
+  const isTestModule = !!Meteor.isTestModule;
+  const isTestEager = !!Meteor.isTestEager;
+  const isTestFullApp = !!Meteor.isTestFullApp;
+  const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const mode = isProd ? 'production' : 'development';
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
@@ -321,7 +321,8 @@ export default function (inMeteor = {}, argv = {}) {
       new DefinePlugin({
         'Meteor.isClient': JSON.stringify(true),
         'Meteor.isServer': JSON.stringify(false),
-        'Meteor.isTest': JSON.stringify(isTest),
+        'Meteor.isTest': JSON.stringify(isTest && !isTestFullApp),
+        'Meteor.isAppTest': JSON.stringify(isTest && isTestFullApp),
         'Meteor.isDevelopment': JSON.stringify(isDev),
         'Meteor.isProduction': JSON.stringify(isProd),
       }),
@@ -351,9 +352,9 @@ export default function (inMeteor = {}, argv = {}) {
 
   const serverEntry =
     isTest && isTestEager && isTestFullApp
-      ? 'node_modules/@meteorjs/rspack/entries/eager-app-tests.js'
+      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-app-tests.js')
       : isTest && isTestEager
-      ? 'node_modules/@meteorjs/rspack/entries/eager-tests.js'
+      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-tests.js')
       : path.resolve(process.cwd(), buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}${
     (isTestModule && 'module') || 'server'
@@ -368,8 +369,9 @@ export default function (inMeteor = {}, argv = {}) {
       path: serverOutputDir,
       filename: () => `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
-      chunkFilename: `${bundlesContext}/[id].[chunkhash].js`,
+      chunkFilename: `${bundlesContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
+      clean: isProd,
     },
     optimization: { usedExports: true },
     module: {
@@ -392,13 +394,15 @@ export default function (inMeteor = {}, argv = {}) {
       new DefinePlugin(
         isTest && (isTestModule || isTestEager)
           ? {
-              'Meteor.isTest': JSON.stringify(isTest),
+              'Meteor.isTest': JSON.stringify(isTest && !isTestFullApp),
+              'Meteor.isAppTest': JSON.stringify(isTest && isTestFullApp),
               'Meteor.isDevelopment': JSON.stringify(isDev),
             }
           : {
               'Meteor.isClient': JSON.stringify(false),
               'Meteor.isServer': JSON.stringify(true),
-              'Meteor.isTest': JSON.stringify(isTest),
+              'Meteor.isTest': JSON.stringify(isTest && !isTestFullApp),
+              'Meteor.isAppTest': JSON.stringify(isTest && isTestFullApp),
               'Meteor.isDevelopment': JSON.stringify(isDev),
               'Meteor.isProduction': JSON.stringify(isProd),
             },

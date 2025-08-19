@@ -87,6 +87,8 @@ export function testMeteorBundler(options) {
  * @param {string} options.customMessages.prodServer - Message for production server
  * @param {string} options.customMessages.test - Message for test
  * @param {Function} options.customAssertions - Custom assertions to run after each test
+ * @param {boolean} options.verbose - Whether to enable verbose output (default: true)
+ * @param {boolean} options.testFullApp - Whether to run tests with the --full-app flag (default: false)
  * @returns {Function} - Jest test function
  */
 export function testMeteorRspackBundler(options) {
@@ -119,6 +121,8 @@ export function testMeteorRspackBundler(options) {
     customAssertions,
     // Some existing tests may fail if this is not set
     verbose = true,
+    // Option to run tests with --full-app flag
+    testFullApp = false,
   } = options;
 
   return () => {
@@ -349,10 +353,10 @@ export function testMeteorRspackBundler(options) {
       await killProcessByPort('8080');
     });
 
-    test(`"meteor test" / should run tests with Rspack`, async () => {
+    test(`"meteor test${testFullApp ? ' --full-app' : ''}" / should run tests with Rspack`, async () => {
       const result = await runMeteorTests(tempDir, port, {
         waitForOutput: "=> App running at:",
-        commandOptions: [],
+        commandOptions: testFullApp ? ['--full-app'] : [],
         checkTestResults: false,
       });
       meteorProcess = result.meteorProcess;
@@ -431,11 +435,11 @@ export function testMeteorRspackBundler(options) {
       await killProcessByPort(port);
     });
 
-    test(`"meteor test --once" / should run tests once with Rspack`, async () => {
+    test(`"meteor test${testFullApp ? ' --full-app' : ''} --once" / should run tests once with Rspack`, async () => {
       // Test the app with Rspack once
       const result = await runMeteorTests(tempDir, port, {
         waitForOutput: "=> App running at:",
-        commandOptions: ['--once'],
+        commandOptions: testFullApp ? ['--full-app', '--once'] : ['--once'],
         checkTestResults: true,
       });
 

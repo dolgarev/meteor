@@ -17,4 +17,9 @@ describe("react", function () {
       assert.strictEqual(Meteor.isClient, false);
     });
   }
+
+  it("is test", function () {
+    assert.strictEqual(Meteor.isTest, true);
+    assert.strictEqual(Meteor.isAppTest, false);
+  });
 });

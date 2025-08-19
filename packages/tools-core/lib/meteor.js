@@ -168,6 +168,14 @@ export function isMeteorAppTest() {
 }
 
 /**
+ * Checks if the current Meteor command is 'test' and is running in full app mode.
+ * @returns {false|*}
+ */
+export function isMeteorAppTestFullApp() {
+  return isMeteorAppTest() && !!Package?.meteor?.global?.currentCommand?.options?.['full-app'];
+}
+
+/**
  * Checks if the current Meteor command is 'test' and is running in watch mode.
  * @returns {boolean} True if the current command is 'test' and is running in watch mode, false otherwise.
  */

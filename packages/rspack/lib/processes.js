@@ -19,6 +19,7 @@ const {
 const {
   getMeteorAppDir,
   isMeteorAppTest,
+  isMeteorAppTestFullApp,
   isMeteorAppDevelopment,
   isMeteorAppProduction,
   isMeteorAppDebug,
@@ -62,18 +63,19 @@ export function getConfigFileName() {
  * @param {boolean} options.isServer - Whether this is for server-side build
  * @returns {string[]} Array of command line arguments for Rspack
  */
-export function getRspackEnv({ isClient, isServer }) {
+export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
   const RSPACK_BUILD_CONTEXT = require('./constants').RSPACK_BUILD_CONTEXT;
 
   const initialEntrypoints = getMeteorInitialAppEntrypoints();
-  const isTest = isMeteorAppTest();
+  const isTest = inIsTest != null ? inIsTest : isMeteorAppTest();
   const isTestEager =
     initialEntrypoints.testModule == null &&
     initialEntrypoints.testClient == null &&
     initialEntrypoints.testServer == null;
   const isTestModule = initialEntrypoints.testModule != null || isTestEager;
+  const isTestFullApp = isMeteorAppTestFullApp();
 
-  const module = isMeteorAppTest() ? { isTest: true } : { isMain: true };
+  const module = isTest ? { isTest: true } : { isMain: true };
   const env = isMeteorAppDevelopment()
     ? { isDevelopment: true }
     : { isProduction: true };
@@ -90,6 +92,11 @@ export function getRspackEnv({ isClient, isServer }) {
   const isTsxEnabled = inputFilePath?.endsWith('.tsx');
   const isJsxEnabled = inputFilePath?.endsWith('.jsx');
 
+  const isReactEnabled = !!process.env.METEOR_REACT_ENABLED;
+  const isCoffeescriptEnabled = !!process.env.METEOR_COFFEESCRIPT_ENABLED;
+  const isBlazeEnabled = isMeteorBlazeProject();
+  const isBlazeHotEnabled = isMeteorBlazeHotProject();
+
   const swcExternalHelpers = checkNpmDependencyExists('@swc/helpers');
 
   const pairs = [
@@ -97,9 +104,10 @@ export function getRspackEnv({ isClient, isServer }) {
     ['isProduction', isMeteorAppProduction()],
     ['isDebug', isMeteorAppDebug()],
     ['isVerbose', isMeteorAppConfigModernVerbose()],
-    ['isTest', isMeteorAppTest()],
-    ['isTestModule', isTestModule],
-    ['isTestEager', isTestEager],
+    ['isTest', isTest],
+    ...(isTest && isTestModule &&  [['isTestModule', isTestModule]] || []),
+    ...(isTest && isTestEager &&  [['isTestEager', isTestEager]] || []),
+    ...(isTest && isTestFullApp &&  [['isTestFullApp', isTestFullApp]] || []),
     ['isRun', isMeteorAppRun()],
     ['isBuild', isMeteorAppBuild()],
     ['isClient', isClient],
@@ -120,16 +128,16 @@ export function getRspackEnv({ isClient, isServer }) {
     ['buildContext', RSPACK_BUILD_CONTEXT],
     ['bundlesContext', RSPACK_BUNDLES_CONTEXT],
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
-    ['isReactEnabled', process.env.METEOR_REACT_ENABLED],
-    ['isBlazeEnabled', isMeteorBlazeProject()],
-    ['isBlazeHotEnabled', isMeteorBlazeHotProject()],
-    ['isTypescriptEnabled', isTypescriptEnabled],
-    ['isTsxEnabled', isTsxEnabled],
-    ['isJsxEnabled', isJsxEnabled],
-    ['isCoffeescriptEnabled', process.env.METEOR_COFFEESCRIPT_ENABLED],
-    ['swcExternalHelpers', swcExternalHelpers],
     ['devServerPort', RSPACK_DEVSERVER_PORT],
-  ];
+    ...(swcExternalHelpers &&  [['swcExternalHelpers', swcExternalHelpers]] || []),
+    ...(isReactEnabled &&  [['isReactEnabled', isReactEnabled]] || []),
+    ...(isBlazeEnabled &&  [['isBlazeEnabled', isBlazeEnabled]] || []),
+    ...(isBlazeHotEnabled &&  [['isBlazeHotEnabled', isBlazeHotEnabled]] || []),
+    ...(isTypescriptEnabled &&  [['isTypescriptEnabled', isTypescriptEnabled]] || []),
+    ...(isTsxEnabled &&  [['isTsxEnabled', isTsxEnabled]] || []),
+    ...(isJsxEnabled &&  [['isJsxEnabled', isJsxEnabled]] || []),
+    ...(isCoffeescriptEnabled &&  [['isCoffeescriptEnabled', isCoffeescriptEnabled]] || []),
+  ].filter(Boolean);
   return pairs.flatMap(([key, val]) => [
     '--env',
     `${key}=${val}`
@@ -246,7 +254,7 @@ export function startRspackServerWatch(options = {}) {
  * @returns {Promise<void>} A promise that resolves when the build is complete
  * @throws {Error} If the build process fails
  */
-export async function runRspackBuild({ isClient, isServer, isTestModule, onCompile, watch, label = 'Build' } = {}) {
+export async function runRspackBuild({ isClient, isServer, isTest, isTestModule, onCompile, watch, label = 'Build' } = {}) {
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
 
@@ -261,7 +269,7 @@ export async function runRspackBuild({ isClient, isServer, isTestModule, onCompi
         '--config',
         configFile,
         ...(watch && ['--watch']) || [],
-        ...getRspackEnv({ isClient, isServer, isTestModule }),
+        ...getRspackEnv({ isClient, isServer, isTest, isTestModule }),
       ].filter(Boolean),
       {
       cwd: appDir,
