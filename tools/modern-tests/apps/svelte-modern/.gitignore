@@ -1,0 +1,7 @@
+node_modules/
+
+# Meteor-Rspack build context directories
+_build
+public/_build-bundles
+public/_build-assets
+private/_build-assets
