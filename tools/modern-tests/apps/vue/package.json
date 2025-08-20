@@ -33,6 +33,7 @@
     "@rspack/cli": "^1.4.8",
     "@rspack/core": "^1.4.8",
     "@types/meteor": "^2.9.7",
+    "playwright": "^1.54.2",
     "tailwindcss": "^4.1.12"
   }
 }
