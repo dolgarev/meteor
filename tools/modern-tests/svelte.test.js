@@ -3,9 +3,9 @@ import {
 } from "./helpers";
 import { testMeteorRspackBundler } from './test-helpers';
 
-describe('SvelteModern App Bundling /', () => {
+describe('Svelte App Bundling /', () => {
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
-    appName: 'svelte-modern',
+    appName: 'svelte',
     port: 3122,
     filePaths: { 
       client: 'client/main.js', 
