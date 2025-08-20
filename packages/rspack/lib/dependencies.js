@@ -16,7 +16,6 @@ const {
 } = require('meteor/tools-core/lib/log');
 const {
   getMeteorAppDir,
-  isMeteorCoffeescriptProject,
 } = require('meteor/tools-core/lib/meteor');
 const {
   checkNpmDependencyExists,
@@ -31,8 +30,6 @@ const {
   DEFAULT_RSPACK_VERSION,
   DEFAULT_METEOR_RSPACK_VERSION,
   DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION,
-  DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION,
-  DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION,
   DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION,
   GLOBAL_STATE_KEYS,
 } = require('./constants');
@@ -178,48 +175,5 @@ export async function ensureRspackReactInstalled() {
     dependencies,
     GLOBAL_STATE_KEYS.RSPACK_REACT_INSTALLATION_CHECKED,
     'Rspack React'
-  );
-}
-
-/**
- * Checks if Coffeescript is installed and sets global state accordingly
- * Sets global state and environment variables based on Coffeescript detection
- * @returns {Promise<void>} A promise that resolves when the check is complete
- */
-export function checkCoffeescriptInstalled() {
-  // Skip if already checked
-  if (getGlobalState(GLOBAL_STATE_KEYS.COFFEESCRIPT_CHECKED, false)) {
-    return;
-  }
-
-  const appDir = getMeteorAppDir();
-  const isCoffescriptInstalled =
-    checkNpmDependencyExists('coffeescript', { cwd: appDir }) ||
-    isMeteorCoffeescriptProject();
-
-  if (isCoffescriptInstalled) {
-    // Set environment variable to indicate React is enabled
-    process.env.METEOR_COFFEESCRIPT_ENABLED = 'true';
-  } else {
-    process.env.METEOR_COFFEESCRIPT_ENABLED = 'false';
-  }
-
-  // Mark as checked
-  setGlobalState(GLOBAL_STATE_KEYS.COFFEESCRIPT_CHECKED, true);
-
-  return isCoffescriptInstalled;
-}
-
-export async function ensureRspackCoffeescriptInstalled() {
-  const dependencies = [
-    { name: 'coffeescript', version: DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION, semverCondition: 'gte', dev: true },
-    { name: 'coffee-loader', version: DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION, semverCondition: 'gte', dev: true },
-    { name: 'swc-loader', version: DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION, semverCondition: 'gte', dev: true }
-  ];
-
-  await ensureDependenciesInstalled(
-    dependencies,
-    GLOBAL_STATE_KEYS.RSPACK_COFFEESCRIPT_INSTALLATION_CHECKED,
-    'Rspack Coffeescript'
   );
 }

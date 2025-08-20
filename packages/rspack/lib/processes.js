@@ -93,7 +93,6 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
   const isJsxEnabled = inputFilePath?.endsWith('.jsx');
 
   const isReactEnabled = !!process.env.METEOR_REACT_ENABLED;
-  const isCoffeescriptEnabled = !!process.env.METEOR_COFFEESCRIPT_ENABLED;
   const isBlazeEnabled = isMeteorBlazeProject();
   const isBlazeHotEnabled = isMeteorBlazeHotProject();
 
@@ -136,7 +135,6 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ...(isTypescriptEnabled &&  [['isTypescriptEnabled', isTypescriptEnabled]] || []),
     ...(isTsxEnabled &&  [['isTsxEnabled', isTsxEnabled]] || []),
     ...(isJsxEnabled &&  [['isJsxEnabled', isJsxEnabled]] || []),
-    ...(isCoffeescriptEnabled &&  [['isCoffeescriptEnabled', isCoffeescriptEnabled]] || []),
   ].filter(Boolean);
   return pairs.flatMap(([key, val]) => [
     '--env',

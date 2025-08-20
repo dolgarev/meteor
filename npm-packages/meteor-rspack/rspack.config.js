@@ -82,21 +82,6 @@ function createSwcConfig({
   };
 }
 
-// Coffeescript rule
-function createCoffeescriptConfig({ swcConfig }) {
-  return {
-    test: /\.coffee$/i,
-    use: [
-      {
-        loader: 'swc-loader',
-        options: swcConfig,
-      },
-      {
-        loader: 'coffee-loader',
-      },
-    ],
-  };
-}
 
 // Keep files outside of build folders
 function keepOutsideBuild() {
@@ -148,7 +133,6 @@ export default function (inMeteor = {}, argv = {}) {
   const isTsxEnabled =
     Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
 
-  const isCoffeescriptEnabled = Meteor.isCoffeescriptEnabled || false;
 
   // Determine entry points
   const entryPath = Meteor.entryPath;
@@ -227,6 +211,9 @@ export default function (inMeteor = {}, argv = {}) {
     externalHelpers: swcExternalHelpers,
     isDevEnvironment,
   });
+  // Expose swc config to use in custom configs
+  Meteor.swcConfigOptions = swcConfigRule.options;
+
   const externals = [
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
@@ -235,7 +222,6 @@ export default function (inMeteor = {}, argv = {}) {
     '/': path.resolve(process.cwd()),
   };
   const extensions = [
-    ...(isCoffeescriptEnabled ? ['.coffee'] : []),
     '.ts',
     '.tsx',
     '.mts',
@@ -247,11 +233,7 @@ export default function (inMeteor = {}, argv = {}) {
     '.json',
     '.wasm',
   ];
-  const extraRules = [
-    ...(isCoffeescriptEnabled
-      ? [createCoffeescriptConfig({ swcConfig: swcConfigRule?.options })]
-      : []),
-  ];
+  const extraRules = [];
 
   const reactRefreshModule = isReactEnabled
     ? safeRequire('@rspack/plugin-react-refresh')

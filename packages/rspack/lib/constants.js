@@ -5,13 +5,10 @@
 
 export const DEFAULT_RSPACK_VERSION = '1.4.8';
 
-export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.30';
+export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.31';
 
 export const DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION = '1.4.3';
 
-export const DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION = '2.7.0';
-
-export const DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION = '5.0.0';
 
 export const DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION = '0.2.6';
 
@@ -33,8 +30,6 @@ export const GLOBAL_STATE_KEYS = {
   SERVER_PROCESS: 'rspack.serverProcess',
   RSPACK_INSTALLATION_CHECKED: 'rspack.rspackInstallationChecked',
   RSPACK_REACT_INSTALLATION_CHECKED: 'rspack.rspackReactInstallationChecked',
-  COFFEESCRIPT_CHECKED: 'rspack.coffeescriptChecked',
-  RSPACK_COFFEESCRIPT_INSTALLATION_CHECKED: 'rspack.rspackCoffeescriptInstallationChecked',
   REACT_CHECKED: 'rspack.reactChecked',
   INITIAL_ENTRYPONTS: 'meteor.initialEntrypoints',
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',

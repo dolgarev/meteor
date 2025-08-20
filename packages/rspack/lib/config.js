@@ -52,7 +52,6 @@ function getFileExtensionsToIgnore() {
 
   // Base extensions to ignore
   const baseExtensions = [
-    '.coffee',
     '.ts',
     '.tsx',
     '.js',
