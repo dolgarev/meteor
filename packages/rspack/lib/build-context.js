@@ -30,8 +30,6 @@ const {
 
 const {
   RSPACK_BUILD_CONTEXT,
-  RSPACK_ASSETS_CONTEXT,
-  RSPACK_BUNDLES_CONTEXT,
   GLOBAL_STATE_KEYS,
   FILE_ROLE,
 } = require('./constants');
@@ -75,11 +73,9 @@ export function ensureRspackBuildContextExists() {
     appDir,
     [
       RSPACK_BUILD_CONTEXT,
-      `public/${RSPACK_BUNDLES_CONTEXT}`,
-      `public/${RSPACK_ASSETS_CONTEXT}`,
-      `private/${RSPACK_ASSETS_CONTEXT}`,
+      `${RSPACK_BUILD_CONTEXT}-*`,
     ],
-    'Meteor-Rspack build context directories',
+    'Meteor Modern-Tools build context directories',
   );
 
   return buildContextPath;
