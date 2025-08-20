@@ -1,5 +1,7 @@
 import { Meteor } from 'meteor/meteor';
+import { S3mini } from "s3mini";
 import { LinksCollection } from '/imports/api/links';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 async function insertLink({ title, url }) {
   await LinksCollection.insertAsync({ title, url, createdAt: new Date() });
@@ -35,3 +37,6 @@ Meteor.startup(async () => {
     return LinksCollection.find();
   });
 });
+
+console.log("--> S3mini imported: ", !!S3mini);
+console.log("--> StreamableHTTPClientTransport imported: ", !!StreamableHTTPClientTransport);

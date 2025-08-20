@@ -9,12 +9,14 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.23.5",
+    "@modelcontextprotocol/sdk": "^1.17.3",
     "@swc/helpers": "^0.5.17",
     "meteor-node-stubs": "^1.2.12",
     "react": "^18.3.1",
     "react-compiler-runtime": "^19.1.0-rc.2",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.0.0"
+    "react-router-dom": "^7.0.0",
+    "s3mini": "^0.4.0"
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.27.1",
