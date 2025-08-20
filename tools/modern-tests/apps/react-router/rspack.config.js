@@ -12,6 +12,12 @@ import { defineConfig } from '@meteorjs/rspack';
  */
 export default defineConfig(Meteor => {
   return {
+    resolve: {
+      alias: {
+        '@helper/alias': '/imports/helpers/alias.js',
+        '@react/alias': '/node_modules/react',
+      },
+    },
     module: {
       rules: [
         {
