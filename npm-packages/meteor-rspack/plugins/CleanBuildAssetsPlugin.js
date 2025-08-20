@@ -28,7 +28,7 @@ export default class CleanBuildAssetsPlugin {
   }
 
   apply(compiler) {
-    compiler.hooks.beforeCompile.tapPromise(
+    compiler.hooks.beforeRun.tapPromise(
       'CleanBuildAssetsPlugin',
       async () => {
         for (const target of this.targets) {
