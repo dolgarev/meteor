@@ -5,7 +5,7 @@ import { inspect } from 'node:util';
 import path from 'path';
 import { merge } from 'webpack-merge';
 
-import { mergeSplitOverlap } from './lib/mergeRulesSplitOverlap.js';
+import { cleanOmittedPaths, mergeSplitOverlap } from "./lib/mergeRulesSplitOverlap.js";
 import { getMeteorAppSwcConfig } from './lib/swc.js';
 import CleanBuildAssetsPlugin from './plugins/CleanBuildAssetsPlugin.js';
 import HtmlRspackPlugin from './plugins/HtmlRspackPlugin.js';
@@ -425,11 +425,31 @@ export default function (inMeteor = {}, argv = {}) {
         ? projectConfig(Meteor, argv)
         : projectConfig;
 
+    const omitPaths = [
+      'name',
+      'target',
+      'entry',
+      'output.path',
+      'output.filename',
+      'output.publicPath',
+    ];
+    const warningFn = path => {
+      console.warn(
+        `[rspack.config.js] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
+      );
+    };
+
     if (Meteor.isClient) {
-      clientConfig = mergeSplitOverlap(clientConfig, userConfig);
+      clientConfig = mergeSplitOverlap(
+        clientConfig,
+        cleanOmittedPaths(userConfig, { omitPaths, warningFn }),
+      );
     }
     if (Meteor.isServer) {
-      serverConfig = mergeSplitOverlap(serverConfig, userConfig);
+      serverConfig = mergeSplitOverlap(
+        serverConfig,
+        cleanOmittedPaths(userConfig, { omitPaths, warningFn }),
+      );
     }
   }
 

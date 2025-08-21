@@ -174,6 +174,85 @@ export function unique(key, pluginNames = [], getter = item => item.constructor 
 }
 
 /**
+ * Helper function to clean fields in an object based on omit paths.
+ * Supports nested path strings like 'output.filename'.
+ *
+ * @param {Object} obj - The object to clean
+ * @param {Object} options - Configuration options
+ * @param {string[]} [options.omitPaths] - Paths to omit from the object (e.g., 'output.filename')
+ * @param {Function} [options.warningFn] - Custom warning function that receives the path string
+ * @returns {Object} The cleaned object with specified paths removed
+ */
+export function cleanOmittedPaths(obj, options = {}) {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+
+  const { omitPaths = [], warningFn } = options;
+
+  // If no omit paths, return the original object
+  if (!omitPaths.length) {
+    return obj;
+  }
+
+  const result = { ...obj };
+
+  // Process each omit path
+  omitPaths.forEach(path => {
+    // Convert path to array of keys
+    const pathArray = Array.isArray(path) ? path : path.split('.');
+    const pathString = Array.isArray(path) ? path.join('.') : path;
+
+    // Start with the root object
+    let current = result;
+    let parent = null;
+    let lastKey = null;
+
+    // Traverse the path to find the target property
+    for (let i = 0; i < pathArray.length - 1; i++) {
+      const key = pathArray[i];
+      if (current && typeof current === 'object' && key in current) {
+        parent = current;
+        lastKey = key;
+        current = current[key];
+      } else {
+        // Path doesn't exist in the object, nothing to remove
+        return;
+      }
+    }
+
+    // Get the final key in the path
+    const finalKey = pathArray[pathArray.length - 1];
+
+    // Handle single-level paths (from root)
+    if (pathArray.length === 1) {
+      const rootKey = pathArray[0];
+      if (rootKey in result) {
+        // Log warning
+        if (typeof warningFn === 'function') {
+          warningFn(pathString);
+        }
+        delete result[rootKey];
+      }
+      return;
+    }
+
+    // If we found the property for nested paths, remove it
+    if (parent && lastKey && finalKey) {
+      if (current && typeof current === 'object' && finalKey in current) {
+        // Log warning
+        if (typeof warningFn === 'function') {
+          warningFn(pathString);
+        }
+        delete current[finalKey];
+      }
+    }
+  });
+
+  return result;
+}
+
+/**
  * Merges webpack/rspack configs with smart handling of overlapping rules.
  *
  * @param {...Object} configs - Configs to merge
