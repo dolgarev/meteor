@@ -211,41 +211,60 @@ export function ensureModuleFilesExist() {
 
 /**
  * Generates a build file path based on configuration parameters
+ * @param {Object} config - Configuration object containing build settings
  * @returns {string} The build file path or filename
  */
 export function getBuildFilePath(config) {
-  // Determine module part (test or main)
-  const module = config?.isTest ? 'test' : config?.isMain ? 'main' : '';
+  // Determine the module part (directory name)
+  let module = '';
+  if (config?.isTest) {
+    module = 'test';
+  } else if (config?.isMain) {
+    module = 'main';
+  }
 
-  // Determine side part (test, server, or client)
-  const side = config?.isTestModule ? 'test' : config?.isServer ? 'server' : config?.isClient ? 'client' : '';
+  // Determine the side part (first part of filename)
+  let side = '';
+  if (config?.isTestModule) {
+    side = 'test';
+  } else if (config?.isServer) {
+    side = 'server';
+  } else if (config?.isClient) {
+    side = 'client';
+  }
 
-  // Determine environment part (dev or prod for non-test files)
-  const env = config?.isTest
-    ? ''
-    : config?.isDevelopment
-    ? 'dev'
-    : config?.isProduction
-    ? 'prod'
-    : '';
+  // Determine the environment part (only for non-test files)
+  let env = '';
+  if (!config?.isTest) {
+    if (config?.isDevelopment) {
+      env = 'dev';
+    } else if (config?.isProduction) {
+      env = 'prod';
+    }
+  }
 
-  // Determine role part (meteor for run/build, rspack for output, or the role itself)
-  const role = [FILE_ROLE.run, FILE_ROLE.build].includes(config?.role)
-    ? 'meteor'
-    : [FILE_ROLE.output].includes(config?.role)
-    ? 'rspack'
-    : config?.role;
+  // Determine the role part
+  let role = config?.role;
+  if ([FILE_ROLE.run, FILE_ROLE.build].includes(role)) {
+    role = 'meteor';
+  } else if ([FILE_ROLE.output].includes(role)) {
+    role = 'rspack';
+  }
 
-  // Get file extension (default to js)
+  // 5. Get file extension (default to js)
   const extension = config?.extension || 'js';
 
-  // Construct the filename
+  // 6. Construct the filename: {side}-{role}.{extension}
   const filename = `${side}-${role}.${extension}`;
 
-  // Return only filename or full path based on config
-  return config?.onlyFilename
-    ? filename
-    : `${module}${env ? `-${env}` : ''}/${filename}`;
+  // Return either just the filename or the full path
+  if (config?.onlyFilename) {
+    return filename;
+  } else {
+    // Full path format: {module}[-{env}]/{filename}
+    const envSuffix = env ? `-${env}` : '';
+    return `${module}${envSuffix}/${filename}`;
+  }
 }
 
 /**
