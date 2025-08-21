@@ -22,6 +22,7 @@ var Profile = require('../tool-env/profile').Profile;
 import { requestGarbageCollection } from "../utils/gc.js";
 import { Unibuild } from "./unibuild.js";
 import rspackHelpers from "../tool-env/rspack";
+import { getCurrentNodeBinDir, getDevBundle } from "../fs/files";
 
 var rejectBadPath = function (p) {
   if (p.match(/\.\./)) {
@@ -519,6 +520,10 @@ Object.assign(Isopack.prototype, {
 
       // Share the meteorConfig object as part of plugin API
       getMeteorConfig: getMeteorConfig,
+
+      // Share functions to get the dev bundle context
+      getDevBundle,
+      getCurrentNodeBinDir,
 
       // Share the rspackHelpers as part of plugin API
       rspackHelpers,

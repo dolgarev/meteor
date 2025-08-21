@@ -1,1 +1,0 @@
-Tinytest.add('tools-core', () => {});

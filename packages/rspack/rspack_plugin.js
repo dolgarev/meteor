@@ -34,7 +34,7 @@ const {
   startRspackClientServe,
   startRspackServerWatch,
   runRspackBuild,
-  cleanup
+  cleanup,
 } = require('./lib/processes');
 
 const {
@@ -60,17 +60,30 @@ const {
   isMeteorAppTestFullApp,
   isMeteorAppDevelopment,
   isMeteorAppProduction,
+  isMeteorAppDebug,
+  isMeteorAppConfigModernVerbose,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
+  logInfo,
   logError,
 } = require('meteor/tools-core/lib/log');
+
+const {
+  getNpxCommand,
+  getNpmCommand,
+} = require('meteor/tools-core/lib/npm');
 
 // Get entry points from Meteor configuration
 setGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS, getMeteorAppEntrypoints());
 
 // Main entry point - using top-level await
 try {
+  if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
+    logInfo(`[i] Meteor Npx prefix: ${getNpxCommand([])?.prefix}`);
+    logInfo(`[i] Meteor Npm prefix: ${getNpmCommand([])?.prefix}`);
+  }
+
   // Ensure Rspack is installed
   await ensureRspackInstalled();
 

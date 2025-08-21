@@ -3,6 +3,34 @@ const path = require('path');
 const { spawnProcess } = require('./process');
 
 /**
+ * Gets the path to a Node.js binary using Plugin.getCurrentNodeBinDir() if available,
+ * otherwise returns null.
+ * 
+ * @param {string} binaryName - The name of the binary (e.g., 'npm', 'npx', 'node')
+ * @returns {string|null} The path to the specified binary, or null if not available
+ */
+export function getNodeBinaryPath(binaryName) {
+  try {
+    // Try to access Plugin.getCurrentNodeBinDir()
+    if (typeof Plugin !== 'undefined' && 
+        typeof Plugin.getCurrentNodeBinDir === 'function' && 
+        Plugin.getCurrentNodeBinDir()) {
+      return path.join(Plugin.getCurrentNodeBinDir(), binaryName);
+    }
+
+    // If we're in a context where we can directly access the function
+    if (typeof getCurrentNodeBinDir === 'function') {
+      return path.join(getCurrentNodeBinDir(), binaryName);
+    }
+
+    return null;
+  } catch (e) {
+    // If any error occurs, return null
+    return null;
+  }
+}
+
+/**
  * Checks if a npm dependency exists in the project.
  * First checks optimistically in node_modules folder, then checks package.json.
  * 
@@ -77,18 +105,17 @@ export function checkNpmBinaryExists(binary, options = {}) {
 }
 
 /**
- * Installs a npm dependency using `meteor npm install`.
+ * Builds npm install arguments based on options and dependencies
  * 
  * @param {string|string[]} dependencies - The npm dependency or dependencies to install
  * @param {Object} [options] - Options for the installation
- * @param {string} [options.cwd] - Current working directory (defaults to process.cwd())
  * @param {boolean} [options.dev=false] - If true, install as a dev dependency
  * @param {boolean} [options.exact=false] - If true, install with exact version
- * @returns {Promise<boolean>} A promise that resolves to true if installation succeeded, false otherwise
+ * @param {boolean} [options.isMeteorCommand=false] - If true, prepends 'npm' to the args for meteor command
+ * @returns {string[]} Array of arguments for the npm install command
  */
-export function installNpmDependency(dependencies, options = {}) {
-  const cwd = options.cwd || process.cwd();
-  const args = ['npm', 'install'];
+function buildNpmInstallArgs(dependencies, options = {}) {
+  const args = options.isMeteorCommand ? ['npm', 'install'] : ['install'];
 
   // Add flags based on options
   if (options.dev) {
@@ -106,9 +133,22 @@ export function installNpmDependency(dependencies, options = {}) {
     args.push(dependencies);
   }
 
+  return args;
+}
+
+/**
+ * Executes a command and returns a promise that resolves to true if successful
+ * 
+ * @param {string} command - The command to execute
+ * @param {string[]} args - The arguments for the command
+ * @param {Object} options - Options for the spawn process
+ * @param {string} options.cwd - Current working directory
+ * @returns {Promise<boolean>} A promise that resolves to true if command succeeded, false otherwise
+ */
+function executeCommand(command, args, options) {
   return new Promise((resolve) => {
-    const proc = spawnProcess('meteor', args, {
-      cwd,
+    spawnProcess(command, args, {
+      cwd: options.cwd,
       onExit: (code) => {
         resolve(code === 0);
       },
@@ -117,6 +157,33 @@ export function installNpmDependency(dependencies, options = {}) {
       }
     });
   });
+}
+
+/**
+ * Installs a npm dependency using direct npm binary if available, otherwise falls back to `meteor npm install`.
+ * 
+ * @param {string|string[]} dependencies - The npm dependency or dependencies to install
+ * @param {Object} [options] - Options for the installation
+ * @param {string} [options.cwd] - Current working directory (defaults to process.cwd())
+ * @param {boolean} [options.dev=false] - If true, install as a dev dependency
+ * @param {boolean} [options.exact=false] - If true, install with exact version
+ * @returns {Promise<boolean>} A promise that resolves to true if installation succeeded, false otherwise
+ */
+export function installNpmDependency(dependencies, options = {}) {
+  const cwd = options.cwd || process.cwd();
+
+  // Try to get the npm binary path
+  const npmBinaryPath = getNodeBinaryPath('npm');
+
+  // If we have a direct path to npm, use it
+  if (npmBinaryPath && fs.existsSync(npmBinaryPath)) {
+    const args = buildNpmInstallArgs(dependencies, options);
+    return executeCommand(npmBinaryPath, args, { cwd });
+  }
+
+  // Fall back to the current method using 'meteor npm install'
+  const args = buildNpmInstallArgs(dependencies, { ...options, isMeteorCommand: true });
+  return executeCommand('meteor', args, { cwd });
 }
 
 
@@ -199,4 +266,56 @@ export function checkNpmDependencyVersion(dependency, options = {}) {
 
   // If we've reached this point, the dependency version couldn't be determined
   return false;
+}
+
+/**
+ * Gets the npm command and arguments
+ * @param {string[]} args - The arguments to pass to npm
+ * @returns {Object} An object with command, args, and base properties
+ */
+export function getNpmCommand(args) {
+  // Try to get the npm binary path
+  const npmBinaryPath = getNodeBinaryPath('npm');
+
+  // If we have a direct path to npm, use it
+  if (npmBinaryPath && fs.existsSync(npmBinaryPath)) {
+    return {
+      command: npmBinaryPath,
+      args: args,
+      prefix: `${npmBinaryPath}`,
+    };
+  }
+
+  // Fall back to the current method using 'meteor npm'
+  return {
+    command: 'meteor',
+    args: ['npm', ...args],
+    prefix: `meteor npm`,
+  };
+}
+
+/**
+ * Gets the npx command and arguments
+ * @param {string[]} args - The arguments to pass to npx
+ * @returns {Object} An object with command, args, and base properties
+ */
+export function getNpxCommand(args) {
+  // Try to get the npx binary path
+  const npxBinaryPath = getNodeBinaryPath('npx');
+
+  // If we have a direct path to npx, use it
+  if (npxBinaryPath && fs.existsSync(npxBinaryPath)) {
+    return {
+      command: npxBinaryPath,
+      args: args,
+      prefix: `${npxBinaryPath}`,
+    };
+  }
+
+  // Fall back to the current method using 'meteor npx'
+  return {
+    command: 'meteor',
+    args: ['npx', ...args],
+    prefix: `meteor npx`,
+  };
 }

@@ -2,7 +2,7 @@
  * @module processes
  * @description Functions for managing Rspack processes
  */
-import { checkNpmDependencyExists } from 'meteor/tools-core/lib/npm';
+import { checkNpmDependencyExists, getNpxCommand } from 'meteor/tools-core/lib/npm';
 import { RSPACK_DEVSERVER_PORT } from "./constants";
 
 const {
@@ -160,9 +160,10 @@ export function startRspackClientServe(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
+  const { command, args } = getNpxCommand(['rspack', 'serve', '--config', configFile, ...getRspackEnv({ isClient: true, isServer: false })]);
   const newClientProcess = spawnProcess(
-    'npx',
-    ['rspack', 'serve', '--config', configFile, ...getRspackEnv({ isClient: true, isServer: false })], {
+    command,
+    args, {
       cwd: appDir,
       onStdout: (data) => {
         logInfo(`[Rspack Client] ${data}`);
@@ -212,9 +213,10 @@ export function startRspackServerWatch(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
+  const { command, args } = getNpxCommand(['rspack', 'build', '--watch', '--config', configFile, ...getRspackEnv({ isClient: false, isServer: true })]);
   const newServerProcess = spawnProcess(
-    'npx',
-    ['rspack', 'build', '--watch', '--config', configFile, ...getRspackEnv({ isClient: false, isServer: true })], {
+    command,
+    args, {
     cwd: appDir,
     onStdout: (data) => {
       logInfo(`[Rspack Server] ${data}`);
@@ -259,16 +261,18 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
   const endpoint = isTestModule ? 'Module' : isClient ? 'Client' : 'Server';
   // Use a promise to ensure Meteor waits until Rspack finishes
   return new Promise((resolve, reject) => {
+    const rspackArgs = [
+      'rspack',
+      'build',
+      '--config',
+      configFile,
+      ...(watch && ['--watch']) || [],
+      ...getRspackEnv({ isClient, isServer, isTest, isTestModule }),
+    ].filter(Boolean);
+    const { command, args } = getNpxCommand(rspackArgs);
     spawnProcess(
-      'npx',
-      [
-        'rspack',
-        'build',
-        '--config',
-        configFile,
-        ...(watch && ['--watch']) || [],
-        ...getRspackEnv({ isClient, isServer, isTest, isTestModule }),
-      ].filter(Boolean),
+      command,
+      args,
       {
       cwd: appDir,
       onStdout: (data) => {
