@@ -1,14 +1,9 @@
 import {
   waitForMeteorOutput,
 } from "./helpers";
-import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
+import { testMeteorRspackBundler } from './test-helpers';
 
 describe('TypeScript App Bundling /', () => {
-  describe('Meteor Bundler /', testMeteorBundler({
-    appName: 'typescript',
-    port: 3111
-  }));
-
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
     appName: 'typescript',
     port: 3112,

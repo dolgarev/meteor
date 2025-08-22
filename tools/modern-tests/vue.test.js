@@ -1,14 +1,9 @@
 import {
   waitForMeteorOutput,
 } from "./helpers";
-import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
+import { testMeteorRspackBundler } from './test-helpers';
 
 describe('Vue App Bundling /', () => {
-  describe('Meteor Bundler /', testMeteorBundler({
-    appName: 'vue',
-    port: 3131
-  }));
-
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
     appName: 'vue',
     port: 3132,

@@ -1,7 +1,7 @@
 import {
   waitForMeteorOutput,
 } from "./helpers";
-import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
+import { testMeteorRspackBundler } from './test-helpers';
 
 describe('CoffeeScript App Bundling /', () => {
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({

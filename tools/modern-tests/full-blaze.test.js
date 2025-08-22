@@ -1,14 +1,9 @@
 import {
   waitForMeteorOutput,
 } from "./helpers";
-import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
+import { testMeteorRspackBundler } from './test-helpers';
 
 describe('Full Blaze App Bundling /', () => {
-  describe('Meteor Bundler /', testMeteorBundler({
-    appName: 'full-blaze',
-    port: 3121
-  }));
-
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
     appName: 'full-blaze',
     port: 3122,

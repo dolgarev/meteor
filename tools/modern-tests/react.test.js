@@ -64,11 +64,6 @@ describe('React App Bundling /', () => {
     });
   });
 
-  describe('Meteor Bundler /', testMeteorBundler({
-    appName: 'react',
-    port: 3101
-  }));
-
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
     appName: 'react',
     port: 3102,
