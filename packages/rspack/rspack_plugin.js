@@ -74,7 +74,7 @@ const {
   getNpmCommand,
 } = require('meteor/tools-core/lib/npm');
 
-if (isMeteorAppRun() || isMeteorAppBuild()) {
+if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
   // Get entry points from Meteor configuration
   setGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS, getMeteorAppEntrypoints());
 
