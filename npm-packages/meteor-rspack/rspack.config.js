@@ -125,6 +125,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isTestEager = !!Meteor.isTestEager;
   const isTestFullApp = !!Meteor.isTestFullApp;
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
+  const isNative = !!Meteor.isNative;
   const mode = isProd ? 'production' : 'development';
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
@@ -203,7 +204,7 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
-  const isDevEnvironment = isRun && isDev && !isTest;
+  const isDevEnvironment = isRun && isDev && !isTest && !isNative;
   const swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
     isJsxEnabled,
@@ -325,7 +326,7 @@ export default function (inMeteor = {}, argv = {}) {
       Meteor.HtmlRspackPlugin(),
     ],
     watchOptions,
-    devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
+    devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
     ...(isDevEnvironment && {
       devServer: {
         static: { directory: clientOutputDir, publicPath: '/__rspack__/' },
@@ -406,8 +407,8 @@ export default function (inMeteor = {}, argv = {}) {
       isTestModule && requireExternalsPlugin,
     ],
     watchOptions,
-    devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
-    ...((isDevEnvironment || (isTest && !isTestEager)) &&
+    devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
+    ...((isDevEnvironment || (isTest && !isTestEager) || isNative) &&
       createCacheStrategy(mode)),
   };
 

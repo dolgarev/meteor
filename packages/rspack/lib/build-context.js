@@ -432,9 +432,7 @@ import '../../${config?.entryFile}';`;
   }
 
   if (config?.outputFile &&
-    (role === FILE_ROLE.build ||
-      config?.isProduction ||
-      config?.isNative ||
+    (role === FILE_ROLE.build || config?.isProduction ||
        (role === FILE_ROLE.run && (config?.isServer || config?.isTest)))) {
     return `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
 ${
