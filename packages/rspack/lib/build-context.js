@@ -17,6 +17,7 @@ const {
   isMeteorAppRun,
   isMeteorAppBuild,
   isMeteorBlazeProject,
+  isMeteorAppNative,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -95,7 +96,10 @@ export function ensureRspackBuildContextExists() {
 export function ensureModuleFilesExist() {
   const appDir = getMeteorAppDir();
 
-  const env = isMeteorAppDevelopment() ? { isDevelopment: true } : { isProduction: true };
+  const env = {
+    ...(isMeteorAppDevelopment() ? { isDevelopment: true } : { isProduction: true }),
+    isNative: isMeteorAppNative(),
+  };
   const commandRole = isMeteorAppRun()
     ? { role: FILE_ROLE.run }
     : isMeteorAppBuild()
@@ -428,7 +432,9 @@ import '../../${config?.entryFile}';`;
   }
 
   if (config?.outputFile &&
-      (role === FILE_ROLE.build || config?.isProduction ||
+    (role === FILE_ROLE.build ||
+      config?.isProduction ||
+      config?.isNative ||
        (role === FILE_ROLE.run && (config?.isServer || config?.isTest)))) {
     return `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
 ${
