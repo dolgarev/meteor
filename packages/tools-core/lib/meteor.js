@@ -188,8 +188,9 @@ export function isMeteorAppTestWatch() {
  * @returns {boolean}
  */
 export function isMeteorAppNativeAndroid() {
-  return Package?.meteor?.global?.currentCommand?.options?.['android-device'] ||
-    Package?.meteor?.global?.currentCommand?.options?.['android'];
+  return Package?.meteor?.global?.currentCommand?.options?.args?.some(_arg =>
+    ['android', 'android-device'].includes(_arg)
+  );
 }
 
 /**
@@ -197,8 +198,9 @@ export function isMeteorAppNativeAndroid() {
  * @returns {boolean}
  */
 export function isMeteorAppNativeIos() {
-  return Package?.meteor?.global?.currentCommand?.options?.['ios-device'] ||
-    Package?.meteor?.global?.currentCommand?.options?.['ios'];
+  return Package?.meteor?.global?.currentCommand?.options?.args?.some(_arg =>
+    ['ios', 'ios-device'].includes(_arg)
+  );
 }
 
 /**
