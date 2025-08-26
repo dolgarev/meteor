@@ -54,7 +54,7 @@ if (condition) {
 
 ### Reserve a new build context
 
-A Meteor-Rspack project reserves the folders `_build`, `public/_build-bundles`, and `public/_build-assets` to store intermediate bundles. These bundles are then passed to the Meteor bundler to complete the final app code. These folders are automatically prepared and cleared, as well as added to `.gitignore` if you are using Git.
+A Meteor-Rspack project reserves the folders `_build`, `public/_build-bundles`, and `public/_build-assets` to store intermediate bundles. These bundles are then passed to the Meteor bundler to complete the final app code. These folders are automatically prepared and cleared, as well as added to `.gitignore` if you are using Git. It’s also recommended to exclude them from IDE analysis.
 
 You do not need to migrate your project for this, just make sure these folders are reserved for Meteor-Rspack integration. If you currently use them for another purpose, move that content elsewhere so they can be used for this integration. For now, there is no way to customize these folder names.
 
