@@ -193,6 +193,112 @@ Nested imports isn’t standard, most modern projects use other deferred loading
 With Meteor–Rspack integration, you can still use nested imports if they are defined in Meteor Atmosphere packages. These will be accepted without any breaking changes.
 :::
 
+### Import Aliasses
+
+An import alias is a shortcut that maps a custom name to a specific file path or directory, making imports shorter and easier to manage.
+
+With Meteor-Rspack integration you can define aliases using the `resolve.alias` configuration in your `rspack.config.js`. For example:
+
+``` javascript
+export default defineConfig(Meteor => {  
+  return {  
+    resolve: {  
+      alias: {  
+        '@ui': '/imports/ui',  
+        '@api': '/imports/api',  
+      },  
+    };
+}
+```
+
+Learn more in the [Rspack alias docs](https://rspack.rs/config/resolve#resolvealias).
+
+If you use TypeScript, also update your `tsconfig.json` to support IDE autocompletion and ESLint resolution:
+
+```json
+{  
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": { 
+		  "@ui/*": ["imports/ui/*"],  
+		  "@api/*": ["imports/api/*"]
+		}
+	}
+}
+```
+
+You can also [configure aliases at the transpiler level](meteor-bundler-optimizations.md#import-aliases). For SWC, enable it through the `.swcrc` file (note that SWC aliases have some limitations when resolving files or `node_modules`). If you use Babel, you can rely on the [module-resolver plugin](https://www.npmjs.com/package/babel-plugin-module-resolver).
+
+### CSS, Less and SCSS
+
+Meteor-Rspack comes with built-in CSS support. You can import any CSS file into your code, and it will be processed and included in your HTML skeleton automatically. In addition, any CSS file placed in the same folder as your Meteor entry point will be processed and added as global styles without the need for explicit imports.
+
+Less support in Meteor-Rspack is limited. The [Meteor `less` package](https://github.com/meteor/meteor/tree/master/packages/non-core/less) compiles `.less` files automatically and merges them into the CSS bundle. With Rspack, you should configure Less directly and consider as replacement of the Meteor package. For details, check the [Rspack and Less guide](https://rspack.rs/guide/tech/css#less).
+
+SCSS support is available in Meteor-Rspack. You may need to replace the existing Meteor [`fourseven:scss` package](https://github.com/Meteor-Community-Packages/meteor-scss) or similar with the Rspack configuration. For details, check [the official Rspack and SCSS guide](https://rspack.rs/guide/tech/css#less).
+
+### React
+
+Meteor-Rspack supports React projects out of the box. Just install the `rspack` package and run your app. Meteor will detect it and automatically add the needed Rspack dependencies, including `react-refresh` for a full development experience.
+
+Learn more in the [official Rspack and React integration guide](https://rspack.rs/guide/tech/react).
+
+> Use `meteor create --react` to start with a preconfigured Rspack React app.
+
+### React Compiler
+
+Meteor-Rspack supports React Compiler. To enable it, install the required dependencies and add the new configuration to Meteor’s `rspack.config.js` file.
+
+Learn more in the [official Rspack and React Compiler integration guide](https://rspack.rs/guide/tech/react#react-compiler).
+
+### Vue
+
+Meteor-Rspack supports Vue projects out of the box. To enable it, install the required dependencies and add the new configuration to Meteor’s `rspack.config.js` file.
+
+Learn more in the [official Rspack and Vue integration guide](https://rspack.rs/guide/tech/vue).
+
+> Use `meteor create --vue` to start with a preconfigured Rspack Vue app.
+
+:::warning
+Previous official support in the Meteor bundler was through [jorgenvatle:vite](https://github.com/JorgenVatle/meteor-vite).
+
+With Meteor-Rspack integration, you no longer need vite-related packages, so you should remove them from your project.
+:::
+
+### Solid
+
+Meteor-Rspack supports Solid projects out of the box. To enable it, install the required dependencies and add the new configuration to Meteor’s `rspack.config.js` file.
+
+Learn more in the [official Rspack and Solid integration guide](https://rspack.rs/guide/tech/solid).
+
+> Use `meteor create --solid` to start with a preconfigured Rspack Solid app.
+
+:::warning
+Previous official support in the Meteor bundler was through [jorgenvatle:vite](https://github.com/JorgenVatle/meteor-vite).
+
+With Meteor-Rspack integration, you no longer need vite-related packages, so you should remove them from your project.
+:::
+
+### Svelte
+
+Meteor-Rspack supports Svelte projects out of the box. To enable it, install the required dependencies and add the new configuration to Meteor’s `rspack.config.js` file.
+
+Learn more in the [official Rspack and Svelte integration guide](https://rspack.rs/guide/tech/svelte).
+
+> Use `meteor create --svelte` to start with a preconfigured Rspack Svelte app.
+
+:::warning
+Official Svelte support in the Meteor bundler was via [zodern:melte](https://github.com/zodern/melte).
+
+With the Meteor–Rspack integration, `zodern:melte` no longer works. Use the official Rspack Svelte integration instead. If you relied on melte-specific features like `$` or `$m`, you may need to update parts of your code. Create your own abstractions or migrate them to standard npm package.
+:::
+
+### Tailwind
+
+Meteor-Rspack supports Tailwind projects out of the box. For details, check [the official Rspack and Tailwind guide](https://rspack.rs/guide/tech/css#tailwind-css).
+
+> Use `meteor create --tailwind` to start with a preconfigured Rspack Tailwind app.
+
 ## Troubleshotting
 
 If you run into issues, try `meteor reset` or delete the `.meteor/local` and `_build` folders in the project root.
