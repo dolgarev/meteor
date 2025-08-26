@@ -7,7 +7,6 @@ import { merge } from 'webpack-merge';
 
 import { cleanOmittedPaths, mergeSplitOverlap } from "./lib/mergeRulesSplitOverlap.js";
 import { getMeteorAppSwcConfig } from './lib/swc.js';
-import CleanBuildAssetsPlugin from './plugins/CleanBuildAssetsPlugin.js';
 import HtmlRspackPlugin from './plugins/HtmlRspackPlugin.js';
 import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
 
@@ -87,9 +86,9 @@ function createSwcConfig({
 function keepOutsideBuild() {
   return (p) => {
     const normalized = '/' + path.normalize(p).replaceAll(path.sep, '/').replace(/^\/+/, '');
-    const isInBuildRoot = /\/_build(\/|$)/.test(normalized);
-    const isInBuildStar = /\/_build-[^/]+(\/|$)/.test(normalized);
-    return !(isInBuildRoot || isInBuildStar); // true => KEEP, false => DELETE
+    const isInBuildRoot = /\/build(\/|$)/.test(normalized);
+    const isInBuildStar = /\/build-[^/]+(\/|$)/.test(normalized);
+    return !(isInBuildRoot || isInBuildStar);
   };
 }
 
@@ -100,7 +99,7 @@ const defaultWatchOptions = {
 
 /**
  * @param {{ isClient: boolean; isServer: boolean; isDevelopment?: boolean; isProduction?: boolean; isTest?: boolean }} Meteor
- * @param {{ mode?: string; clientEntry?: string; serverEntry?: string; clientOutputFolder?: string; serverOutputFolder?: string; bundlesContext?: string; assetsContext?: string; serverAssetsContext?: string }} argv
+ * @param {{ mode?: string; clientEntry?: string; serverEntry?: string; clientOutputFolder?: string; serverOutputFolder?: string; chunksContext?: string; assetsContext?: string; serverAssetsContext?: string }} argv
  * @returns {import('@rspack/cli').Configuration[]}
  */
 export default function (inMeteor = {}, argv = {}) {
@@ -156,8 +155,8 @@ export default function (inMeteor = {}, argv = {}) {
 
   // Determine context for bundles and assets
   const buildContext = Meteor.buildContext || '_build';
-  const bundlesContext = Meteor.bundlesContext || 'bundles';
-  const assetsContext = Meteor.assetsContext || 'assets';
+  const assetsContext = Meteor.assetsContext || 'build-assets';
+  const chunksContext = Meteor.chunksContext || 'build-chunks';
 
   // Determine build output and pass to Meteor
   const buildOutputDir = path.resolve(process.cwd(), buildContext, outputDir);
@@ -267,12 +266,12 @@ export default function (inMeteor = {}, argv = {}) {
         isDevEnvironment ? outputFilename : `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
       publicPath: '/',
-      chunkFilename: `${bundlesContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
+      chunkFilename: `${chunksContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
-      cssFilename: `${assetsContext}/[name]${
+      cssFilename: `${chunksContext}/[name]${
         isProd ? '.[contenthash]' : ''
       }.css`,
-      cssChunkFilename: `${assetsContext}/[id]${
+      cssChunkFilename: `${chunksContext}/[id]${
         isProd ? '.[contenthash]' : ''
       }.css`,
       ...(isProd && { clean: { keep: keepOutsideBuild() } }),
@@ -298,13 +297,6 @@ export default function (inMeteor = {}, argv = {}) {
     resolve: { extensions, alias },
     externals,
     plugins: [
-      ...(isProd
-        ? [
-            new CleanBuildAssetsPlugin({
-              verbose: Meteor.isDebug || Meteor.isVerbose,
-            }),
-          ]
-        : []),
       ...[
         ...(isReactEnabled && reactRefreshModule && isDevEnvironment
           ? [new reactRefreshModule()]
@@ -362,7 +354,7 @@ export default function (inMeteor = {}, argv = {}) {
       path: serverOutputDir,
       filename: () => `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
-      chunkFilename: `${bundlesContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
+      chunkFilename: `${chunksContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
       ...(isProd && { clean: { keep: keepOutsideBuild() } }),
     },

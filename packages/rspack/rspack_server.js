@@ -3,7 +3,7 @@ import { WebApp } from 'meteor/webapp';
 import { shuffleString } from 'meteor/tools-core/lib/string';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import {
-  RSPACK_BUNDLES_CONTEXT,
+  RSPACK_CHUNKS_CONTEXT,
   RSPACK_ASSETS_CONTEXT,
   RSPACK_HOT_UPDATE_REGEX,
   RSPACK_BUNDLES_REGEX,
@@ -52,19 +52,19 @@ if (Meteor.isDevelopment) {
       return res.end();
     }
 
-    // 2) match "/_rspack-bundles/<anything>"
+    // 2) match "/build-chunks/<anything>"
     const bundlesMatch = req.url.match(RSPACK_BUNDLES_REGEX);
     if (bundlesMatch) {
-      // Redirect "/bundles/foo.js" → "/__rspack__/bundles/foo.js"
-      const target = `/__rspack__/${RSPACK_BUNDLES_CONTEXT}/${bundlesMatch[1]}`;
+      // Redirect "/bundles/foo.js" → "/__rspack__/build-chunks/foo.js"
+      const target = `/__rspack__/${RSPACK_CHUNKS_CONTEXT}/${bundlesMatch[1]}`;
       res.writeHead(307, { Location: target });
       return res.end();
     }
 
-    // 3) match "/_rspack-assets/<anything>"
+    // 3) match "/build-assets/<anything>"
     const assetsMatch = req.url.match(RSPACK_ASSETS_REGEX);
     if (assetsMatch) {
-      // Redirect "/_rspack-assets/foo.js" → "/__rspack__/_rspack-assets/foo.js"
+      // Redirect "/build-assets/foo.js" → "/__rspack__/build-assets/foo.js"
       const target = `/__rspack__/${RSPACK_ASSETS_CONTEXT}/${assetsMatch[1]}`;
       res.writeHead(307, { Location: target });
       return res.end();

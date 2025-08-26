@@ -4,11 +4,11 @@ const files = require('../fs/files');
 // Get the build context from environment variable or use default "_build"
 const rspackBuildContext = process.env.RSPACK_BUILD_CONTEXT || "_build";
 
-// Get the assets context from environment variable or use default "_build-assets"
-const rspackAssetsContext = process.env.RSPACK_ASSETS_CONTEXT || "_build-assets";
+// Get the assets context from environment variable or use default "build-assets"
+const rspackAssetsContext = process.env.RSPACK_ASSETS_CONTEXT || "build-assets";
 
-// Get the bundles context from environment variable or use default "_build-bundles"
-const rspackBundlesContext = process.env.RSPACK_BUNDLES_CONTEXT || "_build-bundles";
+// Get the bundles context from environment variable or use default "build-chunks"
+const rspackChunksContext = process.env.RSPACK_CHUNKS_CONTEXT || "build-chunks";
 
 // Cache the regex pattern for performance
 const rspackFilePattern = new RegExp(`^${rspackBuildContext}\\/.*\\/[^\\/]*-rspack\\.js$`);
@@ -16,7 +16,7 @@ const rspackFilePattern = new RegExp(`^${rspackBuildContext}\\/.*\\/[^\\/]*-rspa
 // Export the variables for use in other files
 exports.rspackBuildContext = rspackBuildContext;
 exports.rspackAssetsContext = rspackAssetsContext;
-exports.rspackBundlesContext = rspackBundlesContext;
+exports.rspackChunksContext = rspackChunksContext;
 exports.rspackFilePattern = rspackFilePattern;
 
 // Function to check if a file is a Rspack output file
@@ -28,7 +28,7 @@ exports.isRspackOutputFile = function(filePath) {
 exports.getRspackResourcesContexts = function() {
   return [
     rspackAssetsContext,
-    rspackBundlesContext
+    rspackChunksContext
   ];
 };
 

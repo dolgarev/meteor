@@ -57,14 +57,14 @@ export const RSPACK_BUILD_CONTEXT = process.env.RSPACK_BUILD_CONTEXT || '_build'
  * Can be overridden with RSPACK_ASSETS_CONTEXT environment variable
  * @constant {string}
  */
-export const RSPACK_ASSETS_CONTEXT = process.env.RSPACK_ASSETS_CONTEXT || '_build-assets';
+export const RSPACK_ASSETS_CONTEXT = process.env.RSPACK_ASSETS_CONTEXT || 'build-assets';
 
 /**
  * Directory name for Rspack bundles context
  * Can be overridden with RSPACK_ASSETS_CONTEXT environment variable
  * @constant {string}
  */
-export const RSPACK_BUNDLES_CONTEXT = process.env.RSPACK_BUNDLES_CONTEXT || '_build-bundles';
+export const RSPACK_CHUNKS_CONTEXT = process.env.RSPACK_CHUNKS_CONTEXT || 'build-chunks';
 
 /**
  * Regex pattern for hot update files
@@ -76,7 +76,7 @@ export const RSPACK_HOT_UPDATE_REGEX = /^\/(.+\.hot-update\.(?:json|js))$/;
  * Regex pattern for rspack bundles
  * @constant {RegExp}
  */
-export const RSPACK_BUNDLES_REGEX = new RegExp(`^\/${RSPACK_BUNDLES_CONTEXT}\/(.+)$`);
+export const RSPACK_BUNDLES_REGEX = new RegExp(`^\/${RSPACK_CHUNKS_CONTEXT}\/(.+)$`);
 
 /**
  * Regex pattern for rspack assets

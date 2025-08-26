@@ -31,6 +31,8 @@ const {
 
 const {
   RSPACK_BUILD_CONTEXT,
+  RSPACK_CHUNKS_CONTEXT,
+  RSPACK_ASSETS_CONTEXT,
   GLOBAL_STATE_KEYS,
   FILE_ROLE,
 } = require('./constants');
@@ -80,7 +82,8 @@ export function ensureRspackBuildContextExists() {
     appDir,
     [
       RSPACK_BUILD_CONTEXT,
-      `${RSPACK_BUILD_CONTEXT}-*`,
+      `*/${RSPACK_ASSETS_CONTEXT}`,
+      `*/${RSPACK_CHUNKS_CONTEXT}`,
     ],
     'Meteor Modern-Tools build context directories',
   );
@@ -546,7 +549,7 @@ export function cleanBuildContextFiles() {
         try {
           const files = fs.readdirSync(dir);
           files.forEach(file => {
-            if (file.startsWith('_build-')) {
+            if ([RSPACK_ASSETS_CONTEXT, RSPACK_CHUNKS_CONTEXT].includes(file)) {
               const filePath = path.join(dir, file);
               fs.rmSync(filePath, { recursive: true, force: true });
             }

@@ -39,7 +39,7 @@ const {
 
 const {
   GLOBAL_STATE_KEYS,
-  RSPACK_BUNDLES_CONTEXT,
+  RSPACK_CHUNKS_CONTEXT,
   RSPACK_ASSETS_CONTEXT,
   FILE_ROLE,
 } = require('./constants');
@@ -127,7 +127,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ['runPath', getBuildFilePath({ ...module, ...env, ...side, ...commandRole }) ],
     ['bannerOutput', JSON.stringify(getBuildFileContent({ ...module, ...env, ...side, role: FILE_ROLE.output }))],
     ['buildContext', RSPACK_BUILD_CONTEXT],
-    ['bundlesContext', RSPACK_BUNDLES_CONTEXT],
+    ['chunksContext', RSPACK_CHUNKS_CONTEXT],
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
     ['devServerPort', RSPACK_DEVSERVER_PORT],
     ...(swcExternalHelpers &&  [['swcExternalHelpers', swcExternalHelpers]] || []),
