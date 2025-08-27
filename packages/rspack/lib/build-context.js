@@ -551,7 +551,7 @@ export function cleanBuildContextFiles() {
         try {
           const files = fs.readdirSync(dir);
           files.forEach(file => {
-            if ([RSPACK_ASSETS_CONTEXT, RSPACK_CHUNKS_CONTEXT].includes(file)) {
+            if ([RSPACK_ASSETS_CONTEXT, RSPACK_CHUNKS_CONTEXT, RSPACK_DOCTOR_CONTEXT].includes(file)) {
               const filePath = path.join(dir, file);
               fs.rmSync(filePath, { recursive: true, force: true });
             }
