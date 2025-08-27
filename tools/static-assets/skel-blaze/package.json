@@ -14,7 +14,7 @@
     "meteor-node-stubs": "^1.2.12"
   },
   "devDependencies": {
-    "@meteorjs/rspack": "^0.0.35",
+    "@meteorjs/rspack": "^0.0.36",
     "@rspack/cli": "^1.4.8",
     "@rspack/core": "^1.4.8",
     "@rspack/plugin-react-refresh": "^1.4.3"
