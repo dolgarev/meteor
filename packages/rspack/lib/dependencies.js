@@ -2,7 +2,11 @@
  * @module dependencies
  * @description Functions for managing dependencies for Rspack plugin
  */
-import { DEFAULT_METEOR_RSPACK_REACT_REFRESH_VERSION, DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION } from "./constants";
+import { 
+  DEFAULT_METEOR_RSPACK_REACT_REFRESH_VERSION, 
+  DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION,
+  DEFAULT_RSDOCTOR_RSPACK_PLUGIN_VERSION
+} from "./constants";
 
 const {
   getGlobalState,
@@ -175,5 +179,22 @@ export async function ensureRspackReactInstalled() {
     dependencies,
     GLOBAL_STATE_KEYS.RSPACK_REACT_INSTALLATION_CHECKED,
     'Rspack React'
+  );
+}
+
+/**
+ * Checks if Rspack Doctor is installed, and installs it if not
+ * @returns {Promise<void>} A promise that resolves when the check/installation is complete
+ * @throws {Error} If Rspack Doctor installation fails
+ */
+export async function ensureRspackDoctorInstalled() {
+  const dependencies = [
+    { name: '@rsdoctor/rspack-plugin', version: DEFAULT_RSDOCTOR_RSPACK_PLUGIN_VERSION, semverCondition: 'gte', dev: true },
+  ];
+
+  await ensureDependenciesInstalled(
+    dependencies,
+    GLOBAL_STATE_KEYS.RSPACK_DOCTOR_INSTALLATION_CHECKED,
+    'Rspack Doctor'
   );
 }

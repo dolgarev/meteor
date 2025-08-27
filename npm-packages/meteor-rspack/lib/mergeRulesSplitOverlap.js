@@ -271,7 +271,7 @@ export function mergeSplitOverlap(...configs) {
       if (key === 'plugins') {
         return unique(
           'plugins',
-          ['HtmlRspackPlugin'],
+          ['HtmlRspackPlugin', 'RsdoctorRspackPlugin'],
           (plugin) => plugin.constructor && plugin.constructor.name
         )(a, b, key);
       }

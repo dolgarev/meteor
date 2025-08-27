@@ -30,6 +30,7 @@ const {
   isMeteorBlazeHotProject,
   getMeteorInitialAppEntrypoints,
   isMeteorAppConfigModernVerbose,
+  isMeteorBundleVisualizerProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -96,6 +97,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
   const isReactEnabled = !!process.env.METEOR_REACT_ENABLED;
   const isBlazeEnabled = isMeteorBlazeProject();
   const isBlazeHotEnabled = isMeteorBlazeHotProject();
+  const isBundleVisualizerEnabled = isMeteorBundleVisualizerProject();
 
   const swcExternalHelpers = checkNpmDependencyExists('@swc/helpers');
 
@@ -137,6 +139,8 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ...(isTypescriptEnabled &&  [['isTypescriptEnabled', isTypescriptEnabled]] || []),
     ...(isTsxEnabled &&  [['isTsxEnabled', isTsxEnabled]] || []),
     ...(isJsxEnabled &&  [['isJsxEnabled', isJsxEnabled]] || []),
+    ...(isBundleVisualizerEnabled &&  [['isBundleVisualizerEnabled', isBundleVisualizerEnabled]] || []),
+
   ].filter(Boolean);
   return pairs.flatMap(([key, val]) => [
     '--env',

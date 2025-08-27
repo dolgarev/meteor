@@ -2,6 +2,7 @@
  * @module build-context
  * @description Functions for managing build context and module files for Rspack plugin
  */
+import { RSPACK_DOCTOR_CONTEXT } from "./constants";
 
 const fs = require('fs');
 const path = require('path');
@@ -84,6 +85,7 @@ export function ensureRspackBuildContextExists() {
       RSPACK_BUILD_CONTEXT,
       `*/${RSPACK_ASSETS_CONTEXT}`,
       `*/${RSPACK_CHUNKS_CONTEXT}`,
+      RSPACK_DOCTOR_CONTEXT,
     ],
     'Meteor Modern-Tools build context directories',
   );

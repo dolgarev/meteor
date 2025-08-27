@@ -23,6 +23,7 @@ const {
   ensureRspackInstalled,
   checkReactInstalled,
   ensureRspackReactInstalled,
+  ensureRspackDoctorInstalled,
 } = require('./lib/dependencies');
 
 const {
@@ -65,6 +66,7 @@ const {
   isMeteorAppDebug,
   isMeteorAppConfigModernVerbose,
   isMeteorAppNative,
+  isMeteorBundleVisualizerProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -100,6 +102,11 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
     // Check if Rspack React is installed
     if (checkReactInstalled()) {
       await ensureRspackReactInstalled();
+    }
+
+    // Check if Rspack Doctor should be installed
+    if (isMeteorBundleVisualizerProject()) {
+      await ensureRspackDoctorInstalled();
     }
 
     // Ensure the Rspack build context directory exists

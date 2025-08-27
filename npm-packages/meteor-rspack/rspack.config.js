@@ -132,7 +132,7 @@ export default function (inMeteor = {}, argv = {}) {
     Meteor.isJsxEnabled || (!isTypescriptEnabled && isReactEnabled) || false;
   const isTsxEnabled =
     Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
-
+  const isBundleVisualizerEnabled = Meteor.isBundleVisualizerEnabled || false;
 
   // Determine entry points
   const entryPath = Meteor.entryPath;
@@ -251,6 +251,17 @@ export default function (inMeteor = {}, argv = {}) {
     enableGlobalPolyfill: isDevEnvironment,
   });
 
+  const rsdoctorModule = isBundleVisualizerEnabled
+    ? safeRequire('@rsdoctor/rspack-plugin')
+    : null;
+  const doctorPluginConfig = isBundleVisualizerEnabled && rsdoctorModule?.RsdoctorRspackPlugin
+    ? [
+        new rsdoctorModule.RsdoctorRspackPlugin({
+          port: isClient ? 8081 : 8082,
+        }),
+      ]
+    : [];
+
   const clientNameConfig = `[${(isTest && 'test-') || ''}${
     (isTestModule && 'module') || 'client'
   }-rspack]`;
@@ -316,6 +327,7 @@ export default function (inMeteor = {}, argv = {}) {
         entryOnly: true,
       }),
       Meteor.HtmlRspackPlugin(),
+      ...doctorPluginConfig,
     ],
     watchOptions,
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
@@ -397,6 +409,7 @@ export default function (inMeteor = {}, argv = {}) {
         entryOnly: true,
       }),
       isTestModule && requireExternalsPlugin,
+      ...doctorPluginConfig,
     ],
     watchOptions,
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',

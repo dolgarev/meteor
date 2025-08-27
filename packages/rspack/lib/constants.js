@@ -5,7 +5,7 @@
 
 export const DEFAULT_RSPACK_VERSION = '1.4.8';
 
-export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.34';
+export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.35';
 
 export const DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION = '1.4.3';
 
@@ -14,6 +14,8 @@ export const DEFAULT_METEOR_RSPACK_REACT_REFRESH_VERSION = '0.17.0';
 export const DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION = '0.2.6';
 
 export const DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION = '0.5.17';
+
+export const DEFAULT_RSDOCTOR_RSPACK_PLUGIN_VERSION = '1.2.3';
 
 /**
  * Global state keys used for storing and retrieving state across the application
@@ -32,6 +34,7 @@ export const GLOBAL_STATE_KEYS = {
   SERVER_PROCESS: 'rspack.serverProcess',
   RSPACK_INSTALLATION_CHECKED: 'rspack.rspackInstallationChecked',
   RSPACK_REACT_INSTALLATION_CHECKED: 'rspack.rspackReactInstallationChecked',
+  RSPACK_DOCTOR_INSTALLATION_CHECKED: 'rspack.rspackDoctorInstallationChecked',
   REACT_CHECKED: 'rspack.reactChecked',
   INITIAL_ENTRYPONTS: 'meteor.initialEntrypoints',
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',
@@ -65,6 +68,12 @@ export const RSPACK_ASSETS_CONTEXT = process.env.RSPACK_ASSETS_CONTEXT || 'build
  * @constant {string}
  */
 export const RSPACK_CHUNKS_CONTEXT = process.env.RSPACK_CHUNKS_CONTEXT || 'build-chunks';
+
+/**
+ * Directory name for Rspack doctor context
+ * @type {string}
+ */
+export const RSPACK_DOCTOR_CONTEXT = '.rsdoctor';
 
 /**
  * Regex pattern for hot update files
