@@ -104,11 +104,6 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
       await ensureRspackReactInstalled();
     }
 
-    // Check if Rspack Doctor should be installed
-    if (isMeteorBundleVisualizerProject()) {
-      await ensureRspackDoctorInstalled();
-    }
-
     // Ensure the Rspack build context directory exists
     ensureRspackBuildContextExists();
 

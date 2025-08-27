@@ -28,6 +28,7 @@ import {
 import fs from "fs-extra";
 import path from "path";
 import execa from "execa";
+import waitOn from "wait-on";
 
 /**
  * Helper function to set up and run tests for the Meteor Bundler
@@ -96,6 +97,7 @@ export function testMeteorBundler(options) {
  * @param {Function} options.customAssertions - Custom assertions to run after each test
  * @param {boolean} options.verbose - Whether to enable verbose output (default: true)
  * @param {boolean} options.testFullApp - Whether to run tests with the --full-app flag (default: false)
+ * @param {boolean} options.testBundleVisualizer - Whether to run tests with bundle-visualizer in production mode (default: false)
  * @returns {Function} - Jest test function
  */
 export function testMeteorRspackBundler(options) {
@@ -130,6 +132,8 @@ export function testMeteorRspackBundler(options) {
     verbose = true,
     // Option to run tests with --full-app flag
     testFullApp = false,
+    // Option to test with bundle-visualizer in production mode
+    testBundleVisualizer = false,
   } = options;
 
   return () => {
@@ -359,6 +363,66 @@ export function testMeteorRspackBundler(options) {
       await killProcessByPort(port);
       await killProcessByPort('8080');
     });
+
+    // Conditional test for bundle-visualizer in production mode
+    if (testBundleVisualizer) {
+      test(`"meteor run --extra-packages bundle-visualizer --production" / should run with bundle-visualizer in production mode`, async () => {
+        // Run the Meteor app with bundle-visualizer in production mode
+        const result = await runMeteorApp(tempDir, port, {
+          waitForOutput: "=> App running at:",
+          commandOptions: ['--extra-packages', 'bundle-visualizer', '--production'],
+        });
+        meteorProcess = result.meteorProcess;
+
+        // Wait for a margin
+        await wait(500);
+
+        // Assert that the app files exists
+        await assertFileExist(tempDir, '_build/main-prod/client-entry.js');
+        await assertFileExist(tempDir, '_build/main-prod/client-rspack.js');
+        await assertFileExist(tempDir, '_build/main-prod/client-meteor.js');
+        await assertFileExist(tempDir, '_build/main-prod/server-entry.js');
+        await assertFileExist(tempDir, '_build/main-prod/server-rspack.js');
+        await assertFileExist(tempDir, '_build/main-prod/server-meteor.js');
+        await assertFileExist(tempDir, '_build/main-prod/index.html');
+
+        // Assert that the Meteor app is running correctly
+        await assertMeteorReactApp(port, { title: appName });
+
+        // Wait for bundle-visualizer ports to be available
+        console.log('Waiting for bundle-visualizer ports 8081 and 8082 to be available...');
+        try {
+          await waitOn({
+            resources: [
+              `http-get://localhost:8081`,
+              `http-get://localhost:8082`
+            ],
+            timeout: 30000
+          });
+          console.log('Bundle-visualizer ports 8081 and 8082 are available');
+        } catch (error) {
+          console.error('Error waiting for bundle-visualizer ports:', error);
+          throw error;
+        }
+
+        // Run custom assertions if provided
+        if (customAssertions && customAssertions.afterRunBundleVisualizer) {
+          await customAssertions.afterRunBundleVisualizer({ tempDir, port, meteorProcess, result });
+        }
+
+        // Wait for a margin
+        await wait(500);
+
+        // Kill the meteor process
+        await killMeteorProcess(meteorProcess);
+
+        // Ensure any process on the port is killed
+        await killProcessByPort(port);
+        await killProcessByPort('8080');
+        // await killProcessByPort('8081');
+        // await killProcessByPort('8082');
+      });
+    }
 
     test(`"meteor test${testFullApp ? ' --full-app' : ''}" / should run tests with Rspack`, async () => {
       const result = await runMeteorTests(tempDir, port, {
