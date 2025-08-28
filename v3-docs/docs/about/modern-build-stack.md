@@ -1,3 +1,8 @@
+---
+outline:
+  level: [2, 3]
+---
+
 # Modern Build Stack
 
 **Meteor’s modern build stack** delivers better speed and productivity, plus new features and plugins that follow current bundler standards.
