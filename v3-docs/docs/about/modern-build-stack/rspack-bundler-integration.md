@@ -69,6 +69,12 @@ The folders are prepared and cleared automatically and should not be modified di
 
 You don’t need to migrate your project for this, just ensure these folders are reserved for Meteor-Rspack. If you already use them for something else, move that content elsewhere. Currently, folder names cannot be customized, but this may be supported in the future.
 
+:::warning
+Attempts were made to reuse the existing `.meteor/local` cache context instead of creating new build contexts, but this was not possible.
+
+Use `.meteor/local` or folders that suggest internals or hidden content (e.g., starting with a dot). These affect debug visibility, file watching, final compilation, and inclusion in the Cordova bundle.
+:::
+
 ## Custom `rspack.config.js`
 
 Meteor-Rspack projects can be customized using the `rspack.config.js` file, which is automatically available when installing the `rspack` package.
