@@ -63,16 +63,6 @@ A Meteor-Rspack project reserves the folders `_build`, `public/build-chunks`, an
 
 You do not need to migrate your project for this, just make sure these folders are reserved for Meteor-Rspack integration. If you currently use them for another purpose, move that content elsewhere so they can be used for this integration. For now, there is no way to customize these folder names.
 
-## Limitations
-
-### No Blaze HMR support
-
-Blaze templates build correctly with Rspack, but Meteor’s Hot Module Replacement (HMR) for Blaze is not available. Normally, Blaze HMR updates the UI instantly without reloading the whole page, keeping the current state (like form inputs or scroll position).
-
-With Rspack, Blaze changes will instead trigger a full live reload. This reload is still very fast thanks to Rspack’s reduced rebuild time (about 97% reduction), but the page state will reset after each change. The limitation exists because Blaze’s HMR relies on Meteor’s internal mechanism, which is not yet compatible with Rspack.
-
-This limitation only applies to Blaze. Any other modern project will work with HMR as soon as Rspack natively supports it, which is likely if it’s a modern library.
-
 ## Custom `rspack.config.js`
 
 Meteor-Rspack projects can be customized using the `rspack.config.js` file, which is automatically available when installing the `rspack` package.
@@ -303,6 +293,16 @@ With the Meteor–Rspack integration, `zodern:melte` no longer works. Use the of
 Meteor-Rspack supports Tailwind projects out of the box. For details, check [the official Rspack and Tailwind guide](https://rspack.rs/guide/tech/css#tailwind-css).
 
 > Use `meteor create --tailwind` to start with a preconfigured Rspack Tailwind app.
+
+## Limitations
+
+### No Blaze HMR support
+
+Blaze templates build correctly with Rspack, but Meteor’s Hot Module Replacement (HMR) for Blaze is not available. Normally, Blaze HMR updates the UI instantly without reloading the whole page, keeping the current state (like form inputs or scroll position).
+
+With Rspack, Blaze changes will instead trigger a full live reload. This reload is still very fast thanks to Rspack’s reduced rebuild time (about 97% reduction), but the page state will reset after each change. The limitation exists because Blaze’s HMR relies on Meteor’s internal mechanism, which is not yet compatible with Rspack.
+
+This limitation only applies to Blaze. Any other modern project will work with HMR as soon as Rspack natively supports it, which is likely if it’s a modern library.
 
 ## Troubleshotting
 
