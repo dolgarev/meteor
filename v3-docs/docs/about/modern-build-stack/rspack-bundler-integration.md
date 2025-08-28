@@ -294,6 +294,29 @@ Meteor-Rspack supports Tailwind projects out of the box. For details, check [the
 
 > Use `meteor create --tailwind` to start with a preconfigured Rspack Tailwind app.
 
+## Benefits
+
+Meteor–Rspack integration sends your app code to Rspack to use modern bundler features. Meteor then uses Rspack’s output to handle Meteor-specific tasks (like Atmosphere package compilation) and create the final bundle.
+
+This implementation preserves Rspack HMR for faster reloads.
+
+With `Rspack` compiling your app you get:
+
+- Standard code splitting via HTTP
+- Tree shaking to significantly reduce bundle size
+- Support for ESM packages, including npm packages with export fields
+- Bundler plugins for build hooks, alternative compilers, file resolvers, image optimizations, PWAs with service workers, and more
+- Advanced analysis tools to track code impact and guide later optimizations
+- More features coming soon
+
+With `Meteor` you get:
+
+- Core API with reactive and non-reactive endpoints (DDP, Express)
+- Built-in Mongo/Minimongo API for isomorphic business logic
+- Third-party packages for faster development
+- Multiplatform development support
+- All other Meteor strengths
+
 ## Limitations
 
 ### No Blaze HMR support
