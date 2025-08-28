@@ -230,7 +230,7 @@ Meteor-Rspack comes with built-in CSS support. You can import any CSS file into 
 
 Less support in Meteor-Rspack is limited. The [Meteor `less` package](https://github.com/meteor/meteor/tree/master/packages/non-core/less) compiles `.less` files automatically and merges them into the CSS bundle. With Rspack, you should configure Less directly and consider as replacement of the Meteor package. For details, check the [Rspack and Less guide](https://rspack.rs/guide/tech/css#less).
 
-SCSS support is available in Meteor-Rspack. You may need to replace the existing Meteor [`fourseven:scss` package](https://github.com/Meteor-Community-Packages/meteor-scss) or similar with the Rspack configuration. For details, check [the official Rspack and SCSS guide](https://rspack.rs/guide/tech/css#less).
+SCSS support is available in Meteor-Rspack. You may need to replace the existing Meteor [`fourseven:scss` package](https://github.com/Meteor-Community-Packages/meteor-scss) or similar with the Rspack configuration. For details, check [the official Rspack and SCSS guide](https://rspack.rs/guide/tech/css#sass).
 
 ### React
 
