@@ -59,11 +59,11 @@ export function getConfigFileName() {
 }
 
 /**
- * Gets the appropriate Rspack environment variables and command line arguments
+ * Gets the appropriate Rspack environment variables
  * @param {Object} options - Options for environment variables
  * @param {boolean} options.isClient - Whether this is for client-side build
  * @param {boolean} options.isServer - Whether this is for server-side build
- * @returns {Object} Object containing params (command line arguments) and envs (environment variables)
+ * @returns {string[]} Array of command line arguments for Rspack
  */
 export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
   const RSPACK_BUILD_CONTEXT = require('./constants').RSPACK_BUILD_CONTEXT;
@@ -127,6 +127,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
       }),
     ],
     ['runPath', getBuildFilePath({ ...module, ...env, ...side, ...commandRole }) ],
+    ['bannerOutput', JSON.stringify(getBuildFileContent({ ...module, ...env, ...side, role: FILE_ROLE.output }))],
     ['buildContext', RSPACK_BUILD_CONTEXT],
     ['chunksContext', RSPACK_CHUNKS_CONTEXT],
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
@@ -141,19 +142,10 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ...(isBundleVisualizerEnabled &&  [['isBundleVisualizerEnabled', isBundleVisualizerEnabled]] || []),
 
   ].filter(Boolean);
-
-  // Create environment variables object with bannerOutput
-  const envs = {
-    RSPACK_BANNER: JSON.stringify(getBuildFileContent({ ...module, ...env, ...side, role: FILE_ROLE.output }))
-  };
-
-  // Create params from pairs
-  const params = pairs.flatMap(([key, val]) => [
+  return pairs.flatMap(([key, val]) => [
     '--env',
     `${key}=${val}`
   ]);
-
-  return { params, envs };
 }
 
 /**
@@ -174,13 +166,11 @@ export function startRspackClientServe(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
-  const { params, envs } = getRspackEnv({ isClient: true, isServer: false });
-  const { command, args } = getNpxCommand(['rspack', 'serve', '--config', configFile, ...params]);
+  const { command, args } = getNpxCommand(['rspack', 'serve', '--config', configFile, ...getRspackEnv({ isClient: true, isServer: false })]);
   const newClientProcess = spawnProcess(
     command,
     args, {
       cwd: appDir,
-      env: { ...process.env, ...envs },
       onStdout: (data) => {
         logInfo(`[Rspack Client] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
@@ -229,13 +219,11 @@ export function startRspackServerWatch(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
-  const { params, envs } = getRspackEnv({ isClient: false, isServer: true });
-  const { command, args } = getNpxCommand(['rspack', 'build', '--watch', '--config', configFile, ...params]);
+  const { command, args } = getNpxCommand(['rspack', 'build', '--watch', '--config', configFile, ...getRspackEnv({ isClient: false, isServer: true })]);
   const newServerProcess = spawnProcess(
     command,
     args, {
     cwd: appDir,
-    env: { ...process.env, ...envs },
     onStdout: (data) => {
       logInfo(`[Rspack Server] ${data}`);
       if (onCompile && data.trim().includes("compiled")) {
@@ -279,14 +267,13 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
   const endpoint = isTestModule ? 'Module' : isClient ? 'Client' : 'Server';
   // Use a promise to ensure Meteor waits until Rspack finishes
   return new Promise((resolve, reject) => {
-    const { params, envs } = getRspackEnv({ isClient, isServer, isTest, isTestModule });
     const rspackArgs = [
       'rspack',
       'build',
       '--config',
       configFile,
       ...(watch && ['--watch']) || [],
-      ...params,
+      ...getRspackEnv({ isClient, isServer, isTest, isTestModule }),
     ].filter(Boolean);
     const { command, args } = getNpxCommand(rspackArgs);
     spawnProcess(
@@ -294,7 +281,6 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
       args,
       {
       cwd: appDir,
-      env: { ...process.env, ...envs },
       onStdout: (data) => {
         logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
