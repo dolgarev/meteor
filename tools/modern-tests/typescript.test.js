@@ -64,3 +64,25 @@ export async function waitForTypeScriptEnvs(outputLines, options = {}) {
     );
   }
 }
+
+/**
+ * Helper function to wait for TypeScript error-free output from both Rspack Client and Server
+ * @param {string[]} outputLines - Array that will be populated with output lines
+ * @param {Object} options - Options for waiting
+ * @param {number} options.timeout - Maximum time to wait in milliseconds
+ * @param {number} options.checkInterval - Interval between checks in milliseconds
+ * @returns {Promise<void>} - A promise that resolves when both client and server are error-free
+ */
+export async function waitForTypeScriptErrorFree(outputLines, options = {}) {
+  await waitForMeteorOutput(
+    outputLines,
+    /.*\[Rspack.*Client].*No TypeScript errors found\./,
+    options
+  );
+  await waitForMeteorOutput(
+    outputLines,
+    /.*\[Rspack.*Server].*No TypeScript errors found\./,
+    options
+  );
+  console.log(`Custom Plugin usage: ts-checker-rspack-plugin`);
+}
