@@ -411,3 +411,19 @@ export function isMeteorBundleVisualizerProject() {
 export function isMeteorPackagesTest() {
   return Package?.meteor?.global?.currentCommand?.name === 'test-packages';
 }
+
+/**
+ * Gets the package directories from the environment variables.
+ * @returns {string[]}
+ */
+export function getMeteorEnvPackageDirs() {
+  function packageDirsFromEnvVar(envVar, delimiter = path.delimiter) {
+    return process.env[envVar] && process.env[envVar].split(delimiter) || [];
+  }
+  return [
+    // METEOR_PACKAGE_DIRS should use the arch-specific delimiter
+    ...(packageDirsFromEnvVar('METEOR_PACKAGE_DIRS', path.delimiter || ':')),
+    // PACKAGE_DIRS (deprecated) always used ':' separator (yes, even Windows)
+    ...(packageDirsFromEnvVar('PACKAGE_DIRS', ':')),
+  ];
+}

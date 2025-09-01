@@ -20,6 +20,7 @@ const {
   isMeteorBlazeProject,
   isMeteorLessProject,
   isMeteorScssProject,
+  getMeteorEnvPackageDirs,
 } = require('meteor/tools-core/lib/meteor');
 
 import { getInitialEntrypoints } from './build-context';
@@ -107,11 +108,21 @@ export function configureMeteorForRspack() {
     dir => !includedDirs.includes(dir),
   );
 
+  const envPackageDirs = getMeteorEnvPackageDirs().map(
+    dir => path.normalize(dir)?.split(path.sep)?.filter(Boolean)?.[0],
+  );
   let extraFoldersToIgnore = [
     ...ignoredDirs
       .filter(
         dir =>
-          !['public', 'private', '.meteor', 'packages', RSPACK_BUILD_CONTEXT].includes(dir),
+          ![
+            'public',
+            'private',
+            '.meteor',
+            'packages',
+            ...envPackageDirs,
+            RSPACK_BUILD_CONTEXT,
+          ].includes(dir),
       )
       .map(dir => `${dir}/**`),
   ];
