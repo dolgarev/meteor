@@ -274,7 +274,6 @@ Object.assign(ProjectContext.prototype, {
     self.packageMapFile = null;
     self.platformList = null;
     self.cordovaPluginsFile = null;
-    self.modernLocalModules = null;
     self.appIdentifier = null;
     self.finishedUpgraders = null;
 
@@ -479,12 +478,6 @@ Object.assign(ProjectContext.prototype, {
       if (buildmessage.jobHasMessages())
         return;
 
-      // Read .meteor/platforms, creating it if necessary.
-      self.modernLocalModules = new exports.ModernLocalModules({
-        projectDir: self.projectDir
-      });
-      await self.modernLocalModules.init();
-
       if (buildmessage.jobHasMessages())
         return;
 
@@ -560,7 +553,7 @@ Object.assign(ProjectContext.prototype, {
     var self = this;
     var watchSet = new watch.WatchSet;
     [self.releaseFile, self.projectConstraintsFile, self.packageMapFile,
-      self.platformList, self.cordovaPluginsFile, self.modernLocalModules].forEach(
+      self.platformList, self.cordovaPluginsFile].forEach(
       function (metadataFile) {
         metadataFile && watchSet.merge(metadataFile.watchSet);
       });
@@ -1741,43 +1734,6 @@ Object.assign(exports.ReleaseFile.prototype, {
     await files.writeFileAtomically(self.filename, releaseName + '\n');
     await self._readFile();
   }
-});
-
-
-
-// TODO(modern): Review support for .meteor/local/modern
-// to hold intermediate bundler results. dot contexts are
-// hidden and commonly ignored by tools that scan directories
-
-// Represents .meteor/local/modern, used to store the intermediate results of
-// the different Meteor modules when running a modern bundler.
-exports.ModernLocalModules = function (options) {
-  var self = this;
-  buildmessage.assertInCapture();
-
-  self.modernDir = files.pathJoin(options.projectDir, '.meteor', 'local', 'modern');
-  self.modernMainClient = files.pathJoin(self.modernDir, 'main-client.js');
-  self.modernMainServer = files.pathJoin(self.modernDir, 'main-server.js');
-  self.modernTestClient = files.pathJoin(self.modernDir, 'test-client.js');
-  self.modernTestServer = files.pathJoin(self.modernDir, 'test-server.js');
-  self.watchSet = null;
-};
-
-Object.assign(exports.ModernLocalModules.prototype, {
-  init: async function() {
-    const self = this;
-    await self._readFile();
-  },
-  _readFile: function () {
-    var self = this;
-    buildmessage.assertInCapture();
-
-    self.watchSet = new watch.WatchSet;
-    watch.readAndWatchFile(self.watchSet, self.modernMainClient);
-    watch.readAndWatchFile(self.watchSet, self.modernMainServer);
-    watch.readAndWatchFile(self.watchSet, self.modernTestClient);
-    watch.readAndWatchFile(self.watchSet, self.modernTestServer);
-  },
 });
 
 // Represents .meteor/.finished-upgraders.
