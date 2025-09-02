@@ -703,6 +703,7 @@ export const AVAILABLE_SKELETONS = [
   "tailwind",
   "chakra-ui",
   "solid",
+  "legacy",
 ];
 
 const SKELETON_INFO = {
@@ -740,6 +741,7 @@ main.registerCommand({
     tailwind: { type: Boolean },
     'chakra-ui': { type: Boolean },
     solid: { type: Boolean },
+    legacy: { type: Boolean },
     prototype: { type: Boolean },
     from: { type: String },
   },
@@ -1856,9 +1858,15 @@ main.registerCommand({
                  "MONGO_URL will NOT be reset.");
   }
 
-  const resetMeteorNmCachePromise = options['skip-cache'] ? Promise.resolve() : files.rm_recursive_async(
+  const resetMeteorNpmCachePromise = options['skip-cache'] ? Promise.resolve() : files.rm_recursive_async(
     files.pathJoin(options.appDir, "node_modules", ".cache", "meteor")
   );
+
+  const rspackHelpers = require('../tool-env/rspack.js');
+  const rspackAppContexts = rspackHelpers.getRspackAppContexts(options.appDir);
+  const resetRspackPromises = rspackAppContexts.map((contextPath) => files.rm_recursive_async(
+    contextPath
+  ));
 
   if (options.db) {
     // XXX detect the case where Meteor is running the app, but
@@ -1878,7 +1886,8 @@ main.registerCommand({
       files.rm_recursive_async(
         files.pathJoin(options.appDir, ".meteor", "local")
       ),
-      resetMeteorNmCachePromise,
+      resetMeteorNpmCachePromise,
+      ...resetRspackPromises,
     ]);
 
     Console.info("Project reset.");
@@ -1896,7 +1905,8 @@ main.registerCommand({
     ...allExceptDb.map((_path) =>
       files.rm_recursive_async(files.pathJoin(options.appDir, _path))
     ),
-    resetMeteorNmCachePromise
+    resetMeteorNpmCachePromise,
+    ...resetRspackPromises,
   ];
   await Promise.all(allRemovePromises);
   Console.info("Project reset.");
@@ -2176,7 +2186,7 @@ testCommandOptions = {
     'extra-packages': { type: String },
 
     'exclude-archs': { type: String },
-    
+
     // Same as TINYTEST_FILTER
     filter: { type: String, short: 'f' },
   }

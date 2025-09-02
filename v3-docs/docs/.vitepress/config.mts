@@ -73,10 +73,6 @@ export default defineConfig({
                 link: "https://atmospherejs.com/",
               },
               {
-                text: "VS Code Extension",
-                link: "https://marketplace.visualstudio.com/items?itemName=meteor-toolbox.meteor-toolbox",
-              },
-              {
                 text: "DevTools - Chrome Extension",
                 link: "https://chromewebstore.google.com/detail/ibniinmoafhgbifjojidlagmggecmpgf",
               },
@@ -164,26 +160,22 @@ export default defineConfig({
             link: "/about/web-apps",
           },
           {
-            text: "Cordova",
-            link: "/about/cordova",
-          },
-          {
             text: "Modern Build Stack",
             link: "/about/modern-build-stack.md",
             items: [
               {
-                text: "Transpiler: SWC",
-                link: "/about/modern-build-stack/transpiler-swc.md",
+                text: "Meteor Bundler",
+                link: "/about/modern-build-stack/meteor-bundler-optimizations.md",
               },
               {
-                text: "Bundler",
-                link: "/about/modern-build-stack/bundler.md",
-              },
-              {
-                text: "Dev Server",
-                link: "/about/modern-build-stack/dev-server.md",
+                text: "Rspack Bundler",
+                link: "/about/modern-build-stack/rspack-bundler-integration.md",
               },
             ]
+          },
+          {
+            text: "Cordova",
+            link: "/about/cordova",
           },
         ],
         collapsed: true,

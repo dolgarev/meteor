@@ -95,6 +95,7 @@ import {
 
 import Resolver from "./isobuild/resolver";
 import { addWatchRoot } from './fs/safe-watcher';
+import compiler from "./isobuild/compiler";
 
 const CAN_DELAY_LEGACY_BUILD = ! JSON.parse(
   process.env.METEOR_DISALLOW_DELAYED_LEGACY_BUILD || "false"
@@ -273,6 +274,7 @@ Object.assign(ProjectContext.prototype, {
     self.packageMapFile = null;
     self.platformList = null;
     self.cordovaPluginsFile = null;
+    self.modernLocalModules = null;
     self.appIdentifier = null;
     self.finishedUpgraders = null;
 
@@ -477,6 +479,15 @@ Object.assign(ProjectContext.prototype, {
       if (buildmessage.jobHasMessages())
         return;
 
+      // Read .meteor/platforms, creating it if necessary.
+      self.modernLocalModules = new exports.ModernLocalModules({
+        projectDir: self.projectDir
+      });
+      await self.modernLocalModules.init();
+
+      if (buildmessage.jobHasMessages())
+        return;
+
       // Read .meteor/.id, creating it if necessary.
       await self._ensureAppIdentifier();
       if (buildmessage.jobHasMessages())
@@ -494,6 +505,17 @@ Object.assign(ProjectContext.prototype, {
         appDirectory: self.projectDir,
       });
       self.meteorConfig._ensureInitialized();
+
+      // Reinitialize the config
+      // The new config object is marked to be reloaded,
+      // so it will be reloaded on the next build.
+      global.reinitializeMeteorConfig = () => {
+        self.meteorConfig._ensureInitialized();
+        self.meteorConfig._needReload = {};
+        _.each(compiler.ALL_ARCHES, function (arch) {
+          self.meteorConfig._needReload[arch] = true;
+        });
+      };
 
       if (buildmessage.jobHasMessages()) {
         return;
@@ -538,10 +560,10 @@ Object.assign(ProjectContext.prototype, {
     var self = this;
     var watchSet = new watch.WatchSet;
     [self.releaseFile, self.projectConstraintsFile, self.packageMapFile,
-      self.platformList, self.cordovaPluginsFile].forEach(
+      self.platformList, self.cordovaPluginsFile, self.modernLocalModules].forEach(
       function (metadataFile) {
         metadataFile && watchSet.merge(metadataFile.watchSet);
-    });
+      });
 
     if (self.localCatalog) {
       watchSet.merge(self.localCatalog.packageLocationWatchSet);
@@ -692,6 +714,9 @@ Object.assign(ProjectContext.prototype, {
         self.packageMap = new packageMapModule.PackageMap(solution.answer, {
           localCatalog: self.localCatalog
         });
+
+        // Provide the packageVersionMap to plugins via global scope
+        global.packageVersionMap = self.packageMap.toVersionMap();
 
         self.packageMapDelta = new packageMapModule.PackageMapDelta({
           cachedVersions: cachedVersions,
@@ -1719,6 +1744,42 @@ Object.assign(exports.ReleaseFile.prototype, {
 });
 
 
+
+// TODO(modern): Review support for .meteor/local/modern
+// to hold intermediate bundler results. dot contexts are
+// hidden and commonly ignored by tools that scan directories
+
+// Represents .meteor/local/modern, used to store the intermediate results of
+// the different Meteor modules when running a modern bundler.
+exports.ModernLocalModules = function (options) {
+  var self = this;
+  buildmessage.assertInCapture();
+
+  self.modernDir = files.pathJoin(options.projectDir, '.meteor', 'local', 'modern');
+  self.modernMainClient = files.pathJoin(self.modernDir, 'main-client.js');
+  self.modernMainServer = files.pathJoin(self.modernDir, 'main-server.js');
+  self.modernTestClient = files.pathJoin(self.modernDir, 'test-client.js');
+  self.modernTestServer = files.pathJoin(self.modernDir, 'test-server.js');
+  self.watchSet = null;
+};
+
+Object.assign(exports.ModernLocalModules.prototype, {
+  init: async function() {
+    const self = this;
+    await self._readFile();
+  },
+  _readFile: function () {
+    var self = this;
+    buildmessage.assertInCapture();
+
+    self.watchSet = new watch.WatchSet;
+    watch.readAndWatchFile(self.watchSet, self.modernMainClient);
+    watch.readAndWatchFile(self.watchSet, self.modernMainServer);
+    watch.readAndWatchFile(self.watchSet, self.modernTestClient);
+    watch.readAndWatchFile(self.watchSet, self.modernTestServer);
+  },
+});
+
 // Represents .meteor/.finished-upgraders.
 // This is only used in a few places, so we don't cache its value in memory;
 // we just read it when we need it. There's also no need to add it to a
@@ -1828,7 +1889,10 @@ export class MeteorConfig {
     // Updates config when package.json changes trigger rebuilds
     setMeteorConfig({
       ...(this._config || {}),
-      modern: normalizeModernConfig(modernForced || this._config?.modern || false),
+      modern: {
+        ...normalizeModernConfig(modernForced || this._config?.modern || false),
+        ...(this._config?.verbose || this._config?.modern?.verbose) && { verbose: true },
+      },
     });
 
     return this._config;
