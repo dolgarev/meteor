@@ -82,12 +82,14 @@ Meteor build plugins extend the Meteor bundler by letting you handle new file ty
 However, Meteor’s build system solves the same problems as other bundlers, including Rspack. Build plugins are largely deprecated in favor of Rspack alternatives. Some plugins may still be useful if they don’t act directly on app files and do something Meteor-specific that can be preserved.
 
 Among the compatible plugins:
-- zodern:types. Still compatible, automatically providing Meteor types for core and community packages.
+- [`zodern:types`](https://packosphere.com/zodern/types). Still compatible, automatically providing Meteor types for core and community packages.
 
 For others, please refer to the migration topics.
-- [CSS, Less, and SCSS](#css-less-and-scss) (when using less, fourseven:scss)
-- [Coffeescript](#coffeescript) (when using zodern:melte)
-- [Svelte](#svelte) (when using zodern:melte)
+- [CSS, Less, and SCSS](#css-less-and-scss) (when using [`less`](https://packosphere.com/meteor/less), [`fourseven:scss`](https://packosphere.com/fourseven/scss))
+- [Coffeescript](#coffeescript) (when using [`coffeescript`](https://packosphere.com/meteor/coffeescript))
+- [Svelte](#svelte) (when using [`zodern:melte`](https://packosphere.com/zodern/melte))
+
+You can still use these plugins to handle files inside Meteor atmosphere packages. You only need consider Rspack alternative when it’s required for your app code, which will usually be the case.
 
 Please report your plugin usage as [GitHub issues](https://github.com/meteor/meteor/issues?q=sort%3Aupdated-desc+is%3Aissue+is%3Aopen) or [forum posts](https://forums.meteor.com/), so we can suggest an Rspack alternative or assess compatibility.
 
