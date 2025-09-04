@@ -250,7 +250,7 @@ export default function (inMeteor = {}, argv = {}) {
         lastImports: [`./${outputFilename}`],
       }),
     }),
-    enableGlobalPolyfill: isDevEnvironment,
+    enableGlobalPolyfill: isDevEnvironment && !isServer,
   });
 
   const rsdoctorModule = isBundleVisualizerEnabled
@@ -390,6 +390,7 @@ export default function (inMeteor = {}, argv = {}) {
     },
     externals,
     plugins: [
+      requireExternalsPlugin,
       new DefinePlugin(
         isTest && (isTestModule || isTestEager)
           ? {
