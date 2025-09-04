@@ -280,7 +280,7 @@ export default function (inMeteor = {}, argv = {}) {
   let clientConfig = {
     name: clientNameConfig,
     target: 'web',
-    mode: 'development',
+    mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: clientOutputDir,
