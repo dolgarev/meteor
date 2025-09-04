@@ -120,6 +120,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isClient = !!Meteor.isClient;
   const isServer = !!Meteor.isServer;
   const isRun = !!Meteor.isRun;
+  const isBuild = !!Meteor.isBuild;
   const isReactEnabled = !!Meteor.isReactEnabled;
   const isTestModule = !!Meteor.isTestModule;
   const isTestEager = !!Meteor.isTestEager;
@@ -263,6 +264,14 @@ export default function (inMeteor = {}, argv = {}) {
         }),
       ]
     : [];
+  const bannerPluginConfig = !isBuild
+    ? [
+        new BannerPlugin({
+          banner: bannerOutput,
+          entryOnly: true,
+        }),
+      ]
+    : [];
 
   const clientNameConfig = `[${(isTest && 'test-') || ''}${
     (isTestModule && 'module') || 'client'
@@ -324,10 +333,7 @@ export default function (inMeteor = {}, argv = {}) {
         'Meteor.isDevelopment': JSON.stringify(isDev),
         'Meteor.isProduction': JSON.stringify(isProd),
       }),
-      new BannerPlugin({
-        banner: bannerOutput,
-        entryOnly: true,
-      }),
+      ...bannerPluginConfig,
       Meteor.HtmlRspackPlugin(),
       ...doctorPluginConfig,
     ],
@@ -390,7 +396,6 @@ export default function (inMeteor = {}, argv = {}) {
     },
     externals,
     plugins: [
-      requireExternalsPlugin,
       new DefinePlugin(
         isTest && (isTestModule || isTestEager)
           ? {
@@ -407,11 +412,8 @@ export default function (inMeteor = {}, argv = {}) {
               'Meteor.isProduction': JSON.stringify(isProd),
             },
       ),
-      new BannerPlugin({
-        banner: bannerOutput,
-        entryOnly: true,
-      }),
-      isTestModule && requireExternalsPlugin,
+      ...bannerPluginConfig,
+      requireExternalsPlugin,
       ...doctorPluginConfig,
     ],
     watchOptions,
