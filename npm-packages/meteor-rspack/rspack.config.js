@@ -118,6 +118,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isDev = !!Meteor.isDevelopment || !isProd;
   const isTest = !!Meteor.isTest;
   const isClient = !!Meteor.isClient;
+  const isServer = !!Meteor.isServer;
   const isRun = !!Meteor.isRun;
   const isReactEnabled = !!Meteor.isReactEnabled;
   const isTestModule = !!Meteor.isTestModule;
@@ -203,12 +204,13 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
+  const enableSwcExternalHelpers = !isServer && swcExternalHelpers;
   const isDevEnvironment = isRun && isDev && !isTest && !isNative;
   const swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
     isJsxEnabled,
     isTsxEnabled,
-    externalHelpers: swcExternalHelpers,
+    externalHelpers: enableSwcExternalHelpers,
     isDevEnvironment,
   });
   // Expose swc config to use in custom configs

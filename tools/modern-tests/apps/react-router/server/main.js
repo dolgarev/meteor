@@ -4,8 +4,10 @@ import { LinksCollection } from '/imports/api/links';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import '@helper/alias';
 import ReactAlias from '@react/alias';
+import { S3Client } from '@aws-sdk/client-s3';
 
 console.log('@react/alias loaded', ReactAlias.version);
+console.log('S3client loaded', !!S3Client);
 
 async function insertLink({ title, url }) {
   await LinksCollection.insertAsync({ title, url, createdAt: new Date() });
