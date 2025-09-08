@@ -20,7 +20,7 @@ describe('ReactRouter App Bundling /', () => {
     },
     customAssertions: {
       afterRun: async ({ result, port }) => {
-        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+        await waitForReactEnvs(result.outputLines, { isTsxEnabled: true });
         await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
         await assert404Page(port);
         // Less styles support
@@ -47,7 +47,7 @@ describe('ReactRouter App Bundling /', () => {
         await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:.*/);
       },
       afterRunProduction: async ({ result, port }) => {
-        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+        await waitForReactEnvs(result.outputLines, { isTsxEnabled: true });
         await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
         await assert404Page(port, { isProductionMode: true });
         // Less styles support
@@ -74,7 +74,7 @@ describe('ReactRouter App Bundling /', () => {
         await waitForReactEnvs(result.outputLines);
       },
       afterBuild: async ({ result }) => {
-        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+        await waitForReactEnvs(result.outputLines, { isTsxEnabled: true });
         await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
       },
     }
@@ -95,10 +95,10 @@ export async function waitForReactEnvs(outputLines, options = {}) {
     /.*isReactEnabled:.*true.*/,
     options
   );
-  if (options.isJsxEnabled) {
+  if (options.isTsxEnabled) {
     await waitForMeteorOutput(
       outputLines,
-      /.*isJsxEnabled:.*true.*/,
+      /.*isTsxEnabled:.*true.*/,
       options
     );
   }
