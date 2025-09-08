@@ -141,8 +141,8 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     inputFilePath?.endsWith('.tsx');
 
   const isReactEnabled = process.env.METEOR_REACT_ENABLED === 'true';
-  const isTsxEnabled = inputFilePath?.endsWith('.tsx') || isReactEnabled;
-  const isJsxEnabled = inputFilePath?.endsWith('.jsx') || isReactEnabled;
+  const isTsxEnabled = isTypescriptEnabled && (inputFilePath?.endsWith('.tsx') || isReactEnabled);
+  const isJsxEnabled = !isTypescriptEnabled && (inputFilePath?.endsWith('.jsx') || isReactEnabled);
 
   const isBlazeEnabled = isMeteorBlazeProject();
   const isBlazeHotEnabled = isMeteorBlazeHotProject();
