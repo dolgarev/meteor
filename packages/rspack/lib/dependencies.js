@@ -81,6 +81,9 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
       logInfo(`  • ${dep}`);
     });
 
+    // Check if this is a Yarn project
+    const isYarnProj = process.env.YARN_ENABLED === 'true';
+
     // Install dev dependencies
     const devDepsToInstall = allDepsToInstall.filter(dep => dep.dev === true || dep.dev == null);
     if (devDepsToInstall.length > 0) {
@@ -88,6 +91,7 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
       success = await installNpmDependency(devDepsStrings, {
         cwd: appDir,
         dev: true,
+        yarn: isYarnProj,
       });
     }
 
@@ -95,22 +99,30 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
     const depsToInstall = allDepsToInstall.filter(dep => dep.dev === false);
     if (depsToInstall.length > 0) {
       const depsStrings = depsToInstall.map(dep => `${dep.name}@${dep.version}`);
-      const depsSuccess = await installNpmDependency(depsStrings, {
+
+      let depsSuccess;
+      depsSuccess = await installNpmDependency(depsStrings, {
         cwd: appDir,
         dev: false,
+        yarn: isYarnProj,
       });
 
       success = success && depsSuccess;
     }
 
     if (!success) {
+      const isYarnProj = process.env.YARN_ENABLED === 'true';
+      const installCommand = isYarnProj 
+        ? `yarn add --dev ${joinWithAnd(dependencyStrings)}`
+        : `meteor npm install -D ${joinWithAnd(dependencyStrings)}`;
+
       logError(`\n┌─────────────────────────────────────────────────`);
       logError(`│ ❌ ${packageName} Installation Failed`);
       logError(`└─────────────────────────────────────────────────`);
-      logError(`Run: meteor npm install -D ${joinWithAnd(dependencyStrings)}`);
+      logError(`Run: ${installCommand}`);
 
       throw new Error(
-        `Failed to install ${packageName} dependencies. Please install them manually with: meteor npm install -D ${joinWithAnd(dependencyStrings)}`
+        `Failed to install ${packageName} dependencies. Please install them manually with: ${installCommand}`
       );
     }
 
