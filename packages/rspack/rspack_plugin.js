@@ -79,17 +79,29 @@ const {
 const {
   getNpxCommand,
   getNpmCommand,
+  getYarnCommand,
+  isYarnProject,
 } = require('meteor/tools-core/lib/npm');
+const { getMeteorAppConfig, hasMeteorAppConfigAutoInstallDeps } = require("../tools-core/lib/meteor");
 
 if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
   // Get entry points from Meteor configuration
   setGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS, getMeteorAppEntrypoints());
 
+  let isYarnProj = process.env.YARN_ENABLED === 'true';
   // Main entry point - using top-level await
   try {
+    // Check if the project is a Yarn project and store the result in environment variable if not already set
+    if (process.env.YARN_ENABLED === undefined) {
+      isYarnProj = isYarnProject();
+      process.env.YARN_ENABLED = isYarnProj ? 'true' : 'false';
+    }
     if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
       logInfo(`[i] Meteor Npx prefix: ${getNpxCommand([])?.prefix}`);
       logInfo(`[i] Meteor Npm prefix: ${getNpmCommand([])?.prefix}`);
+      if (isYarnProj) {
+        logInfo(`[i] Meteor Yarn prefix: ${getYarnCommand([])?.prefix}`);
+      }
     }
 
     // Clean build context files only if they haven't been cleaned yet
@@ -98,12 +110,15 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
       setGlobalState(GLOBAL_STATE_KEYS.BUILD_CONTEXT_FILES_CLEANED, true);
     }
 
-    // Ensure Rspack is installed
-    await ensureRspackInstalled();
+    // Auto install deps (by default enabled)
+    if (hasMeteorAppConfigAutoInstallDeps()) {
+      // Ensure Rspack is installed
+      await ensureRspackInstalled();
 
-    // Check if Rspack React is installed
-    if (checkReactInstalled()) {
-      await ensureRspackReactInstalled();
+      // Check if Rspack React is installed
+      if (checkReactInstalled()) {
+        await ensureRspackReactInstalled();
+      }
     }
 
     // Ensure the Rspack build context directory exists
