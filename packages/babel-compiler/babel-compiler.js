@@ -358,7 +358,7 @@ BCp.processOneFileForTarget = function (inputFile, source) {
           ...(hasSwcHelpersAvailable &&
             !isNodeTarget &&
             (packageName == null ||
-              !['modules-runtime'].includes(packageName)) && {
+              !['core-runtime', 'modules-runtime'].includes(packageName)) && {
               externalHelpers: true,
             }),
         },
