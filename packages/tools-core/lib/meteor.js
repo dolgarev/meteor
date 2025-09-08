@@ -55,6 +55,15 @@ export function isMeteorAppConfigModernVerbose() {
 }
 
 /**
+ * Retrieves the auto install deps flag from the app's package.json.
+ * @returns {Boolean|*}
+ */
+export function hasMeteorAppConfigAutoInstallDeps() {
+  const { autoInstallDeps = true } = getMeteorAppConfig() || {};
+  return autoInstallDeps;
+}
+
+/**
  * Retrieves the entry points for the Meteor application from the configuration.
  * Uses Plugin.getMeteorConfig() if available, otherwise falls back to getMeteorAppConfig().
  * @returns {Object} An object containing the main and test entry points for client and server.

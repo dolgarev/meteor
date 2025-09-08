@@ -82,6 +82,7 @@ const {
   getYarnCommand,
   isYarnProject,
 } = require('meteor/tools-core/lib/npm');
+const { getMeteorAppConfig, hasMeteorAppConfigAutoInstallDeps } = require("../tools-core/lib/meteor");
 
 if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
   // Get entry points from Meteor configuration
@@ -109,12 +110,15 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
       setGlobalState(GLOBAL_STATE_KEYS.BUILD_CONTEXT_FILES_CLEANED, true);
     }
 
-    // Ensure Rspack is installed
-    await ensureRspackInstalled();
+    // Auto install deps (by default enabled)
+    if (hasMeteorAppConfigAutoInstallDeps()) {
+      // Ensure Rspack is installed
+      await ensureRspackInstalled();
 
-    // Check if Rspack React is installed
-    if (checkReactInstalled()) {
-      await ensureRspackReactInstalled();
+      // Check if Rspack React is installed
+      if (checkReactInstalled()) {
+        await ensureRspackReactInstalled();
+      }
     }
 
     // Ensure the Rspack build context directory exists
