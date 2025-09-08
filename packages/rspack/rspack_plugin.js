@@ -88,7 +88,6 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
   setGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS, getMeteorAppEntrypoints());
 
   let isYarnProj = process.env.YARN_ENABLED === 'true';
-  console.log("--> (rspack_plugin.js-Line: 91)\n process.env.YARN_ENABLED: ", process.env.YARN_ENABLED);
   // Main entry point - using top-level await
   try {
     // Check if the project is a Yarn project and store the result in environment variable if not already set
