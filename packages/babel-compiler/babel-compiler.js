@@ -243,10 +243,20 @@ BCp.processOneFileForTarget = function (inputFile, source) {
     bare: !! fileOptions.bare
   };
 
+  if (process.env.METEOR_VERBOSE === 'true') {
+    console.log('inputFilePath', inputFilePath, inputFile.getPathInPackage());
+    console.log('Plugin?.rspackHelpers?.isRspackOutputFile', Plugin?.rspackHelpers?.isRspackOutputFile);
+    console.log('Plugin?.rspackHelpers?.rspackFilePattern', Plugin?.rspackHelpers?.rspackFilePattern);
+    console.log('Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)', Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath));
+  }
+
   // Check if the file is a Rspack output file
   // If it is, bypass SWC/Babel and just read the file and its map file
   // as the contents are already transpiled by Rspack.
-  if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
+if (process.env.METEOR_SKIP_OUTPUT_FILE_PROCESSING !== 'true' &&
+    (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath) ||
+      inputFilePath.includes('-rspack.js'))
+  ) {
     try {
       // Get the full path to the file
       const fullPath = inputFile.getPathInPackage();
@@ -258,6 +268,17 @@ BCp.processOneFileForTarget = function (inputFile, source) {
       if (fs.existsSync(mapPath)) {
         const mapContent = fs.readFileSync(mapPath, 'utf8');
         toBeAdded.sourceMap = JSON.parse(mapContent);
+      }
+
+      if (this.isVerbose()) {
+        const arch = inputFile.getArch();
+        logTranspilation({
+          usedRspack: true,
+          inputFilePath,
+          packageName,
+          cacheHit: true,
+          arch,
+        });
       }
 
       return toBeAdded;
@@ -358,7 +379,9 @@ BCp.processOneFileForTarget = function (inputFile, source) {
           ...(hasSwcHelpersAvailable &&
             !isNodeTarget &&
             (packageName == null ||
-              !['modules-runtime'].includes(packageName)) && {
+              !['core-runtime', 'modules', 'modules-runtime'].includes(
+                packageName,
+              )) && {
               externalHelpers: true,
             }),
         },
@@ -1123,14 +1146,16 @@ function logTranspilation({
   packageName,
   inputFilePath,
   usedSwc,
+  usedRspack,
   cacheHit,
   isNodeModulesCode,
   arch,
   errorMessage = '',
   tip = '',
 }) {
-  const transpiler = usedSwc ? 'SWC' : 'Babel';
-  const transpilerColor = usedSwc ? 32 : 33;
+  let transpiler = usedSwc ? 'SWC' : 'Babel';
+  transpiler = usedRspack ? 'Rspack' : transpiler;
+  const transpilerColor = usedSwc || usedRspack ? 32 : 33;
   const label = color('[Transpiler]', 36);
   const transpilerPart = `${label} Used ${color(
     transpiler,
@@ -1153,7 +1178,7 @@ function logTranspilation({
     : color(originPaddedRaw, 35);
   const cacheStatus = errorMessage
     ? color('⚠️  Fallback', 33)
-    : usedSwc
+    : usedSwc || usedRspack
     ? cacheHit
       ? color('🟢 Cache hit', 32)
       : color('🔴 Cache miss', 31)
