@@ -253,12 +253,34 @@ export function cleanOmittedPaths(obj, options = {}) {
 }
 
 /**
+ * Normalizes externals configuration to ensure consistent handling.
+ * @param {Object} config - The configuration object
+ * @returns {Object} - The normalized configuration
+ */
+function normalizeExternals(config) {
+  if (!config || !config.externals) return config;
+
+  // Create a deep clone of the config to avoid modifying the original
+  const result = { ...config };
+
+  // If externals is not an array, convert it to an array
+  if (!Array.isArray(result.externals)) {
+    result.externals = [result.externals];
+  }
+
+  return result;
+}
+
+/**
  * Merges webpack/rspack configs with smart handling of overlapping rules.
  *
  * @param {...Object} configs - Configs to merge
  * @returns {Object} Merged config
  */
 export function mergeSplitOverlap(...configs) {
+  // Normalize externals in all configs before merging
+  const normalizedConfigs = configs.map(normalizeExternals);
+
   return mergeWithCustomize({
     customizeArray(a, b, key) {
       if (key === 'module.rules') {
@@ -287,5 +309,5 @@ export function mergeSplitOverlap(...configs) {
       // fall through to default merging
       return undefined;
     }
-  })(...configs);
+  })(...normalizedConfigs);
 }
