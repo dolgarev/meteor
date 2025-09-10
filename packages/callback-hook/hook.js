@@ -230,7 +230,6 @@ function normalizeHookExceptionHandler(exceptionHandler) {
     return exceptionHandler;
   }
 
-  // TODO: The message "callback of async function" is not very useful and needs clarification.
   const description = typeof exceptionHandler === 'string'
     ? exceptionHandler
     : "callback of async function";
