@@ -217,7 +217,7 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
-  const enableSwcExternalHelpers = !isServer && swcExternalHelpers;
+  const enableSwcExternalHelpers = !!swcExternalHelpers;
   const isDevEnvironment = isRun && isDev && !isTest && !isNative;
   const swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
@@ -232,6 +232,7 @@ export default function (inMeteor = {}, argv = {}) {
   const externals = [
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
+    ...(isServer ? [/^bcrypt$/] : []),
   ];
   const alias = {
     '/': path.resolve(process.cwd()),
