@@ -275,15 +275,19 @@ export function startRspackClientServe(options = {}) {
         if (data.includes('Loopback:') || data.includes('Project is running at:')) {
           logInfo(`[Rspack Client] ${data}`);
         } else {
-          logError(`[Rspack Client Error] ${data}`);
           // Check if this is the "npm error could not determine executable to run" error
           if (data.includes('npm error could not determine executable to run')) {
-            logError('[Rspack Client Error] Try running "meteor npm install" to ensure rspack is available');
+            const errorMsg = '[Rspack Client Error] Try running "meteor npm install" to ensure rspack is available';
+            logError(errorMsg);
+            throw new Error(errorMsg);
           }
+          logError(`[Rspack Client Error] ${data}`);
         }
       },
       onError: (err) => {
-        logError(`Rspack Error: ${err.message}`);
+        const errorMsg = `Rspack Error: ${err.message}`;
+        logError(errorMsg);
+        throw new Error(errorMsg);
       }
     });
 
@@ -329,15 +333,19 @@ export function startRspackServerWatch(options = {}) {
       if (data.includes('Project is running at:')) {
         logInfo(`[Rspack Server] ${data}`);
       } else {
-        logError(`[Rspack Server Error] ${data}`);
         // Check if this is the "npm error could not determine executable to run" error
         if (data.includes('npm error could not determine executable to run')) {
-          logError('[Rspack Server Error] Try running "meteor npm install" to ensure rspack is available');
+          const errorMsg = '[Rspack Server Error] Try running "meteor npm install" to ensure rspack is available';
+          logError(errorMsg);
+          throw new Error(errorMsg);
         }
+        logError(`[Rspack Server Error] ${data}`);
       }
     },
     onError: (err) => {
-      logError(`Rspack Error: ${err.message}`);
+      const errorMsg = `Rspack Error: ${err.message}`;
+      logError(errorMsg);
+      throw new Error(errorMsg);
     }
   });
 
@@ -392,11 +400,13 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
         if (data.includes('Project is running at:')) {
           logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
         } else {
-          logError(`[Rspack ${label} Error ${endpoint}] ${data}`);
           // Check if this is the "npm error could not determine executable to run" error
           if (data.includes('npm error could not determine executable to run')) {
-            logError(`[Rspack ${label} Error ${endpoint}] Try running "meteor npm install" to ensure rspack is available`);
+            const errorMsg = `[Rspack ${label} Error ${endpoint}] Try running "meteor npm install" to ensure rspack is available`;
+            logError(errorMsg);
+            throw new Error(errorMsg);
           }
+          throw new Error(`[Rspack ${label} Error ${endpoint}] ${data}`);
         }
       },
       onExit: (code) => {
