@@ -8,6 +8,8 @@ const { cleanOmittedPaths, mergeSplitOverlap } = require("./lib/mergeRulesSplitO
 const { getMeteorAppSwcConfig } = require('./lib/swc.js');
 const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
 const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
+const { createIgnoreFoldersRegex, getMeteorIgnoreEntries } = require("./lib/ignore.js");
+const { generateEagerTestFile } = require("./lib/test.js");
 
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
@@ -137,7 +139,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const isNative = !!Meteor.isNative;
   const mode = isProd ? 'production' : 'development';
-  const projectConfigPath = Meteor.projectConfigPath || path.resolve(process.cwd(), 'rspack.config.js');
+  const projectDir = process.cwd();
+  const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
@@ -368,11 +371,12 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     experiments: { css: true },
   };
 
+
   const serverEntry =
     isTest && isTestEager && isTestFullApp
-      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-app-tests.mjs')
+      ? generateEagerTestFile({ isAppTest: true, projectDir })
       : isTest && isTestEager
-      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-tests.mjs')
+      ? generateEagerTestFile({ isAppTest: false, projectDir })
       : path.resolve(process.cwd(), buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}${
     (isTestModule && 'module') || 'server'
