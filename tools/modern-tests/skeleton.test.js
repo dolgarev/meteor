@@ -51,7 +51,7 @@ describe('Meteor Skeletons /', () => {
   }));
 
   describe('Coffeescript Skeleton /', testMeteorSkeleton({
-    skeletonName: 'coffee',
+    skeletonName: 'coffeescript',
     port: 3211,
     filePaths: {
       client: 'client/main.coffee',
