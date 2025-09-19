@@ -18,7 +18,7 @@ Starting with Meteor 3.4
 Add this Atmosphere package to your app:
 
 ``` bash
-meteor add rspack
+meteor add rspack-beta340.9
 ```
 
 On first run, the package installs the required Rspack setup at the project level. It compiles your app code with Rspack to get the full benefit of this integration.
@@ -101,7 +101,7 @@ For others, please refer to the migration topics.
 - [Coffeescript](#coffeescript) (when using [`coffeescript`](https://packosphere.com/meteor/coffeescript))
 - [Svelte](#svelte) (when using [`zodern:melte`](https://packosphere.com/zodern/melte))
 
-You can still use these plugins to handle files inside Meteor atmosphere packages. You only need consider Rspack alternative when it’s required for your app code, which will usually be the case.
+You can still use these plugins to handle files inside Meteor atmosphere packages. You only need consider Rspack alternative when it’s required for your app code, which will usually be the case. An exception applies to HTML and CSS files: you can still use Meteor plugins touching these files if they are in the entry folder (e.g. `client/*.[html|css]` in most apps), or when using `modules` config as explained in the [Entry Points migration guide](#entry-points).
 
 Please report your plugin usage as [GitHub issues](https://github.com/meteor/meteor/issues?q=sort%3Aupdated-desc+is%3Aissue+is%3Aopen) or [forum posts](https://forums.meteor.com/), so we can suggest an Rspack alternative or assess compatibility.
 
@@ -186,7 +186,7 @@ Ensure your app defines these entry files with the correct paths where each modu
 
 Defining entry points improves performance even with the Meteor bundler, as Meteor stops scanning and eagerly loading unnecessary files. For Meteor-Rspack integration, this is required, since it does not support automatic code discovery for efficiency.
 
-In Meteor-Rspack integration, all app code is ignored by Meteor and handled by Rspack. By default, Meteor still processes eagerly CSS and HTML files in the entry folder (e.g. `client/`).
+In Meteor-Rspack integration, all app code is ignored by Meteor and handled by Rspack. By default, Meteor still processes eagerly CSS and HTML files in the entry folder (e.g. `client/*.[html|css]` in most apps).
 
 If you need Meteor to handle CSS or HTML files outside the main entry folder, add them to the `modules` field. This field accepts an array of strings, each pointing to a file or folder.
 
@@ -199,6 +199,8 @@ If you need Meteor to handle CSS or HTML files outside the main entry folder, ad
 ```
 
 With this, Meteor will process these files, merge stylesheets, generate the final HTML, and support files a Meteor plugin may use, except for JS or script code now handled by Rspack. You can also process CSS and HTML files directly with Rspack using loaders from imports in your app code, as mentioned in ["CSS, Less and SCSS"](#css-less-and-scss) or ["HtmlRspackPlugin"](#htmlrspackplugin). If you prefer Meteor's loading approach, you can still rely on it.
+
+Keep in mind: compiling styles with the Meteor compilers triggers Meteor HMR, which is slower than Rspack HMR. Migrating to compile styles with Rspack as part of the app code ensures the fastest HMR for style changes in development.
 
 ### Nested Imports
 
