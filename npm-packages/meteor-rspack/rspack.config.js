@@ -8,6 +8,8 @@ const { cleanOmittedPaths, mergeSplitOverlap } = require("./lib/mergeRulesSplitO
 const { getMeteorAppSwcConfig } = require('./lib/swc.js');
 const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
 const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
+const { generateEagerTestFile } = require("./lib/test.js");
+const { getMeteorIgnoreEntries, createIgnoreGlobConfig } = require("./lib/ignore");
 
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
@@ -52,7 +54,7 @@ function createSwcConfig({
   const defaultConfig = {
     jsc: {
       baseUrl: process.cwd(),
-      paths: { '/*': ['*'] },
+      paths: { '/*': ['*', '/*'] },
       parser: {
         syntax: isTypescriptEnabled ? 'typescript' : 'ecmascript',
         ...(isTsxEnabled && { tsx: true }),
@@ -101,17 +103,12 @@ function keepOutsideBuild() {
   };
 }
 
-// Watch options shared across both builds
-const defaultWatchOptions = {
-  ignored: ['**/.meteor/local/**', '**/dist/**'],
-};
-
 /**
  * @param {{ isClient: boolean; isServer: boolean; isDevelopment?: boolean; isProduction?: boolean; isTest?: boolean }} Meteor
  * @param {{ mode?: string; clientEntry?: string; serverEntry?: string; clientOutputFolder?: string; serverOutputFolder?: string; chunksContext?: string; assetsContext?: string; serverAssetsContext?: string }} argv
- * @returns {import('@rspack/cli').Configuration[]}
+ * @returns {Promise<import('@rspack/cli').Configuration[]>}
  */
-module.exports = function (inMeteor = {}, argv = {}) {
+module.exports = async function (inMeteor = {}, argv = {}) {
   // Transform Meteor env properties to proper boolean values
   const Meteor = { ...inMeteor };
   // Convert string boolean values to actual booleans
@@ -137,6 +134,8 @@ module.exports = function (inMeteor = {}, argv = {}) {
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const isNative = !!Meteor.isNative;
   const mode = isProd ? 'production' : 'development';
+  const projectDir = process.cwd();
+  const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
@@ -161,8 +160,8 @@ module.exports = function (inMeteor = {}, argv = {}) {
   const bannerOutput = JSON.parse(Meteor.bannerOutput || process.env.RSPACK_BANNER || '""');
 
   // Determine output directories
-  const clientOutputDir = path.resolve(process.cwd(), 'public');
-  const serverOutputDir = path.resolve(process.cwd(), 'private');
+  const clientOutputDir = path.resolve(projectDir, 'public');
+  const serverOutputDir = path.resolve(projectDir, 'private');
 
   // Determine context for bundles and assets
   const buildContext = Meteor.buildContext || '_build';
@@ -170,7 +169,7 @@ module.exports = function (inMeteor = {}, argv = {}) {
   const chunksContext = Meteor.chunksContext || 'build-chunks';
 
   // Determine build output and pass to Meteor
-  const buildOutputDir = path.resolve(process.cwd(), buildContext, outputDir);
+  const buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
   Meteor.buildOutputDir = buildOutputDir;
 
   // Add HtmlRspackPlugin function to Meteor
@@ -195,18 +194,24 @@ module.exports = function (inMeteor = {}, argv = {}) {
     });
   };
 
-  // Set watch options
+  // Get Meteor ignore entries
+  const { rootFolders, nestedFolders } = getMeteorIgnoreEntries(projectDir);
+
+  // Set default watch options
   const watchOptions = {
-    ...defaultWatchOptions,
-    ...(isTest &&
-      isTestEager && {
-        ignored: [
-          ...defaultWatchOptions.ignored,
-          '**/_build/**',
-          '**/.meteor/local/**',
-          '**/node_modules/**',
+    ignored: [
+      ...createIgnoreGlobConfig({
+        rootFolders,
+        nestedFolders: [
+          ".meteor/local",
+          "dist",
+          ...(isTest && isTestEager
+            ? [buildContext, ".meteor/local", "node_modules"]
+            : []),
+          ...(nestedFolders || []),
         ],
       }),
+    ],
   };
 
   if (Meteor.isDebug || Meteor.isVerbose) {
@@ -367,12 +372,25 @@ module.exports = function (inMeteor = {}, argv = {}) {
     experiments: { css: true },
   };
 
+
   const serverEntry =
     isTest && isTestEager && isTestFullApp
-      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-app-tests.mjs')
+      ? generateEagerTestFile({
+          isAppTest: true,
+          projectDir,
+          buildContext,
+          rootFolders,
+          nestedFolders,
+        })
       : isTest && isTestEager
-      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-tests.mjs')
-      : path.resolve(process.cwd(), buildContext, entryPath);
+      ? generateEagerTestFile({
+          isAppTest: false,
+          projectDir,
+          buildContext,
+          rootFolders,
+          nestedFolders,
+        })
+      : path.resolve(projectDir, buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}${
     (isTestModule && 'module') || 'server'
   }-rspack]`;
@@ -403,7 +421,7 @@ module.exports = function (inMeteor = {}, argv = {}) {
     resolve: {
       extensions,
       alias,
-      modules: ['node_modules', path.resolve(process.cwd())],
+      modules: ['node_modules', path.resolve(projectDir)],
       conditionNames: ['import', 'require', 'node', 'default'],
     },
     externals,
@@ -435,13 +453,36 @@ module.exports = function (inMeteor = {}, argv = {}) {
   };
 
   // Load and apply project-level overrides for the selected build
-  const projectConfigPath = path.resolve(process.cwd(), 'rspack.config.js');
-
   // Check if we're in a Meteor package directory by looking at the path
-  const isMeteorPackageConfig = process.cwd().includes('/packages/rspack');
+  const isMeteorPackageConfig = projectDir.includes('/packages/rspack');
   if (fs.existsSync(projectConfigPath) && !isMeteorPackageConfig) {
-    const projectConfig =
-      require(projectConfigPath)?.default || require(projectConfigPath);
+    // Check if there's a .mjs or .cjs version of the config file
+    const mjsConfigPath = projectConfigPath.replace(/\.js$/, '.mjs');
+    const cjsConfigPath = projectConfigPath.replace(/\.js$/, '.cjs');
+
+    let configPath = projectConfigPath;
+    if (fs.existsSync(mjsConfigPath)) {
+      configPath = mjsConfigPath;
+    } else if (fs.existsSync(cjsConfigPath)) {
+      configPath = cjsConfigPath;
+    }
+
+    // Use require for CommonJS modules and dynamic import for ES modules
+    let projectConfig;
+    try {
+      if (path.extname(configPath) === '.mjs') {
+        // For ESM modules, we need to use dynamic import
+        const fileUrl = `file://${configPath}`;
+        const module = await import(fileUrl);
+        projectConfig = module.default || module;
+      } else {
+        // For CommonJS modules, we can use require
+        projectConfig = require(configPath)?.default || require(configPath);
+      }
+    } catch (error) {
+      console.error(`Error loading rspack config from ${configPath}:`, error);
+      throw error;
+    }
 
     const userConfig =
       typeof projectConfig === 'function'
