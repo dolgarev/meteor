@@ -11,7 +11,7 @@ describe('Monorepo App Bundling /', () => {
     filePaths: { 
       client: 'app/client/main.jsx', 
       server: 'app/server/main.js',
-      test: 'app/tests/main.js'
+      test: 'app/tests/main.test.js'
     },
     customAssertions: {
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
