@@ -50,6 +50,7 @@ function createSwcConfig({
   isTsxEnabled,
   externalHelpers,
   isDevEnvironment,
+  isClient,
 }) {
   const defaultConfig = {
     jsc: {
@@ -64,7 +65,7 @@ function createSwcConfig({
       transform: {
         react: {
           development: isDevEnvironment,
-          refresh: isDevEnvironment,
+          ...(isClient && { refresh: isDevEnvironment }),
         },
       },
       externalHelpers,
@@ -195,22 +196,24 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   };
 
   // Get Meteor ignore entries
-  const { rootFolders, nestedFolders } = getMeteorIgnoreEntries(projectDir);
+  const meteorIgnoreEntries = getMeteorIgnoreEntries(projectDir);
+
+  // Additional ignore entries
+  const additionalEntries = [
+    "**/.meteor/local/**",
+    "**/dist/**",
+    ...(isTest && isTestEager
+      ? [`**/${buildContext}/**`, "**/.meteor/local/**", "node_modules/**"]
+      : []),
+  ];
 
   // Set default watch options
   const watchOptions = {
     ignored: [
-      ...createIgnoreGlobConfig({
-        rootFolders,
-        nestedFolders: [
-          ".meteor/local",
-          "dist",
-          ...(isTest && isTestEager
-            ? [buildContext, ".meteor/local", "node_modules"]
-            : []),
-          ...(nestedFolders || []),
-        ],
-      }),
+      ...createIgnoreGlobConfig([
+        ...meteorIgnoreEntries,
+        ...additionalEntries,
+      ]),
     ],
   };
 
@@ -227,6 +230,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     isTsxEnabled,
     externalHelpers: enableSwcExternalHelpers,
     isDevEnvironment,
+    isClient,
   });
   // Expose swc config to use in custom configs
   Meteor.swcConfigOptions = swcConfigRule.options;
@@ -272,7 +276,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const rsdoctorModule = isBundleVisualizerEnabled
     ? safeRequire('@rsdoctor/rspack-plugin')
     : null;
-  const doctorPluginConfig = isBundleVisualizerEnabled && rsdoctorModule?.RsdoctorRspackPlugin
+  const doctorPluginConfig = isRun && isBundleVisualizerEnabled && rsdoctorModule?.RsdoctorRspackPlugin
     ? [
         new rsdoctorModule.RsdoctorRspackPlugin({
           port: isClient
@@ -379,16 +383,14 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isAppTest: true,
           projectDir,
           buildContext,
-          rootFolders,
-          nestedFolders,
+          entries: meteorIgnoreEntries,
         })
       : isTest && isTestEager
       ? generateEagerTestFile({
           isAppTest: false,
           projectDir,
           buildContext,
-          rootFolders,
-          nestedFolders,
+          entries: meteorIgnoreEntries,
         })
       : path.resolve(projectDir, buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}${

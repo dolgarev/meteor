@@ -721,7 +721,7 @@ const SKELETON_INFO = {
   "tailwind": "To create an app using React and Tailwind",
   "chakra-ui": "To create an app Chakra UI and React",
   "solid": "To create a basic Solid app",
-  "coffee": "To create a basic CoffeeScript app",
+  "coffeescript": "To create a basic CoffeeScript app",
   "babel": "To create a React app with Babel support",
 };
 
@@ -745,7 +745,7 @@ main.registerCommand({
     svelte: { type: Boolean },
     tailwind: { type: Boolean },
     'chakra-ui': { type: Boolean },
-    coffee: { type: Boolean },
+    coffeescript: { type: Boolean },
     solid: { type: Boolean },
     legacy: { type: Boolean },
     prototype: { type: Boolean },
