@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { createIgnoreFoldersRegex } = require("./ignore.js");
+const { createIgnoreRegex, createIgnoreGlobConfig } = require("./ignore.js");
 
 /**
  * Generates eager test files dynamically
@@ -8,33 +8,34 @@ const { createIgnoreFoldersRegex } = require("./ignore.js");
  * @param {boolean} options.isAppTest - Whether this is an app test
  * @param {string} options.projectDir - The project directory
  * @param {string} options.buildContext - The build context
- * @param {string} options.rootFolders
- * @param {string} options.nestedFolders
+ * @param {string[]} options.entries - Array of ignore patterns
  * @returns {string} The path to the generated file
  */
 const generateEagerTestFile = ({
   isAppTest,
   projectDir,
   buildContext,
-  rootFolders,
-  nestedFolders,
+  entries = [],
 }) => {
   const distDir = path.resolve(projectDir, ".meteor/local/test");
   if (!fs.existsSync(distDir)) {
     fs.mkdirSync(distDir, { recursive: true });
   }
 
-  const excludeFoldersRegex = createIgnoreFoldersRegex({
-    nestedFolders: [
-      "node_modules",
-      ".meteor",
-      "public",
-      "private",
-      buildContext,
-      ...nestedFolders,
-    ],
-    rootFolders,
-  });
+  // Combine all ignore entries
+  const ignoreEntries = [
+    "**/node_modules/**",
+    "**/.meteor/**",
+    "**/public/**",
+    "**/private/**",
+    `**/${buildContext}/**`,
+    ...entries,
+  ];
+
+  // Create regex from ignore entries
+  const excludeFoldersRegex = createIgnoreRegex(
+    createIgnoreGlobConfig(ignoreEntries)
+  );
 
   const filename = isAppTest ? "eager-app-tests.mjs" : "eager-tests.mjs";
   const filePath = path.resolve(distDir, filename);

@@ -195,22 +195,24 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   };
 
   // Get Meteor ignore entries
-  const { rootFolders, nestedFolders } = getMeteorIgnoreEntries(projectDir);
+  const meteorIgnoreEntries = getMeteorIgnoreEntries(projectDir);
+
+  // Additional ignore entries
+  const additionalEntries = [
+    "**/.meteor/local/**",
+    "**/dist/**",
+    ...(isTest && isTestEager
+      ? [`**/${buildContext}/**`, "**/.meteor/local/**", "node_modules/**"]
+      : []),
+  ];
 
   // Set default watch options
   const watchOptions = {
     ignored: [
-      ...createIgnoreGlobConfig({
-        rootFolders,
-        nestedFolders: [
-          ".meteor/local",
-          "dist",
-          ...(isTest && isTestEager
-            ? [buildContext, ".meteor/local", "node_modules"]
-            : []),
-          ...(nestedFolders || []),
-        ],
-      }),
+      ...createIgnoreGlobConfig([
+        ...meteorIgnoreEntries,
+        ...additionalEntries,
+      ]),
     ],
   };
 
@@ -379,16 +381,14 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isAppTest: true,
           projectDir,
           buildContext,
-          rootFolders,
-          nestedFolders,
+          entries: meteorIgnoreEntries,
         })
       : isTest && isTestEager
       ? generateEagerTestFile({
           isAppTest: false,
           projectDir,
           buildContext,
-          rootFolders,
-          nestedFolders,
+          entries: meteorIgnoreEntries,
         })
       : path.resolve(projectDir, buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}${
