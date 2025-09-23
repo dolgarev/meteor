@@ -46,6 +46,7 @@ function createCacheStrategy(mode, side) {
 // SWC loader rule (JSX/JS)
 function createSwcConfig({
   isTypescriptEnabled,
+  isReactEnabled,
   isJsxEnabled,
   isTsxEnabled,
   externalHelpers,
@@ -62,12 +63,14 @@ function createSwcConfig({
         ...(isJsxEnabled && { jsx: true }),
       },
       target: 'es2015',
-      transform: {
-        react: {
-          development: isDevEnvironment,
-          ...(isClient && { refresh: isDevEnvironment }),
+      ...(isReactEnabled && {
+        transform: {
+          react: {
+            development: isDevEnvironment,
+            ...(isClient && { refresh: isDevEnvironment }),
+          },
         },
-      },
+      }),
       externalHelpers,
     },
   };
@@ -226,6 +229,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isDevEnvironment = isRun && isDev && !isTest && !isNative;
   const swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
+    isReactEnabled,
     isJsxEnabled,
     isTsxEnabled,
     externalHelpers: enableSwcExternalHelpers,
