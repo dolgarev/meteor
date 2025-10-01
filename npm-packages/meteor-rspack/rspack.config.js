@@ -27,17 +27,52 @@ function safeRequire(moduleName) {
 }
 
 // Persistent filesystem cache strategy
-function createCacheStrategy(mode, side) {
+function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {}) {
+  // Check for configuration files
+  const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
+  const hasTsconfig = fs.existsSync(tsconfigPath);
+  const babelRcConfig = path.join(process.cwd(), '.babelrc');
+  const hasBabelRcConfig = fs.existsSync(babelRcConfig);
+  const babelJsConfig = path.join(process.cwd(), 'babel.config.js');
+  const hasBabelJsConfig = fs.existsSync(babelJsConfig);
+  const swcrcPath = path.join(process.cwd(), '.swcrc');
+  const hasSwcrcConfig = fs.existsSync(swcrcPath);
+  const swcJsPath = path.join(process.cwd(), 'swc.config.js');
+  const hasSwcJsConfig = fs.existsSync(swcJsPath);
+  const postcssConfigPath = path.join(process.cwd(), 'postcss.config.js');
+  const hasPostcssConfig = fs.existsSync(postcssConfigPath);
+  const packageLockPath = path.join(process.cwd(), 'package-lock.json');
+  const hasPackageLock = fs.existsSync(packageLockPath);
+  const yarnLockPath = path.join(process.cwd(), 'yarn.lock');
+  const hasYarnLock = fs.existsSync(yarnLockPath);
+
+  // Build dependencies array
+  const buildDependencies = [
+    ...(projectConfigPath ? [projectConfigPath] : []),
+    ...(configPath ? [configPath] : []),
+    ...(hasTsconfig ? [tsconfigPath] : []),
+    ...(hasBabelRcConfig ? [babelRcConfig] : []),
+    ...(hasBabelJsConfig ? [babelJsConfig] : []),
+    ...(hasSwcrcConfig ? [swcrcPath] : []),
+    ...(hasSwcJsConfig ? [swcJsPath] : []),
+    ...(hasPostcssConfig ? [postcssConfigPath] : []),
+    ...(hasPackageLock ? [packageLockPath] : []),
+    ...(hasYarnLock ? [yarnLockPath] : []),
+  ].filter(Boolean);
+
   return {
     cache: true,
     experiments: {
       cache: {
-        version: `swc-${mode}${(side && `-${side}`) || ""}`,
+        version: `cache-${mode}${(side && `-${side}`) || ""}`,
         type: "persistent",
         storage: {
           type: "filesystem",
           directory: `node_modules/.cache/rspack${(side && `/${side}`) || ""}`,
         },
+        ...(buildDependencies.length > 0 && {
+          buildDependencies: buildDependencies,
+        })
       },
     },
   };
@@ -140,6 +175,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const mode = isProd ? 'production' : 'development';
   const projectDir = process.cwd();
   const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
+  const configPath = Meteor.configPath;
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
@@ -377,7 +413,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         },
       },
     }),
-    ...merge(createCacheStrategy(mode, "client"), { experiments: { css: true } })
+    ...merge(createCacheStrategy(mode, "client", { projectConfigPath, configPath }), { experiments: { css: true } })
   };
 
 
@@ -455,7 +491,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     watchOptions,
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
     ...((isDevEnvironment || (isTest && !isTestEager) || isNative) &&
-      createCacheStrategy(mode, "server")),
+      createCacheStrategy(mode, "server", { projectConfigPath, configPath })),
   };
 
   // Load and apply project-level overrides for the selected build
