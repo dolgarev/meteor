@@ -207,6 +207,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
 
   const swcExternalHelpers = checkNpmDependencyExists('@swc/helpers');
 
+  const configPath = getConfigFilePath();
   const projectConfigPath = getCustomConfigFilePath();
 
   const pairs = [
@@ -240,6 +241,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
     ['devServerPort', process.env.RSPACK_DEVSERVER_PORT],
     ['projectConfigPath', projectConfigPath],
+    ['configPath', configPath],
     ...(swcExternalHelpers &&  [['swcExternalHelpers', swcExternalHelpers]] || []),
     ...(isReactEnabled &&  [['isReactEnabled', isReactEnabled]] || []),
     ...(isBlazeEnabled &&  [['isBlazeEnabled', isBlazeEnabled]] || []),
