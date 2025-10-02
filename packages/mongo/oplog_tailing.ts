@@ -104,36 +104,41 @@ export class OplogHandle {
       },
     ];
 
-    const nsRegex = new RegExp(
-      "^(?:" +
-        [
-          // @ts-ignore
-          Meteor._escapeRegExp(this._dbName + "."),
-          // @ts-ignore
-          Meteor._escapeRegExp("admin.$cmd"),
-        ].join("|") +
-        ")"
-    );
-
     if (this._oplogOptions.excludeCollections?.length) {
-      oplogCriteria.push({
-        ns: {
-          $regex: nsRegex,
-          $nin: this._oplogOptions.excludeCollections.map(
-            (collName: string) => `${this._dbName}.${collName}`
-          ),
-        },
-      });
-    } else if (this._oplogOptions.includeCollections?.length) {
+      const nsRegex = new RegExp(
+        '^(?:' +
+          [
+            // @ts-ignore
+            Meteor._escapeRegExp(this._dbName + '.'),
+          ].join('|') +
+          ')'
+      );
+      const excludeNs = {
+        $regex: nsRegex,
+        $nin: this._oplogOptions.excludeCollections.map(
+          (collName: string) => `${this._dbName}.${collName}`
+        ),
+      };
       oplogCriteria.push({
         $or: [
-          { ns: /^admin\.\$cmd/ },
+          { ns: excludeNs },
           {
-            ns: {
-              $in: this._oplogOptions.includeCollections.map(
-                (collName: string) => `${this._dbName}.${collName}`
-              ),
-            },
+            ns: /^admin\.\$cmd/,
+            'o.applyOps': { $elemMatch: { ns: { $nin: excludeNs.$nin } } },
+          },
+        ],
+      });
+    } else if (this._oplogOptions.includeCollections?.length) {
+      const includeNs = {
+        $in: this._oplogOptions.includeCollections.map(
+          (collName: string) => `${this._dbName}.${collName}`
+        ),
+      };
+      oplogCriteria.push({
+        $or: [
+          { ns: /^admin\.\$cmd/, 'o.applyOps.ns': includeNs },
+          {
+            ns: includeNs,
           },
         ],
       });
