@@ -147,7 +147,7 @@ export class OplogHandle {
           { ns: excludeNs },
           {
             ns: /^admin\.\$cmd/,
-            'o.applyOps': { $elemMatch: { ns: { $nin: excludeNs.$nin } } },
+            'o.applyOps': { $elemMatch: { ns: excludeNs } },
           },
         ],
       });
