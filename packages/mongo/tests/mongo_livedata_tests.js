@@ -2776,38 +2776,59 @@ const setsEqual = function (a, b) {
     });
   });
 
-  // Test for CollectionPrototype._validatedInsert return value (issue #12159)
-  testAsyncMulti('mongo-livedata - _validatedInsert returns inserted id, ' + idGeneration, [
-    async function(test, expect) {
-      var coll = new Mongo.Collection(null, { idGeneration: idGeneration });
-      
-      // Test that _validatedInsert returns the inserted ID
-      var result = await coll._validatedInsert({name: "test"});
-      test.isNotNull(result);
-      test.isNotUndefined(result);
-      
-      // Verify the document was actually inserted and has the returned ID
-      var doc = await coll.findOneAsync({name: "test"});
-      test.isNotNull(doc);
-      test.equal(doc._id, result);
-    }
-  ]);
+  // Test for CollectionPrototype._validatedInsertAsync return value (issue #12159)
+  // This test verifies that insertAsync returns the inserted ID when using allow/deny rules
+  if (Meteor.isServer) {
+    testAsyncMulti('mongo-livedata - insertAsync with allow/deny returns inserted id, ' + idGeneration, [
+      async function(test, expect) {
+        var collectionName = 'test_validated_insert_' + Random.id();
+        var coll = new Mongo.Collection(collectionName, { idGeneration: idGeneration });
+        
+        // Set up allow rule to test _validatedInsertAsync return value
+        coll.allow({
+          insert: function() { return true; }
+        });
+        
+        // Test that insertAsync (which uses _validatedInsertAsync internally) returns the inserted ID
+        var result = await coll.insertAsync({name: "test"});
+        test.isNotNull(result);
+        test.isNotUndefined(result);
+        
+        // Verify the document was actually inserted and has the returned ID
+        var doc = await coll.findOneAsync({name: "test"});
+        test.isNotNull(doc);
+        test.equal(doc._id, result);
+        
+        // Clean up
+        await coll.dropCollectionAsync();
+      }
+    ]);
 
-  testAsyncMulti('mongo-livedata - _validatedInsert returns generated id when explicit id provided, ' + idGeneration, [
-    async function(test, expect) {
-      var coll = new Mongo.Collection(null, { idGeneration: idGeneration });
-      
-      // Test with explicit ID
-      var explicitId = idGeneration === 'MONGO' ? new Mongo.ObjectID() : 'explicit-test-id';
-      var result = await coll._validatedInsert({_id: explicitId, name: "explicit-test"});
-      test.equal(result, explicitId);
-      
-      // Verify the document was inserted with the explicit ID
-      var doc = await coll.findOneAsync({name: "explicit-test"});
-      test.isNotNull(doc);
-      test.equal(doc._id, explicitId);
-    }
-  ]);
+    testAsyncMulti('mongo-livedata - insertAsync with allow/deny returns explicit id, ' + idGeneration, [
+      async function(test, expect) {
+        var collectionName = 'test_validated_insert_explicit_' + Random.id();
+        var coll = new Mongo.Collection(collectionName, { idGeneration: idGeneration });
+        
+        // Set up allow rule
+        coll.allow({
+          insert: function() { return true; }
+        });
+        
+        // Test with explicit ID
+        var explicitId = idGeneration === 'MONGO' ? new Mongo.ObjectID() : 'explicit-test-id';
+        var result = await coll.insertAsync({_id: explicitId, name: "explicit-test"});
+        test.equal(result, explicitId);
+        
+        // Verify the document was inserted with the explicit ID
+        var doc = await coll.findOneAsync({name: "explicit-test"});
+        test.isNotNull(doc);
+        test.equal(doc._id, explicitId);
+        
+        // Clean up
+        await coll.dropCollectionAsync();
+      }
+    ]);
+  }
 
 });  // end idGeneration parametrization
 
