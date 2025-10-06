@@ -81,12 +81,12 @@ Tinytest.add('minimongo - bulk remove with $in operator removes all matching doc
   test.equal(coll.find().count(), 2);
   
   // Verify the correct documents were removed
-  test.isNull(coll.findOne('id1'));
-  test.isNull(coll.findOne('id2'));
+  test.isUndefined(coll.findOne('id1'));
+  test.isUndefined(coll.findOne('id2'));
   
   // Verify the other documents still exist
-  test.isNotNull(coll.findOne('id3'));
-  test.isNotNull(coll.findOne('id4'));
+  test.isNotUndefined(coll.findOne('id3'));
+  test.isNotUndefined(coll.findOne('id4'));
 });
 
 if (Meteor.isClient) {
