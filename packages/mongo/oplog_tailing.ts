@@ -159,10 +159,10 @@ export class OplogHandle {
       };
       oplogCriteria.push({
         $or: [
-          { ns: /^admin\.\$cmd/, 'o.applyOps.ns': includeNs },
           {
             ns: includeNs,
           },
+          { ns: /^admin\.\$cmd/, 'o.applyOps.ns': includeNs },
         ],
       });
     } else {

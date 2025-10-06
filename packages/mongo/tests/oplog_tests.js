@@ -304,29 +304,29 @@ async function oplogTailingOptionsTest({
       );
     });
 
-  // Ensure EXCLUDE collection does NOT get processed
-  const excludeNotSeen = new Promise(async (resolve, reject) => {
-    const excludeStop = await myOplogHandle.onOplogEntry(
-      { dropCollection: false, dropDatabase: false, collection: excludeCollectionName },
-      ({ op, collection, id }) => {
-        // If anything for excluded collection arrives, fail
+    // Ensure EXCLUDE collection does NOT get processed
+    const excludeNotSeen = new Promise(async (resolve, reject) => {
+      const excludeStop = await myOplogHandle.onOplogEntry(
+        { dropCollection: false, dropDatabase: false, collection: excludeCollectionName },
+        ({ op, collection, id }) => {
+          // If anything for excluded collection arrives, fail
+          excludeStop.stop();
+          reject("Recieved a document in a excluded collection");
+        }
+      );
+      // Resolve after 2s if nothing arrived
+      setTimeout(() => {
         excludeStop.stop();
-        reject("Recieved a document in a excluded collection");
-      }
-    );
-    // Resolve after 2s if nothing arrived
-    setTimeout(() => {
-      excludeStop.stop();
-      resolve(true);
-    }, 2000);
-  });
+        resolve(true);
+      }, 2000);
+    });
 
-  // Do the inserts (e.g., oplogInsertionTransaction or your chosen function)
-  await functionToRun(IncludeCollection, ExcludeCollection);
+    // Do the inserts (e.g., oplogInsertionTransaction or your chosen function)
+    await functionToRun(IncludeCollection, ExcludeCollection);
 
-  // Await raw-oplog assertions
-  test.equal(await includeSeen, true);
-  test.equal(await excludeNotSeen, true);
+    // Await raw-oplog assertions
+    test.equal(await includeSeen, true);
+    test.equal(await excludeNotSeen, true);
   } finally {
     if (stopRaw?.stop) await stopRaw.stop();
     // Reset:
