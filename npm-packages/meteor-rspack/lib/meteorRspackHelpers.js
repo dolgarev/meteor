@@ -1,5 +1,6 @@
 const path = require("path");
 const { prepareMeteorRspackConfig } = require("./meteorRspackConfigFactory");
+const { builtinModules } = require("module");
 
 /**
  * Resolve a package directory from node resolution.
@@ -53,7 +54,28 @@ function compileWithRspack(deps, { options = {} } = {}) {
   });
 }
 
+/**
+ * Build an alias map that disables ALL Node core modules in a web build.
+ * - Includes both 'fs' and 'node:fs' keys
+ * - Optional extras let you block non-core modules too
+ */
+function makeWebNodeBuiltinsAlias(extras = []) {
+  // Strip potential 'node:' prefixes then add both forms
+  const core = new Set(builtinModules.map((m) => m.replace(/^node:/, "")));
+
+  const names = new Set();
+  for (const m of core) {
+    names.add(m);           // e.g. 'fs'
+    names.add(`node:${m}`); // e.g. 'node:fs'
+  }
+  for (const x of extras) names.add(x);
+
+  // Map every name to false (causes hard error if imported)
+  return Object.fromEntries([...names].map((m) => [m, false]));
+}
+
 module.exports = {
   compileWithMeteor,
   compileWithRspack,
+  makeWebNodeBuiltinsAlias,
 };

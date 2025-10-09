@@ -1,4 +1,4 @@
-const { DefinePlugin, BannerPlugin } = require('@rspack/core');
+const { DefinePlugin, BannerPlugin, NormalModuleReplacementPlugin } = require('@rspack/core');
 const fs = require('fs');
 const { inspect } = require('node:util');
 const path = require('path');
@@ -11,7 +11,11 @@ const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js')
 const { generateEagerTestFile } = require("./lib/test.js");
 const { getMeteorIgnoreEntries, createIgnoreGlobConfig } = require("./lib/ignore");
 const { mergeMeteorRspackFragments } = require("./lib/meteorRspackConfigFactory.js");
-const { compileWithMeteor, compileWithRspack } = require("./lib/meteorRspackHelpers.js");
+const {
+  compileWithMeteor,
+  compileWithRspack,
+  makeWebNodeBuiltinsAlias,
+} = require('./lib/meteorRspackHelpers.js');
 
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
@@ -292,6 +296,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const alias = {
     '/': path.resolve(process.cwd()),
   };
+  const fallback = {
+    ...(isClient && makeWebNodeBuiltinsAlias()),
+  };
   const extensions = [
     '.ts',
     '.tsx',
@@ -386,7 +393,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         ...extraRules,
       ],
     },
-    resolve: { extensions, alias },
+    resolve: { extensions, alias, fallback },
     externals,
     plugins: [
       ...[
@@ -406,6 +413,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       ...bannerPluginConfig,
       Meteor.HtmlRspackPlugin(),
       ...doctorPluginConfig,
+      new NormalModuleReplacementPlugin(/^node:(.*)$/, (res) => {
+        res.request = res.request.replace(/^node:/, '');
+      }),
     ],
     watchOptions,
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
@@ -476,6 +486,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       conditionNames: ['import', 'require', 'node', 'default'],
     },
     externals,
+    externalsPresets: { node: true },
     plugins: [
       new DefinePlugin(
         isTest && (isTestModule || isTestEager)
