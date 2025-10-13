@@ -14,6 +14,7 @@ const { mergeMeteorRspackFragments } = require("./lib/meteorRspackConfigFactory.
 const {
   compileWithMeteor,
   compileWithRspack,
+  setCache,
   makeWebNodeBuiltinsAlias,
 } = require('./lib/meteorRspackHelpers.js');
 
@@ -218,12 +219,23 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
   Meteor.buildOutputDir = buildOutputDir;
 
+  const cacheStrategy = createCacheStrategy(
+    mode,
+    (Meteor.isClient && 'client') || 'server',
+    { projectConfigPath, configPath }
+  );
+
   // Expose Meteor's helpers to expand Rspack configs
   Meteor.compileWithMeteor = deps => compileWithMeteor(deps);
   Meteor.compileWithRspack = deps =>
     compileWithRspack(deps, {
       options: Meteor.swcConfigOptions,
     });
+  Meteor.setCache = enabled =>
+    setCache(
+      !!enabled,
+      enabled === 'memory' ? undefined : cacheStrategy
+    );
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {
@@ -443,7 +455,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         },
       },
     }),
-    ...merge(createCacheStrategy(mode, "client", { projectConfigPath, configPath }), { experiments: { css: true } })
+    ...merge(cacheStrategy, { experiments: { css: true } })
   };
 
 
@@ -526,7 +538,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     watchOptions,
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
     ...((isDevEnvironment || (isTest && !isTestEager) || isNative) &&
-      createCacheStrategy(mode, "server", { projectConfigPath, configPath })),
+      cacheStrategy),
   };
 
   // Load and apply project-level overrides for the selected build
