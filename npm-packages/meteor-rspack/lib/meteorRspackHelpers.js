@@ -55,6 +55,30 @@ function compileWithRspack(deps, { options = {} } = {}) {
 }
 
 /**
+ * Enable or disable Rspack cache config
+ * Usage: setCache(false)
+ *
+ * @param {boolean} enabled
+ * @param {Record<string, object>} cacheConfig
+ * @returns {Record<string, object>} `{ meteorRspackConfigX: { cache: {} } }`
+ */
+function setCache(
+  enabled,
+  cacheConfig = { cache: true, experiments: { cache: true } },
+) {
+  return prepareMeteorRspackConfig(
+    enabled
+      ? cacheConfig
+      : {
+        cache: false, // disable cache
+        experiments: {
+          cache: false, // disable persistent cache (experimental flag)
+        },
+      },
+  );
+}
+
+/**
  * Build an alias map that disables ALL Node core modules in a web build.
  * - Includes both 'fs' and 'node:fs' keys
  * - Optional extras let you block non-core modules too
@@ -77,5 +101,6 @@ function makeWebNodeBuiltinsAlias(extras = []) {
 module.exports = {
   compileWithMeteor,
   compileWithRspack,
+  setCache,
   makeWebNodeBuiltinsAlias,
 };
