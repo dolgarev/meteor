@@ -434,7 +434,8 @@ selftest.define("run and SIGKILL parent process", ["yet-unsolved-windows-failure
   // Test that passing a bad pid in $METEOR_PARENT_PID logs an error and exits
   // immediately.
   s.set("METEOR_BAD_PARENT_PID_FOR_TEST", "t");
-  run = s.run();
+  run = s.run("run", "--timestamps");
+
   run.waitSecs(120);
   await run.match("must be a valid process ID");
   await run.match("Your application is crashing");
