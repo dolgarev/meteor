@@ -403,7 +403,7 @@ selftest.define("run and SIGKILL parent process", ["yet-unsolved-windows-failure
   await s.createApp("myapp", "app-prints-pid");
   s.cd("myapp");
 
-  run = s.run();
+  run = s.run("run", "--timestamps");
   run.waitSecs(30);
   var match = await run.match(/My pid is (\d+)/);
   var childPid;
