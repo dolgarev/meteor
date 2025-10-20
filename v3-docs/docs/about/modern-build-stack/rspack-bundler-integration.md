@@ -546,6 +546,47 @@ module.exports = defineConfig(Meteor => ({
 }));
 ```
 
+### Service Worker
+
+Rspack lets you use standard plugins to manage Service Workers, such as Workbox, so you don’t need to maintain your own setup. You can follow the Webpack guide for integrating Workbox with [`workbox-webpack-plugin`](https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin) (it should be compatible), or try the Rspack-specific version [`@aaroon/workbox-rspack-plugin`](https://github.com/Clarkkkk/workbox-rspack-plugin).
+
+Whether you use a managed tool or a custom setup, ensure that only the Rspack dev server endpoints are treated as network-only for proper development. Otherwise, you may end up with infinite reload loops that only clear after removing the Service Worker. Skip caching of `__rspack__` endpoints.
+
+If you use a custom implementation in your `sw.js`, intercept fetch requests to ignore Rspack contexts like this:
+
+```js
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  const sameOrigin = url.origin === self.location.origin;
+  // Skip Rspack  devServer
+  if (sameOrigin && url.pathname.includes('/__rspack__/')) {
+    // Never cache ignores and hot updates; hit the network every time
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+
+  // ...
+});
+```
+
+When using Workbox, the equivalent with `GenerateSW` might look like this:
+
+```js
+new GenerateSW({
+  // ...
+  runtimeCaching: [
+    {
+      urlPattern: ({ url }) => url.pathname.includes('/__rspack__/'),
+      handler: 'NetworkOnly',
+    },
+    // ...
+  ],
+  // ...
+})
+```
+
 ## Benefits
 
 Meteor–Rspack integration sends your app code to Rspack to use modern bundler features. Meteor then uses Rspack’s output to handle Meteor-specific tasks (like Atmosphere package compilation) and create the final bundle.
