@@ -546,6 +546,27 @@ module.exports = defineConfig(Meteor => ({
 }));
 ```
 
+### Cache
+
+Meteor cache remains active and continues to handle Atmosphere packages and intermediate builds. There’s an additional cache layer managed by Rspack to speed up rebuilds for your app code.
+
+This Rspack cache is enabled by default in persistent mode. If you [encounter issues](https://github.com/web-infra-dev/rspack/issues/11804) or prefer to disable it, you can do so in your `rspack.config.js` using the helper:
+
+```json
+const { defineConfig } = require('@meteorjs/rspack');
+const { rspack } = require('@rspack/core');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+
+module.exports = defineConfig(Meteor => ({
+  // Disable cache, or use 'memory' to switch to in-memory cache
+  ...Meteor.setCache(false),
+}));
+
+
+```
+
+This helper provide a shortcut to apply the needed Rspack configuration and safely override defaults, so you don’t have to handle it manually.
+
 ### Service Worker
 
 Rspack lets you use standard plugins to manage Service Workers, such as Workbox, so you don’t need to maintain your own setup. You can follow the Webpack guide for integrating Workbox with [`workbox-webpack-plugin`](https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin) (it should be compatible), or try the Rspack-specific version [`@aaroon/workbox-rspack-plugin`](https://github.com/Clarkkkk/workbox-rspack-plugin).
