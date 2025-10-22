@@ -245,7 +245,7 @@ function getLegacyArches(): string[] {
   try {
     const meteorConfig = getMeteorConfig();
 
-    if (meteorConfig?.cordova?.disableModern === true) {
+    if (meteorConfig?.modern?.cordova === false) {
       arches.push("web.cordova");
     }
   } catch (e) {
@@ -267,8 +267,8 @@ export function mapWhereToArches(where: string) {
   // Shorthands for common arch prefixes:
   // "server" => os.*
   // "client" => web.*
-  // "modern" => web.browser, web.cordova (unless cordova.disableModern is set)
-  // "legacy" => web.browser.legacy, web.cordova (if cordova.disableModern is true)
+  // "modern" => web.browser, web.cordova (unless modern.cordova is set to false)
+  // "legacy" => web.browser.legacy, web.cordova (if modern.cordova is false)
   if (where === "server") {
     arches.push("os");
   } else if (where === "client") {
