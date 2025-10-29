@@ -105,6 +105,10 @@ You can still use these plugins to handle files inside Meteor atmosphere package
 
 Please report your plugin usage as [GitHub issues](https://github.com/meteor/meteor/issues?q=sort%3Aupdated-desc+is%3Aissue+is%3Aopen) or [forum posts](https://forums.meteor.com/), so we can suggest an Rspack alternative or assess compatibility.
 
+### Further migration
+
+Refer to the [Migration Topics](#migration-topics) section for more details on other specific requirements your app might have.
+
 ## Custom `rspack.config.js`
 
 Meteor-Rspack projects can be customized using the `rspack.config.js` file, which is automatically available when installing the `rspack` package. You can also use `rspack.config.mjs` or `rspack.config.cjs` if you prefer strict ESM or CommonJS formats.
@@ -568,6 +572,46 @@ module.exports = defineConfig(Meteor => ({
 ```
 
 This helper provide a shortcut to apply the needed Rspack configuration and safely override defaults, so you don’t have to handle it manually.
+
+### Interop for Default Imports
+
+Meteor originally handled default imports from CommonJS modules automatically. This allowed you to write:
+```js
+import all from 'some-commonjs-lib';
+```
+even when the library used module.exports = ... under the hood.
+
+With Rspack and SWC, that behavior no longer happens by default, you now need to use:
+
+```js
+import * as all from 'some-commonjs-lib';
+```
+unless you re-enable interop support.
+
+If you prefer to restore Meteor’s earlier behavior, you can configure SWC like this in your `.swcrc`:
+
+``` json
+{
+  "jsx": { ... },
+  "module": {
+    "type": "commonjs",
+    "noInterop": false,
+    "importInterop": "node"
+  }
+}
+```
+
+* `"type": "commonjs"` tells SWC to emit CommonJS output (require, module.exports, etc.).
+* `"noInterop": false` injects interop helpers so default imports from CommonJS modules work properly.
+* `"importInterop": "node"` aligns behavior with how Node handles ESM and CJS interop.
+
+This configuration ensures compatibility for mixed module imports, allowing default imports from CommonJS packages to behave as the old Meteor-style import behavior.
+
+However, enabling this globally means SWC will convert all `import`/`export` statements into `require` calls. Rspack then loses access to ES module boundaries, preventing optimizations like tree-shaking and static analysis.
+
+In short, this option trades runtime compatibility for build-time optimization.
+
+We recommend migrating away from this pattern and using standard named or namespace imports (`import { ... }` or `import * as`...) for long-term compatibility and better build performance.
 
 ### Service Worker
 
