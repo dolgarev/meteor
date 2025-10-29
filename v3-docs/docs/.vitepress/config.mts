@@ -49,6 +49,10 @@ export default defineConfig({
                 link: "/tutorials/blaze/index",
               },
               {
+                text: "Meteor.js 3 + Svelte",
+                link: "/tutorials/svelte/index",
+              },
+              {
                 link: "/tutorials/application-structure/index",
                 text: "Application structure",
               },
@@ -487,6 +491,10 @@ export default defineConfig({
           { 
             text: "Meteor.js 3 + Blaze",
             link: "/tutorials/blaze/index",
+          },
+          {
+            text: "Meteor.js 3 + Svelte",
+            link: "/tutorials/svelte/index",
           },
           {
             link: "/tutorials/application-structure/index",
