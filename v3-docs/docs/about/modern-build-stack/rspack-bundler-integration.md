@@ -671,6 +671,19 @@ new GenerateSW({
 })
 ```
 
+### Dev Server
+
+You can customize the Rspack dev server much like you would when using meteor run. Any [devServer option listed in the official Rspack guide](https://rspack.rs/config/dev-server) can be applied in your app’s [`rspack.config.js`](./rspack-bundler-integration.md#custom-rspackconfigjs).
+
+The only exception is the port configuration. To set a specific port for the Rspack dev server, use the `RSPACK_DEVSERVER_PORT` environment variable:
+
+```bash
+# Assign a specific port for the Rspack dev server
+RSPACK_DEVSERVER_PORT=3232 meteor run
+```
+
+The reason is that the Rspack dev server is handled by the Meteor so it can make both dev server works together, and the info of the port needs to be properly shared via the env.
+
 ## Benefits
 
 Meteor–Rspack integration sends your app code to Rspack to use modern bundler features. Meteor then uses Rspack’s output to handle Meteor-specific tasks (like Atmosphere package compilation) and create the final bundle.
