@@ -573,6 +573,23 @@ module.exports = defineConfig(Meteor => ({
 
 This helper provide a shortcut to apply the needed Rspack configuration and safely override defaults, so you don’t have to handle it manually.
 
+### Split Vendor Chunk
+
+When using dynamic imports (`import()`), you might unintentionally include libraries like React, Mantine, or date utilities in multiple async chunks. To avoid this, it's best to define a stable `vendor` chunk for shared dependencies.
+
+We provide a helper to easily configure this in your `rspack.config.js`:
+
+```js
+const { defineConfig } = require('@meteorjs/rspack');
+
+module.exports = defineConfig(Meteor => ({
+  // Split vendor chunk
+  ...Meteor.splitVendorChunk(),
+}));
+```
+
+This is a quick configuration for split chunks all within `node_modules` as a `vendor` chunk, if you need more control you can use the [official Rspack split chunks integration guide](https://rspack.rs/guide/optimization/code-splitting#splitchunksplugin).
+
 ### Interop for Default Imports
 
 Meteor originally handled default imports from CommonJS modules automatically. This allowed you to write:
