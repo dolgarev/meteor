@@ -278,7 +278,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       enabled === 'memory' ? undefined : cacheStrategy
     );
   Meteor.splitVendorChunk = () => splitVendorChunk();
-  Meteor.createAngularConfig = () => createAngularConfig();
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {
