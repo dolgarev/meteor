@@ -20,6 +20,6 @@ export default defineConfig(async Meteor => {
   });
 
   return {
-    ...(Meteor.isClient && angularConfig),
+    ...(Meteor.isClient && !Meteor.isTest && angularConfig),
   };
 });
