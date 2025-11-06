@@ -477,15 +477,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           : []),
         ...extraRules,
       ],
-      ...(Meteor.isTest && {
-        parser: {
-          javascript: {
-            dynamicImportMode: 'eager',
-            dynamicImportPrefetch: true,
-            dynamicImportPreload: true
-          },
-        },
-      }),
     },
     resolve: { extensions, alias, fallback },
     externals,
@@ -703,10 +694,30 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       }
     : {};
 
-  const config = mergeSplitOverlap(
+  // Establish test client overrides to ensure proper running
+  const testClientExpandConfig =
+    isTest && isClient
+      ? {
+          module: {
+            parser: {
+              javascript: {
+                dynamicImportMode: "eager",
+                dynamicImportPrefetch: true,
+                dynamicImportPreload: true,
+              },
+            },
+          },
+          optimization: {
+            splitChunks: false,
+          },
+        }
+      : {};
+
+  let config = mergeSplitOverlap(
     isClient ? clientConfig : serverConfig,
     angularExpandConfig
   );
+  config = mergeSplitOverlap(config, testClientExpandConfig);
 
   if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('Config:', inspect(config, { depth: null, colors: true }));
