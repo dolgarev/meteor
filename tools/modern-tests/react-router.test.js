@@ -53,6 +53,8 @@ describe('ReactRouter App Bundling /', () => {
         await waitForMeteorOutput(result.outputLines, /.*custom-package loaded.*/);
         // resolve.extensions loading
         await waitForMeteorOutput(result.outputLines, /.*first\.jsx loaded.*/);
+        // Check custom plugin gets loaded from rspack.config.override.js file
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/);
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
@@ -81,6 +83,8 @@ describe('ReactRouter App Bundling /', () => {
       },
       afterTest: async ({ result }) => {
         await waitForReactEnvs(result.outputLines);
+        // Check custom plugin gets loaded from rspack.config.override.js file
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/);
       },
       afterTestOnce: async ({ result }) => {
         await waitForReactEnvs(result.outputLines);
@@ -88,6 +92,8 @@ describe('ReactRouter App Bundling /', () => {
       afterBuild: async ({ result }) => {
         await waitForReactEnvs(result.outputLines, { isTsxEnabled: true });
         await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
+        // Check custom plugin gets loaded from rspack.config.override.js file
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/);
       },
     }
   }));
