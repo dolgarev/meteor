@@ -110,6 +110,7 @@ export function testMeteorBundler(options) {
  * @param {boolean} options.verbose - Whether to enable verbose output (default: true)
  * @param {boolean} options.testFullApp - Whether to run tests with the --full-app flag (default: false)
  * @param {boolean} options.testBundleVisualizer - Whether to run tests with bundle-visualizer in production mode (default: false)
+ * @param {string[]} options.checkBundleFilePaths - Array of file paths to check for existence in the bundle
  * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
  * @param {Function} options.afterAllBehavior - Additional behavior to run in afterAll
  * @returns {Function} - Jest test function
@@ -149,6 +150,8 @@ export function testMeteorRspackBundler(options) {
     testFullApp = false,
     // Option to test with bundle-visualizer in production mode
     testBundleVisualizer = false,
+    // Array of file paths to check for existence in the bundle
+    checkBundleFilePaths = [],
     // Additional behavior for beforeAll and afterAll
     beforeAllBehavior,
     afterAllBehavior,
@@ -635,9 +638,30 @@ export function testMeteorRspackBundler(options) {
         // Check if the npm install command was successful
         expect(npmInstallResult.exitCode).toBe(0);
 
+        // Check for the existence of specified file paths in the bundle
+        const fileCheckResults = {};
+        if (checkBundleFilePaths.length > 0) {
+          console.log(`Checking for existence of ${checkBundleFilePaths.length} file paths in the bundle...`);
+
+          // Check each file path
+          for (const filePath of checkBundleFilePaths) {
+            const fullPath = path.join(buildOutputDir, 'bundle', filePath);
+            try {
+              const exists = await fs.pathExists(fullPath);
+              fileCheckResults[filePath] = exists;
+              console.log(`Checking file ${filePath}: ${exists ? 'exists' : 'does not exist'}`);
+              expect(exists).toBe(true);
+            } catch (error) {
+              console.error(`Error checking file ${filePath}:`, error);
+              fileCheckResults[filePath] = false;
+              expect(false).toBe(true); // This will fail the test
+            }
+          }
+        }
+
         // Run custom assertions if provided
         if (customAssertions && customAssertions.afterBuild) {
-          await customAssertions.afterBuild({ tempDir, buildOutputDir, result });
+          await customAssertions.afterBuild({ tempDir, buildOutputDir, result, fileCheckResults });
         }
       } finally {
         // Clean up the build output directory
@@ -663,6 +687,7 @@ export function testMeteorRspackBundler(options) {
  * @param {Function} options.customAssertions.afterRunProduction - Custom assertions to run after running the app in production mode
  * @param {Function} options.customAssertions.afterTestOnce - Custom assertions to run after running tests once
  * @param {Function} options.customAssertions.afterBuild - Custom assertions to run after building the app
+ * @param {string[]} options.checkBundleFilePaths - Array of file paths to check for existence in the bundle
  * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
  * @param {Function} options.afterAllBehavior - Additional behavior to run in afterAll
  * @returns {Function} - Jest test function
@@ -679,6 +704,7 @@ export function testMeteorSkeleton(options) {
     },
     customAssertions = {},
     checkBodyStyles = true,
+    checkBundleFilePaths = [],
     beforeAllBehavior,
     afterAllBehavior,
   } = options;
@@ -854,9 +880,30 @@ export function testMeteorSkeleton(options) {
         expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser/program.json`)).toBe(true);
         expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser.legacy/program.json`)).toBe(true);
 
+        // Check for the existence of specified file paths in the bundle
+        const fileCheckResults = {};
+        if (checkBundleFilePaths.length > 0) {
+          console.log(`Checking for existence of ${checkBundleFilePaths.length} file paths in the bundle...`);
+
+          // Check each file path
+          for (const filePath of checkBundleFilePaths) {
+            const fullPath = path.join(buildOutputDir, 'bundle', filePath);
+            try {
+              const exists = await fs.pathExists(fullPath);
+              fileCheckResults[filePath] = exists;
+              console.log(`Checking file ${filePath}: ${exists ? 'exists' : 'does not exist'}`);
+              expect(exists).toBe(true);
+            } catch (error) {
+              console.error(`Error checking file ${filePath}:`, error);
+              fileCheckResults[filePath] = false;
+              expect(false).toBe(true); // This will fail the test
+            }
+          }
+        }
+
         // Run custom assertions if provided
         if (customAssertions.afterBuild) {
-          await customAssertions.afterBuild({ tempDir, buildOutputDir, result });
+          await customAssertions.afterBuild({ tempDir, buildOutputDir, result, fileCheckResults });
         }
       } finally {
         // Clean up the build output directory

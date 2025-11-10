@@ -12,6 +12,14 @@ describe('ReactRouter App Bundling /', () => {
       test: 'tests/main.app-test.js',
     },
     testFullApp: true,
+    checkBundleFilePaths: [
+      'programs/web.browser/app/1x1.png',
+      'programs/web.browser/app/images/1x1.png',
+      'programs/web.browser/app/docs/text.md',
+      'programs/web.browser.legacy/app/1x1.png',
+      'programs/web.browser.legacy/app/images/1x1.png',
+      'programs/web.browser.legacy/app/docs/text.md',
+    ],
     beforeAllBehavior: async () => {
       process.env.METEOR_PACKAGE_DIRS = './my-packages';
     },
