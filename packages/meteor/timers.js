@@ -1,13 +1,13 @@
 function withoutInvocation(f) {
   if (Package.ddp) {
-    const DDP = Package.ddp.DDP;
-    const CurrentInvocation =
+    var DDP = Package.ddp.DDP;
+    var CurrentInvocation =
       DDP._CurrentMethodInvocation ||
       // For backwards compatibility, as explained in this issue:
       // https://github.com/meteor/meteor/issues/8947
       DDP._CurrentInvocation;
 
-    const invocation = CurrentInvocation.get();
+    var invocation = CurrentInvocation.get();
     if (invocation && invocation.isSimulation) {
       throw new Error("Can't set timers inside simulations");
     }
@@ -98,7 +98,7 @@ Meteor.deferrable = function (f, { on }) {
     throw new Error("options.on must be an array");
   }
 
-  const env = Meteor.isDevelopment
+  var env = Meteor.isDevelopment
     ? "development"
     : Meteor.isProduction
     ? "production"
