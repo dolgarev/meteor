@@ -84,6 +84,9 @@ Meteor.startup(async () => {
 
 :::
 
+Using this pattern can get some performance gains on the defined environments as sometimes we do not need to wait for this function,
+this can increase the speed of startup.
+
 <ApiBox name="Meteor.deferDev" hasCustomExample />
 This helper function allows you to defer the execution of a function only in development environments.
 
