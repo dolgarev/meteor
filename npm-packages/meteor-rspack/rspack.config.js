@@ -664,7 +664,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   // Load and apply project-level overrides for the selected build
   // Check if we're in a Meteor package directory by looking at the path
   const isMeteorPackageConfig = projectDir.includes('/packages/rspack');
-  console.log("--> (rspack.config.js-Line: 665)\n isMeteorPackageConfig: ", isMeteorPackageConfig);
   if (fs.existsSync(projectConfigPath) && !isMeteorPackageConfig) {
     // Check if there's a .mjs or .cjs version of the config file
     const mjsConfigPath = projectConfigPath.replace(/\.js$/, '.mjs');

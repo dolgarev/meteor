@@ -14,8 +14,17 @@ const require = createRequire(import.meta.url);
  *
  * Use these flags to adjust your build settings based on environment.
  */
-export default defineConfig((/* Meteor */) => {
+export default defineConfig(Meteor => {
   return {
+    ...Meteor.extendSwcConfig({
+      jsc: {
+        baseUrl: process.cwd(),
+        paths: {
+          '@ui/*': ['imports/ui/*'],
+          '@api/*': ['imports/api/*'],
+        },
+      },
+    }),
     module: {
       rules: [
         {
