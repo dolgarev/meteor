@@ -139,10 +139,32 @@ function splitVendorChunk() {
   });
 }
 
+/**
+ * Extend SWC loader config
+ * Usage: extendSwcConfig()
+ *
+ * @returns {Record<string, object>} `{ meteorRspackConfigX: { optimization: { ... } } }`
+ */
+function extendSwcConfig(swcConfig) {
+  return prepareMeteorRspackConfig({
+    module: {
+      rules: [
+        {
+          test: /\.(?:[mc]?js|jsx|[mc]?ts|tsx)$/i,
+          exclude: /node_modules|\.meteor\/local/,
+          loader: 'builtin:swc-loader',
+          options: swcConfig,
+        },
+      ],
+    },
+  });
+}
+
 module.exports = {
   compileWithMeteor,
   compileWithRspack,
   setCache,
   splitVendorChunk,
+  extendSwcConfig,
   makeWebNodeBuiltinsAlias,
 };

@@ -5,7 +5,7 @@ import {
   defineConfig as _rspackDefineConfig,
   Configuration as _RspackConfig,
 } from '@rspack/cli';
-import { HtmlRspackPluginOptions, RuleSetConditions } from '@rspack/core';
+import { HtmlRspackPluginOptions, RuleSetConditions, SwcLoaderOptions } from '@rspack/core';
 
 export interface MeteorRspackConfig extends _RspackConfig {
   meteor?: {
@@ -56,6 +56,11 @@ type MeteorEnv = Record<string, any> & {
    * @returns A config object with optimization configuration
    */
   splitVendorChunk: () => Record<string, object>;
+  /**
+   * Extend Rspack SWC loader config.
+   * @returns A config object with SWC loader config
+   */
+  extendSwcConfig: (swcConfig: SwcLoaderOptions) => Record<string, object>;
 }
 
 export type ConfigFactory = (

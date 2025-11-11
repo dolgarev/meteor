@@ -17,6 +17,7 @@ const {
   compileWithRspack,
   setCache,
   splitVendorChunk,
+  extendSwcConfig,
   makeWebNodeBuiltinsAlias,
 } = require('./lib/meteorRspackHelpers.js');
 
@@ -280,6 +281,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       enabled === 'memory' ? undefined : cacheStrategy
     );
   Meteor.splitVendorChunk = () => splitVendorChunk();
+  Meteor.extendSwcConfig = (customSwcConfig) => extendSwcConfig(customSwcConfig);
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {
