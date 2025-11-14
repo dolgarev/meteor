@@ -85,7 +85,7 @@ var updateTestPackageWithDevDepends = async function (
 /// HELPERS
 ///
 
-var _assertCorrectPackageNpmDir = function (projectContext, deps) {
+var _assertCorrectPackageNpmDir = function (projectContext, deps, context = 'package') {
   // test-package/.npm was generated
 
   // Get the actual npm-shrinkwrap.json content
@@ -94,7 +94,7 @@ var _assertCorrectPackageNpmDir = function (projectContext, deps) {
       files.pathJoin(
         getTestPackageDir(projectContext),
         ".npm",
-        "package",
+        context,
         "npm-shrinkwrap.json"
       ),
       "utf8"
@@ -144,20 +144,20 @@ var _assertCorrectPackageNpmDir = function (projectContext, deps) {
   var testPackageDir = getTestPackageDir(projectContext);
   assert.equal(
     files.readFile(
-      files.pathJoin(testPackageDir, ".npm", "package", ".gitignore"),
+      files.pathJoin(testPackageDir, ".npm", context, ".gitignore"),
       "utf8"
     ),
     "node_modules\n"
   );
   assert(
-    files.exists(files.pathJoin(testPackageDir, ".npm", "package", "README"))
+    files.exists(files.pathJoin(testPackageDir, ".npm", context, "README"))
   );
 
   // verify the contents of the `node_modules` dir
   var nodeModulesDir = files.pathJoin(
     testPackageDir,
     ".npm",
-    "package",
+    context,
     "node_modules"
   );
 
@@ -316,7 +316,7 @@ var runTest = async function () {
     assert.strictEqual(result.errors, false, result.errors && result.errors[0]);
 
     // In development mode, both regular and dev dependencies should be installed
-    _assertCorrectPackageNpmDir(projectContext, allDeps);
+    _assertCorrectPackageNpmDir(projectContext, allDeps, 'devPackage');
     _assertCorrectBundleNpmContents(tmpOutputDir, allDeps);
 
     // Restore the original global.currentCommand
@@ -347,7 +347,7 @@ var runTest = async function () {
     assert.strictEqual(result.errors, false, result.errors && result.errors[0]);
 
     // In production mode, only regular dependencies should be installed
-    _assertCorrectPackageNpmDir(projectContext, regularDeps);
+    _assertCorrectPackageNpmDir(projectContext, regularDeps, 'package');
     _assertCorrectBundleNpmContents(tmpOutputDir, regularDeps);
 
     // Restore the original global.currentCommand
