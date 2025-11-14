@@ -3,18 +3,6 @@ const { prepareMeteorRspackConfig } = require("./meteorRspackConfigFactory");
 const { builtinModules } = require("module");
 
 /**
- * Resolve a package directory from node resolution.
- * @param {string} pkg
- * @returns {string} absolute directory of the package
- */
-function pkgDir(pkg) {
-  const resolved = require.resolve(`${pkg}/package.json`, {
-    paths: [process.cwd()],
-  });
-  return path.dirname(resolved);
-}
-
-/**
  * Wrap externals for Meteor runtime (marks deps as externals).
  * Usage: compileWithMeteor(["sharp", "vimeo", "fs"])
  *
@@ -38,7 +26,11 @@ function compileWithMeteor(deps) {
  * @returns {Record<string, object>} `{ meteorRspackConfigX: { module: { rules: [...] } } }`
  */
 function compileWithRspack(deps, { options = {} } = {}) {
-  const includeDirs = deps.flat().filter(Boolean).map(pkgDir);
+  const includeDirs = deps.flat().filter(Boolean)
+      .map(pkg => typeof pkg === 'string' && !pkg.includes('node_modules')
+          ? path.join(process.cwd(), 'node_modules', pkg)
+          : pkg
+      );
 
   return prepareMeteorRspackConfig({
     module: {
