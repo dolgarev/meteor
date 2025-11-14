@@ -125,12 +125,6 @@ export class PackageNpm {
 
     this._devDependenciesCalled = true;
 
-    // const trySkipDevModule = ['build', 'deploy'].includes(global.currentCommand?.name);
-    // if (trySkipDevModule) {
-    //   // Skip dev dependencies in production builds
-    //   return;
-    // }
-
     if (typeof devDependencies !== 'object') {
       buildmessage.error("the argument to Npm.devDepends should be an " +
         "object, like this: {jest: '29.5.0'}",
