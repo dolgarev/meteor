@@ -293,7 +293,9 @@ class NodeModulesDirectory {
         // Normalize .npm/package/node_modules/... paths so that they get
         // copied into the bundle as if they were in the top-level local
         // node_modules directory of the package.
-        if (relParts[1] === "package") {
+        if (relParts[1] === "devPackage") {
+          relParts.splice(0, 2, 'dev');
+        } else if (relParts[1] === "package") {
           relParts.splice(0, 2);
         } else if (relParts[1] === "plugin") {
           relParts.splice(0, 3);
@@ -1996,15 +1998,21 @@ function hashOfFiles(files) {
  */
 function getDevOnlyPackages() {
   const targets = global.meteorBundlerTargets || {};
-  return ['client', 'server'].flatMap(target => {
-    const pkgMap = targets[target]?.packageMap?._map;
-    if (!pkgMap) {
-      return [];
-    }
-    return Object.entries(pkgMap)
-      .filter(([_, pkg]) => pkg.packageSource?.devOnly)
-      .map(([name]) => name);
-  });
+  return [
+    ...new Set(
+        ['web.browser', 'server'].flatMap(target => {
+          const pkgMap = targets[target]?.unibuilds;
+
+          if (!pkgMap) {
+            return [];
+          }
+
+          return pkgMap
+              .filter(unibuild => unibuild?.pkg?.devOnly)
+              .map(unibuild => unibuild?.pkg.name);
+        })
+    )
+  ];
 }
 
 //////////////////// JsImageTarget and JsImage  ////////////////////
@@ -2436,8 +2444,8 @@ class JsImage {
     });
 
     var devOnlySkipPackages = [];
-    const trySkipDevModule = ['build', 'deploy'].includes(global.currentCommand?.name) && buildMode === 'production';
-    if (trySkipDevModule) devOnlySkipPackages = getDevOnlyPackages();
+    const isProductionLike = ['build', 'deploy'].includes(global.currentCommand?.name) && buildMode === 'production';
+    if (isProductionLike) devOnlySkipPackages = getDevOnlyPackages();
 
     // If multiple load files share the same asset, only write one copy of
     // each. (eg, for app assets).
@@ -2582,9 +2590,25 @@ class JsImage {
       }
 
       if (nmd.sourcePath !== nmd.preferredBundlePath) {
+        const hasDevNodeModules = nmd.sourcePath.includes('npm/dev/node_modules')
+            || nmd.sourcePath.includes('devPackage/node_modules');
+        // Skip copy dev node_modules in production-like mode
+        if (isProductionLike && hasDevNodeModules) {
+          continue;
+        }
+        // Skip copy prod node_modules in dev mode when dev node_modules exist
+        if (!isProductionLike
+            && files.exists(`${nmd.sourceRoot}/npm/dev/node_modules`)
+            && nmd.sourcePath.includes('npm/node_modules')) {
+          continue;
+        }
+        // Ensure to copy dev node_modules to proper context
+        const to = hasDevNodeModules
+            ? nmd.preferredBundlePath.replace('/dev/node_modules', '/node_modules')
+            : nmd.preferredBundlePath;
         var copyOptions = {
           from: nmd.sourcePath,
-          to: nmd.preferredBundlePath,
+          to: to,
           npmDiscards: nmd.npmDiscards,
           symlink: includeNodeModules === 'symlink'
         };

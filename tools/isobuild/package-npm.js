@@ -16,6 +16,7 @@ export class PackageNpm {
     // the Npm.strip comment below for further usage information.
     this._discards = new NpmDiscards;
     this._dependencies = null;
+    this._devDependencies = null;
     this._dependenciesCalled = false;
     this._devDependenciesCalled = false;
   }
@@ -115,7 +116,7 @@ export class PackageNpm {
    * @locus package.js
    */
   devDepends(devDependencies) {
-    if (this._devDependenciesCalled && this._dependencies) {
+    if (this._devDependenciesCalled && this._devDependencies) {
       buildmessage.error("Npm.devDepends may only be called once per package",
                          { useMyCaller: true });
       // recover by ignoring the Npm.devDepends line
@@ -123,12 +124,6 @@ export class PackageNpm {
     }
 
     this._devDependenciesCalled = true;
-
-    const trySkipDevModule = ['build', 'deploy'].includes(global.currentCommand?.name);
-    if (trySkipDevModule) {
-      // Skip dev dependencies in production builds
-      return;
-    }
 
     if (typeof devDependencies !== 'object') {
       buildmessage.error("the argument to Npm.devDepends should be an " +
@@ -155,8 +150,8 @@ export class PackageNpm {
       return;
     }
 
-    // Add dev dependencies to the main dependencies
-    this._dependencies = {
+    // Add dev dependencies mode including dependencies
+    this._devDependencies = {
       ...(this._dependencies || {}),
       ...devDependencies,
     };
