@@ -501,10 +501,7 @@ export function testMeteorRspackBundler(options) {
         await appendFileContent(tempDir, filePaths.test, {
           content: customUpdates.test(customMessages.test),
         });
-        await waitForMeteorOutput(
-          result.outputLines,
-          customMessages.test
-        );
+        await waitForMeteorOutput(result.outputLines, customMessages.test);
       } else {
         await appendFileContent(tempDir, filePaths.testClient, {
           content: customUpdates.test(customMessages.testClient),
@@ -557,8 +554,6 @@ export function testMeteorRspackBundler(options) {
 
       // Wait for a margin
       await wait(500);
-
-      const isTestModule = filePaths.test && !filePaths.testClient && !filePaths.testServer;
 
       // Assert that the app files exists
       await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);

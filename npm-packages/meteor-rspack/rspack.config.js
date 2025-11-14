@@ -226,6 +226,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const projectDir = process.cwd();
   const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
   const configPath = Meteor.configPath;
+  const testEntry = Meteor.testEntry;
+  const testClientEntry = Meteor.testClientEntry;
+  const testServerEntry = Meteor.testServerEntry;
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
@@ -348,7 +351,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   Meteor.swcConfigOptions = swcConfigRule.options;
 
   const externals = [
-    /^meteor.*/,
+    /^meteor\/.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
     ...(isServer ? [/^bcrypt$/] : []),
   ];
@@ -409,26 +412,29 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       ]
     : [];
 
-
   const clientEntry =
     isTest && isTestEager && isTestFullApp
       ? generateEagerTestFile({
-        isAppTest: true,
-        projectDir,
-        buildContext,
-        ignoreEntries: [...meteorIgnoreEntries, '**/server/**'],
-        prefix: 'client',
-      })
+          isAppTest: true,
+          projectDir,
+          buildContext,
+          ignoreEntries: [...meteorIgnoreEntries, "**/server/**"],
+          prefix: "client",
+        })
       : isTest && isTestEager
-        ? generateEagerTestFile({
+      ? generateEagerTestFile({
           isAppTest: false,
           isClient: true,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, '**/server/**'],
-          prefix: 'client',
+          ignoreEntries: [...meteorIgnoreEntries, "**/server/**"],
+          prefix: "client",
         })
-        : path.resolve(process.cwd(), buildContext, entryPath);
+      : isTest && testEntry
+      ? path.resolve(process.cwd(), testEntry)
+      : isTest && testClientEntry
+      ? path.resolve(process.cwd(), testClientEntry)
+      : path.resolve(process.cwd(), buildContext, entryPath);
   const clientNameConfig = `[${(isTest && 'test-') || ''}client-rspack]`;
   // Base client config
   let clientConfig = {
@@ -530,17 +536,21 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isAppTest: true,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, '**/client/**'],
-          prefix: 'server',
+          ignoreEntries: [...meteorIgnoreEntries, "**/client/**"],
+          prefix: "server",
         })
       : isTest && isTestEager
       ? generateEagerTestFile({
           isAppTest: false,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, '**/client/**'],
-          prefix: 'server',
+          ignoreEntries: [...meteorIgnoreEntries, "**/client/**"],
+          prefix: "server",
         })
+      : isTest && testEntry
+      ? path.resolve(process.cwd(), testEntry)
+      : isTest && testServerEntry
+      ? path.resolve(process.cwd(), testServerEntry)
       : path.resolve(projectDir, buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}server-rspack]`;
   // Base server config
