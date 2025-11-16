@@ -1000,9 +1000,9 @@ Meteor.methods(
  * @importFromPackage accounts-base
  */
 Accounts.replaceEmailAsync = async (userId, oldEmail, newEmail, verified) => {
-  check(userId, NonEmptyString);
-  check(oldEmail, NonEmptyString);
-  check(newEmail, NonEmptyString);
+  check(userId, Match.NonEmptyString);
+  check(oldEmail, Match.NonEmptyString);
+  check(newEmail, Match.NonEmptyString);
   check(verified, Match.Optional(Boolean));
 
   if (verified === void 0) {
