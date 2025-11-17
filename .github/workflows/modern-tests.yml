@@ -1,0 +1,47 @@
+name: Modern Tests
+
+on:
+  pull_request:
+    paths:
+      - 'tools/modern-tests/**'
+      - 'packages/rspack/**'
+      - 'packages/tools-core/**'
+      - 'npm-packages/meteor-rspack/**'
+      - 'tools/static-assets/skel-**'
+      - '.github/workflows/modern-tests.yml'
+
+jobs:
+  test:
+    name: ${{ matrix.category }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        category:
+          - Babel
+          - Blaze
+          - Coffeescript
+          - Monorepo
+          - React
+          - Solid
+          - Svelte
+          - Typescript
+          - Vue
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Install dependencies
+        run: npm run install:modern
+
+      - name: Install Playwright
+        run: npx playwright install
+
+      - name: Run tests for ${{ matrix.category }}
+        run: npm run test:modern -- -t="${{ matrix.category }}"
