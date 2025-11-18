@@ -381,7 +381,11 @@ if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
         filename,
         sourceFileName: filename,
         ...(isLegacyWebArch && {
-          env: { targets: lastModifiedSwcLegacyConfig || {} },
+          env: {
+            targets: lastModifiedSwcLegacyConfig || {},
+            mode: 'entry',
+            coreJs: '3.37',
+          },
         }),
       };
 
