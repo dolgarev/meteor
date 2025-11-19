@@ -142,16 +142,6 @@ BCp.initializeMeteorAppSwcrc = function () {
   return lastModifiedSwcConfig;
 };
 
-let lastModifiedSwcLegacyConfig;
-BCp.initializeMeteorAppLegacyConfig = function () {
-  const swcLegacyConfig = convertBabelTargetsForSwc(Babel.getMinimumModernBrowserVersions());
-  if (this.isVerbose() && !lastModifiedSwcLegacyConfig) {
-    logConfigBlock('SWC Legacy Config', swcLegacyConfig);
-  }
-  lastModifiedSwcLegacyConfig = swcLegacyConfig;
-  return lastModifiedSwcConfig;
-};
-
 // Helper function to check if @swc/helpers is available
 function hasSwcHelpers() {
   return fs.existsSync(`${getMeteorAppDir()}/node_modules/@swc/helpers`);
@@ -196,7 +186,6 @@ BCp.processFilesForTarget = function (inputFiles) {
 
   this.initializeMeteorAppConfig();
   this.initializeMeteorAppSwcrc();
-  this.initializeMeteorAppLegacyConfig();
   this.initializeMeteorAppSwcHelpersAvailable();
 
   inputFiles.forEach(function (inputFile) {
@@ -382,7 +371,18 @@ if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
         sourceFileName: filename,
         ...(isLegacyWebArch && {
           env: {
-            targets: lastModifiedSwcLegacyConfig || {},
+            targets: {
+              chrome: '49',
+              edge: '15',
+              firefox: '30',
+              safari: '10',
+              ios: '10',
+              android: '5',
+              opera: '42',
+              ie: '11',
+              node: '8',
+              electron: '1.6',
+            },
             mode: 'entry',
             coreJs: '3.37',
           },
