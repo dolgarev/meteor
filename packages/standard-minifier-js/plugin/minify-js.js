@@ -49,7 +49,7 @@ export class MeteorMinifier {
       const NODE_ENV = process.env.NODE_ENV || 'development';
       
       let content = file.getContentsAsString();
-      const isLegacyBuild = file?._arch === 'web.browser.legacy';
+      const isLegacyWebArch = file?._arch === 'web.browser.legacy';
 
       return swc.minifySync(
         content,
@@ -61,7 +61,7 @@ export class MeteorMinifier {
             unused: true,
             dead_code: true,
             typeofs: false,
-            ...(isLegacyBuild && { defaults: false }),
+            ...(isLegacyWebArch && { defaults: false }),
 
             global_defs: {
               'process.env.NODE_ENV': NODE_ENV,
