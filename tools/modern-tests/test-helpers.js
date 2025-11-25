@@ -33,6 +33,7 @@ import waitOn from "wait-on";
 const isCI = process.env.GITHUB_ACTIONS === "true";
 
 const WAIT_ON = isCI ? 2000 : 500;
+console.log("--> (test-helpers.js-Line: 36)\n isCI: ", isCI);
 
 /**
  * Helper function to set up and run tests for the Meteor Bundler
