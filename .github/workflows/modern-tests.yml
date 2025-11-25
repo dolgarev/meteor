@@ -15,7 +15,6 @@ jobs:
     name: ${{ matrix.category }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
       matrix:
         category:
           - Babel
