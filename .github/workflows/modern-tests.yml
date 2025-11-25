@@ -42,7 +42,7 @@ jobs:
             .meteor
             dev_bundle
             .babel-cache
-          key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json', 'meteor') }}
           restore-keys: |
             ${{ runner.os }}-meteor-
 
