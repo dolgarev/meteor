@@ -20,13 +20,13 @@ jobs:
         category:
           - Babel
 #          - Blaze
-#          - Coffeescript
+          - Coffeescript
           - Monorepo
 #          - React
 #          - Solid
 #          - Svelte
 #          - Typescript
-#          - Vue
+          - Vue
 
     steps:
       - name: Checkout code
