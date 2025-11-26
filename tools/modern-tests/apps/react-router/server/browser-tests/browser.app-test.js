@@ -29,6 +29,6 @@ describe("Run browser tests", () => {
     page.goto(process.env.ROOT_URL);
     console.log("OPEN PAGE", process.env.ROOT_URL);
 
-    await page.waitForSelector("title");
+    await page.waitForSelector("#react-target");
   });
 });
