@@ -49,8 +49,7 @@ const generateEagerTestFile = ({
     ? "/\\.app-(?:test|spec)s?\\.[^.]+$/"
     : "/\\.(?:test|spec)s?\\.[^.]+$/";
 
-  const content = `${extraEntry ? `import path from 'path';` : ''}
-  {
+  const content = `{
   const ctx = import.meta.webpackContext('/', {
     recursive: true,
     regExp: ${regExp},
