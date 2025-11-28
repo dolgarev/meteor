@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Install test deps
+      - name: Install deps
         run: npm install
 
       - name: Install test deps
