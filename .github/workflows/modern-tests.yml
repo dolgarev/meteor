@@ -71,7 +71,7 @@ jobs:
           METEOR_WATCH_FORCE_POLLING: "true"
           METEOR_WATCH_POLLING_INTERVAL_MS: "1000"
         with:
-          max_attempts: 3
+          max_attempts: 2
           retry_on: error
-          timeout_minutes: 15
+          timeout_minutes: 10
           command: npm run test:modern -- -t="${{ matrix.category }}"

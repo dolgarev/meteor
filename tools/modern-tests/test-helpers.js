@@ -74,6 +74,12 @@ export function testMeteorBundler(options) {
       }
     });
 
+    beforeEach(async () => {
+      // Ensure any process on the port is killed
+      await killProcessByPort(port);
+      await killProcessByPort('8080');
+    });
+
     test(`"meteor run" / should start the app`, async () => {
       // Run the Meteor app
       meteorProcess = (await runMeteorApp(tempDir, port))?.meteorProcess;
@@ -228,6 +234,12 @@ export function testMeteorRspackBundler(options) {
       if (afterAllBehavior) {
         await afterAllBehavior({ tempDir, port });
       }
+    });
+
+    beforeEach(async () => {
+      // Ensure any process on the port is killed
+      await killProcessByPort(port);
+      await killProcessByPort('8080');
     });
 
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
@@ -732,6 +744,12 @@ export function testMeteorSkeleton(options) {
       if (afterAllBehavior) {
         await afterAllBehavior({ tempDir, port });
       }
+    });
+
+    beforeEach(async () => {
+      // Ensure any process on the port is killed
+      await killProcessByPort(port);
+      await killProcessByPort('8080');
     });
 
     test(`"meteor create --${skeletonName}" / should create a new Meteor ${skeletonName} app`, async () => {

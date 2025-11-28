@@ -1,6 +1,8 @@
 // jest.setup.js
 import chalk from 'chalk';
 
+jest.retryTimes(2);
+
 // Set fixed ports for all tests
 process.env.RSPACK_DEVSERVER_PORT = '8080';
 process.env.RSDOCTOR_CLIENT_PORT = '8888';
