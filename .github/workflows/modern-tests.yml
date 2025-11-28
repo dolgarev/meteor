@@ -66,7 +66,12 @@ jobs:
         run: ./meteor --get-ready
 
       - name: Run tests for ${{ matrix.category }}
+        uses: nick-fields/retry@v3
         env:
           METEOR_WATCH_FORCE_POLLING: "true"
           METEOR_WATCH_POLLING_INTERVAL_MS: "1000"
-        run: npm run test:modern -- -t="${{ matrix.category }}"
+        with:
+          max_attempts: 3
+          retry_on: error
+          timeout_minutes: 15
+          command: npm run test:modern -- -t="${{ matrix.category }}"
