@@ -71,5 +71,4 @@ jobs:
           max_attempts: 3
           retry_on: error
           timeout_minutes: 10
-          retry_wait_seconds: 60
           command: npm run test:modern -- -t="${{ matrix.category }}"
