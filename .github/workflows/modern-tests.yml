@@ -23,6 +23,7 @@ jobs:
           - Coffeescript
           - Monorepo
           - React
+          - R.Router
           - Solid
           - Svelte
           - Typescript
