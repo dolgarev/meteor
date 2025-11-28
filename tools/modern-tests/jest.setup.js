@@ -1,7 +1,11 @@
 // jest.setup.js
 import chalk from 'chalk';
 
-jest.retryTimes(2);
+const isCI = process.env.GITHUB_ACTIONS === "true";
+if (isCI) {
+  jest.retryTimes(2);
+  console.log('Set 2 retries on Jest level');
+}
 
 // Set fixed ports for all tests
 process.env.RSPACK_DEVSERVER_PORT = '8080';
