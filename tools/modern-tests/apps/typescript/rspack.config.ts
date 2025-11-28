@@ -59,10 +59,9 @@ export default defineConfig(Meteor => {
                 { file: 'tests/**/*.tsx' },
               ],
               exclude: [
-                { file: '.meteor/**/*.ts' },
-                { file: '.meteor/**/*.tsx' },
-                { file: 'node_modules/**/*.ts' },
-                { file: 'node_modules/**/*.tsx' },
+                { file: '.meteor/**' },
+                { file: 'node_modules/**' },
+                { file: '_build/**' },
               ],
             },
           })
