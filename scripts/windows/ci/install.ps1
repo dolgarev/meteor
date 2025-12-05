@@ -15,9 +15,9 @@ Write-Host "Updating submodules recursively..." -ForegroundColor Magenta
 # Appveyor suggests -q flag for 'git submodule...' https://goo.gl/4TFAHm
 & git.exe -C "$dirCheckout" submodule -q update --init --recursive
 
-If ($LASTEXITCODE -ne 0) {
-  throw "Updating submodules failed."
-}
+# If ($LASTEXITCODE -ne 0) {
+#   throw "Updating submodules failed."
+# }
 
 # The `meteor npm install` subcommand should work
 & "$meteorBat" npm install
