@@ -3,11 +3,19 @@ import { Meteor } from 'meteor/meteor';
 import { Configuration } from 'meteor/service-configuration';
 import { DDP } from 'meteor/ddp';
 
+/**
+ * Object containing functions that generate URLs for account-related emails.
+ * Override these to customize URLs in password reset, enrollment, and verification emails.
+ */
 export interface URLS {
-  resetPassword: (token: string) => string;
-  verifyEmail: (token: string) => string;
-  loginToken: (token: string) => string;
-  enrollAccount: (token: string) => string;
+  /** Generates the URL for password reset emails. */
+  resetPassword: (token: string, extraParams?: Record<string, string>) => string;
+  /** Generates the URL for email verification emails. */
+  verifyEmail: (token: string, extraParams?: Record<string, string>) => string;
+  /** Generates the URL for login token emails. */
+  loginToken: (selector: string, token: string, extraParams?: Record<string, string>) => string;
+  /** Generates the URL for account enrollment emails. */
+  enrollAccount: (token: string, extraParams?: Record<string, string>) => string;
 }
 
 export interface EmailFields {
