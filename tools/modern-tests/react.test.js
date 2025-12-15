@@ -79,6 +79,9 @@ describe('React App Bundling /', () => {
 
         // Check if images exist and return 200 status code
         await assertImagesExistAndLoad();
+
+        // Check custom plugin is disabled with Meteor.disablePlugins
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
@@ -89,6 +92,9 @@ describe('React App Bundling /', () => {
 
         // Check if images exist and return 200 status code
         await assertImagesExistAndLoad();
+
+        // Check custom plugin is disabled with Meteor.disablePlugins
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR to not be enabled in production-like mode
@@ -96,12 +102,21 @@ describe('React App Bundling /', () => {
       },
       afterTest: async ({ result }) => {
         await waitForReactEnvs(result.outputLines);
+
+        // Check custom plugin is disabled with Meteor.disablePlugins
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
       },
       afterTestOnce: async ({ result }) => {
         await waitForReactEnvs(result.outputLines);
+
+        // Check custom plugin is disabled with Meteor.disablePlugins
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
       },
       afterBuild: async ({ result }) => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+
+        // Check custom plugin is disabled with Meteor.disablePlugins
+        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
       },
     }
   }));

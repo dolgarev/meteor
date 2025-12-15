@@ -1,5 +1,6 @@
 const { defineConfig } = require('@meteorjs/rspack');
 const path = require('path');
+const CustomConsoleLogPlugin = require("./plugins/CustomConsoleLogPlugin");
 
 /**
  * Rspack configuration for Meteor projects.
@@ -12,7 +13,13 @@ const path = require('path');
  * Use these flags to adjust your build settings based on environment.
  */
 module.exports = defineConfig(Meteor => {
+  const disabledPluginMatches = Meteor.isRun
+    ? ['CustomConsoleLogPlugin']
+    : Meteor.isTest
+    ? /CustomConsoleLogPlugin/i
+    : p => p?.constructor?.name === 'CustomConsoleLogPlugin';
   return {
+    ...Meteor.disablePlugins(disabledPluginMatches),
     resolve: {
       alias: {
         "@public": path.resolve(__dirname, "public"),
@@ -32,5 +39,6 @@ module.exports = defineConfig(Meteor => {
         },
       ],
     },
+    plugins: [new CustomConsoleLogPlugin()],
   };
 });
