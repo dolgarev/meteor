@@ -20,7 +20,9 @@ const {
   splitVendorChunk,
   extendSwcConfig,
   makeWebNodeBuiltinsAlias,
+  disablePlugins,
 } = require('./lib/meteorRspackHelpers.js');
+const { prepareMeteorRspackConfig } = require("./lib/meteorRspackConfigFactory");
 
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
@@ -287,6 +289,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   Meteor.splitVendorChunk = () => splitVendorChunk();
   Meteor.extendSwcConfig = (customSwcConfig) => extendSwcConfig(customSwcConfig);
   Meteor.extendConfig = (...configs) => mergeSplitOverlap(...configs);
+  Meteor.disablePlugins = matchers => prepareMeteorRspackConfig({
+    disablePlugins: matchers,
+  });
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {
@@ -778,6 +783,12 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         config = mergeSplitOverlap(config, nextOverrideConfig);
       }
     }
+  }
+
+  const shouldDisablePlugins = config?.disablePlugins != null;
+  if (shouldDisablePlugins) {
+    config = disablePlugins(config, config.disablePlugins);
+    delete config.disablePlugins;
   }
 
   if (Meteor.isDebug || Meteor.isVerbose) {
