@@ -1,0 +1,36 @@
+const { defineConfig } = require('@meteorjs/rspack');
+const path = require('path');
+
+/**
+ * Rspack configuration for Meteor projects.
+ *
+ * Provides typed flags on the `Meteor` object, such as:
+ * - `Meteor.isClient` / `Meteor.isServer`
+ * - `Meteor.isDevelopment` / `Meteor.isProduction`
+ * - …and other flags available
+ *
+ * Use these flags to adjust your build settings based on environment.
+ */
+module.exports = defineConfig(Meteor => {
+  return {
+    resolve: {
+      alias: {
+        "@public": path.resolve(__dirname, "public"),
+      },
+    },
+    module: {
+      rules: [
+        // ✅ Images
+        {
+          test: /\.(png|jpe?g|gif|webp|avif)$/i,
+          type: "asset/resource", // emits a file, returns URL string
+        },
+        // (optional) SVGs
+        {
+          test: /\.svg$/i,
+          type: "asset/resource",
+        },
+      ],
+    },
+  };
+});
