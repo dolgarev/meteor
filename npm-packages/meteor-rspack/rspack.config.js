@@ -403,7 +403,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const assetModuleFilename = _fileInfo => {
     const filename = _fileInfo.filename;
     const isPublic = filename.startsWith('/') || filename.startsWith('public');
-    if (isPublic) return `/[hash][ext][query]`;
+    if (isPublic) return `[name][ext][query]`;
     return `${assetsContext}/[hash][ext][query]`;
   };
 
