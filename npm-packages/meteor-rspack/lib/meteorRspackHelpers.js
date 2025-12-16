@@ -199,7 +199,6 @@ function disablePlugins(config, matchers) {
     return !matches;
   });
 
-  config.plugins = kept;
   return config;
 }
 
