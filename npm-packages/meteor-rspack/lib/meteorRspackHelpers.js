@@ -194,11 +194,9 @@ function disablePlugins(config, matchers) {
     );
   });
 
-  plugins.forEach((p, index) => {
-    const matches = predicates.some((fn) => fn(p, index));
-    if (!matches) {
-      kept.push(p);
-    }
+  config.plugins = plugins.filter((p, index) => {
+    const matches = predicates.some(fn => fn(p, index));
+    return !matches;
   });
 
   config.plugins = kept;
