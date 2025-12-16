@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 export const Counter = () => {
   const [counter, setCounter] = useState(0);
@@ -9,7 +9,9 @@ export const Counter = () => {
 
   return (
     <div className="section">
-      <button className="button" onClick={increment}>Click Me</button>
+      <button className="button" onClick={increment}>
+        Click Me
+      </button>
       <p>You've pressed the button {counter} times.</p>
     </div>
   );

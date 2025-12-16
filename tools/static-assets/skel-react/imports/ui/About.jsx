@@ -13,4 +13,4 @@ export const About = () => {
       <p>{about}</p>
     </div>
   );
-}
+};
