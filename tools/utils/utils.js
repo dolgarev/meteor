@@ -363,7 +363,7 @@ exports.timeoutScaleFactor = timeoutScaleFactor;
 // the prerelease for a given release will sort before it. Because $ sorts
 // before '.', this means that 1.2 will sort before 1.2.3.)
 exports.defaultOrderKeyForReleaseVersion = function (v) {
-  var m = REGEX_RELEASE_VERSION.exec(v);
+  var m = v.match(REGEX_RELEASE_VERSION);
   if (!m) {
     return null;
   }
