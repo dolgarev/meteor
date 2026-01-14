@@ -587,27 +587,6 @@ module.exports = defineConfig((Meteor) => {
 
 More info in [this forum post](https://forums.meteor.com/t/new-3-4-beta-12-release-faster-builds-smaller-bundles-and-modern-setups-with-the-rspack-integration/64124/94).
 
-### Cache
-
-Meteor cache remains active and continues to handle Atmosphere packages and intermediate builds. There’s an additional cache layer managed by Rspack to speed up rebuilds for your app code.
-
-This Rspack cache is enabled by default in persistent mode. If you [encounter issues](https://github.com/web-infra-dev/rspack/issues/11804) or prefer to disable it, you can do so in your `rspack.config.js` using the helper:
-
-```json
-const { defineConfig } = require('@meteorjs/rspack');
-const { rspack } = require('@rspack/core');
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
-
-module.exports = defineConfig(Meteor => ({
-  // Disable cache, or use 'memory' to switch to in-memory cache
-  ...Meteor.setCache(false),
-}));
-
-
-```
-
-This helper provide a shortcut to apply the needed Rspack configuration and safely override defaults, so you don’t have to handle it manually.
-
 ### Split Vendor Chunk
 
 When using dynamic imports (`import()`), you might unintentionally include libraries like React, Mantine, or date utilities in multiple async chunks. To avoid this, it's best to define a stable `vendor` chunk for shared dependencies.
