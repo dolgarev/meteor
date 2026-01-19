@@ -36,13 +36,19 @@ To set up Meteor with Vue easily, run the following command, replacing `simple-t
 meteor create --vue simple-todos-vue
 ```
 
+Meteor will create all the necessary files for you. The `--vue` flag generates a project using Vue, Rspack and Tailwind CSS, and this is the approach walked through in this tutorial. Using [the Rspack bundler](../../about/modern-build-stack/rspack-bundler-integration.md) is the default convention in Meteor 3.4+, as it improves dev speed, enables more build features, and provides better control over bundle size and configuration.
+
+We provide the final version of the app built in this tutorial for both the Rspack and the Meteor bundler versions. By following the guide, you will reach that same state at the end.
+
 ::: info
-You can find the final version of this app in our [GitHub repository](https://github.com/meteor/meteor3-vue3).
+You can find the final version of this app using the Rspack bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-rspack).
 :::
 
-Meteor will create all the necessary files for you. The `--vue` flag generates a project using Vue, Vite and Tailwind CSS.
+::: info
+You can find the final version of this app using the Meteor bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-meteor).
+:::
 
-You will find the `client` directory contains files for your client-side setup. Inside, there should be an empty `main.js` file required for Meteor's import mode. However, with Vite, the entry point is set in the `vite.config.js` file, pointing to `imports/ui/main.js`, which is where Meteor renders the main component.
+You will find the `client` directory contains files for your client-side setup. Inside, you can see for example `client/main.jsx` where Meteor is rendering your App main component into the HTML.
 
 Check the server directory for the server setup where you will see `server/main.js` populating your MongoDB database with some default data. There's no need to install MongoDB separately, as Meteor includes an embedded version.
 
@@ -1366,7 +1372,11 @@ You have completed the tutorial!
 By now, you should have a good understanding of working with Meteor and Vue.
 
 ::: info
-You can find the final version of this app in our [GitHub repository](https://github.com/meteor/meteor3-vue3).
+You can find the final version of this app using the Rspack bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-rspack).
+:::
+
+::: info
+You can find the final version of this app using the Meteor bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-meteor).
 :::
 
 Here are some options for what you can do next:
