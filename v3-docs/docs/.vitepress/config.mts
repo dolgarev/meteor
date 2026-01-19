@@ -37,7 +37,7 @@ export default defineConfig({
                 link: "/tutorials/react/index",
               },
               {
-                text: "Meteor + Vue",
+                text: "Meteor.js 3 + Vue",
                 link: "/tutorials/vue/meteorjs3-vue3",
               },
               {
@@ -487,8 +487,8 @@ export default defineConfig({
             link: "/tutorials/react/index",
           },
           {
+            text: "Meteor.js 3 + Vue",
             link: "/tutorials/vue/meteorjs3-vue3",
-            text: "Meteor + Vue",
           },
           {
             text: "Meteor.js 3 + Solid",

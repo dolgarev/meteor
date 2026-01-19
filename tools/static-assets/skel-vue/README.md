@@ -1,4 +1,4 @@
-# Meteor + Vue3
+# Meteor.js 3 + Vue3
 
 This is a simple example of how to use Vue3 with Meteor.
 

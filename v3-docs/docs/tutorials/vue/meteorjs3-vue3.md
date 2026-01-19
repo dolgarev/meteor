@@ -5,6 +5,7 @@ In this tutorial, we will create a simple To-Do app using [Vue 3](https://vuejs.
 Vue.js is a powerful JavaScript framework for making user interfaces. It helps you build interactive applications by using templates that connect to data and update automatically when the data changes. Vue.js templates use a simple syntax similar to HTML and work with Vue’s reactivity system to show components in the browser.
 
 To start building your Vue.js app, you'll need a code editor. If you're unsure which one to choose, [Visual Studio Code](https://code.visualstudio.com/) is a good option.
+
 :::warning
 This tutorial uses the `vue-meteor-tracker` package, which is currently in beta and does not support async calls yet. However, it is still a valuable package, and we hope it will be updated soon. We are also working on a new tutorial that will use Meteor core packages instead.
 :::
