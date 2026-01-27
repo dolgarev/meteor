@@ -39,7 +39,7 @@ meteor create --vue simple-todos-vue
 
 Meteor will create all the necessary files for you. The `--vue` flag generates a project using Vue, Rspack and Tailwind CSS, and this is the approach walked through in this tutorial. Using [the Rspack bundler](../../about/modern-build-stack/rspack-bundler-integration.md) is the default convention in Meteor 3.4+, as it improves dev speed, enables more build features, and provides better control over bundle size and configuration.
 
-We provide the final version of the app built in this tutorial for both the Rspack and the Meteor bundler versions. By following the guide, you will reach that same state at the end.
+We provide the final app for both the Rspack and Meteor bundlers. This guide follows the Rspack version and reaches the same final state. The Meteor bundler version is for those who prefer the legacy bundler.
 
 ::: info
 You can find the final version of this app on GitHub using the [Rspack bundler](https://github.com/meteor/meteor3-vue3/tree/3.4-rspack) or the [Meteor bundler](https://github.com/meteor/meteor3-vue3/tree/3.4-meteor).
