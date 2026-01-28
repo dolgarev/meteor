@@ -93,6 +93,7 @@ We plan to document the changes in the Meteor documentation, including:
 **Feedback and discussion**
 
 🔗 [MongoDB Change Streams support in Meteor](https://forums.meteor.com/t/mongodb-change-streams-support-in-meteor/63681)
+💬 TODO -  Add link to the new Change Streams beta/RC forum post
 
 ### Phase 1: Opined implementation
 
@@ -105,19 +106,28 @@ We plan to document the changes in the Meteor documentation, including:
 
 **Goal:** Make MongoDB Change Streams more configurable to bring better performance in specific scenarios for real-time updates in Meteor, while gathering feedback from the community to refine and improve the implementation based on real-world usage.
 
+💬 TODO -  Add link to the new Change Streams forum post for feedback
 
 ## Next priorities
 
 The priorities listed below represent tasks that are large enough to be considered major items we want to pursue next, similar to bundler optimizations and change streams.
 
 * Mobile/Capacitor Support
-* Release CI/CD Speed & Reliability
-* Open telemetry & Observability support ([PR](https://github.com/meteor/meteor/pull/14086))
-* TypeScript Improvements
-* Client-side Type Safety
-* Test Support Improvements
+> Capacitor is a modern alternative to Cordova; we should provide an easy way to build mobile apps using Capacitor.
 
-We will expand their descriptions and open feedback channels once we have time to address them.
+* Release CI/CD Speed & Reliability
+> Improve the speed and reliability of our release process, so we can improve the contribution experience by decreasing the time to run the CI/CD for PRs and releases.
+
+* Open telemetry & Observability support ([PR](https://github.com/meteor/meteor/pull/14086))
+> Provide built-in support for OpenTelemetry in Meteor, allowing developers to easily instrument their applications for observability and monitoring. This will be divided in 2 phases: 
+> - Phase 1: Basic OpenTelemetry support with metrics & tracing for DDP methods and publications. 
+> - Phase 2: Advanced OpenTelemetry support with logging, and integration with mongo instrumentation.
+
+* TypeScript Improvements
+> Enhance TypeScript support in Meteor, including better type definitions, improved integration with the build system, and enhanced developer experience.
+
+* Test toolkit Improvements
+> Improve the testing toolkit in Meteor, including better integration with popular testing frameworks, improved test runner performance, and enhanced developer experience.
 
 Beyond these, we also track smaller tasks delivered in each release. These focus on improving existing areas in Meteor (such as Node 24, Express Auth integration, and more), enforcing Meteor core code quality (linting and standards), easing contributions through documentation and engagement programs, and reviewing and validating existing and new community contributions.
 
