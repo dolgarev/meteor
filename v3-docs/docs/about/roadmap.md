@@ -14,7 +14,7 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 > If you have new feature requests or ideas, you should open a new [discussion](https://github.com/meteor/meteor/discussions/new).
 
-## Current project: Bundle optimization
+## Current project: Bundler optimizations
 
 > We need to improve the bundle size and performance of Meteor apps. We should consider tree-shaking, code-splitting,
 > and other optimizations to make our apps leaner and faster.
