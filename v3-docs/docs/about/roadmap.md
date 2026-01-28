@@ -4,7 +4,7 @@ Describes the high-level features and actions for the Meteor project in the near
 
 ## Introduction
 
-**Last updated: June 16, 2025.**
+**Last updated: January 30, 2026.**
 
 The description of many items includes sentences and ideas from Meteor community members.
 
@@ -18,12 +18,19 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 > We need to improve the bundle size and performance of Meteor apps. We should consider tree-shaking, code-splitting,
 > and other optimizations to make our apps leaner and faster.
-> To achieve that we plan to integrate or have an easy way to integrate with modern bundlers like Rspack, ESBuild, or Rollup.
+> To achieve that we plan to integrate or have an easy way to integrate with modern bundlers like Rspack.
 
-**Discussion links:**
+**Release articles**
 
-- [GitHub discussion](https://github.com/meteor/meteor/discussions/11587)
-- [forums discussion](https://forums.meteor.com/t/join-the-effort-to-speed-up-meteor-bundler/63406/17)
+🔗 [Unlocking Meteor 3.2: New Profiling Tool to Track Bundler Performance and Size](https://dev.to/meteor/unlocking-meteor-32-new-profiling-tool-to-track-bundler-performance-and-size-1jc8)
+
+🔗 [Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
+
+🔗 [TODO]() Add link to the next 3.4 article
+
+**Feedback and discussion**
+
+[TODO]() Add link to the new 3.4 forum post for feedback
 
 ### Implementation plan:
 
@@ -50,85 +57,58 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 **Goal:** Improve the HMR performance, so that it is faster and more reliable on what needs to be changed.
 
-#### Phase 4: Bundler Improvements & feedback
+#### Phase 4: Bundler Improvements & Feedback
 
-**Target Release:** 3.3.x ⏳
+**Target Release:** 3.3.2 ✅
 
 **Goal:** Improve the build size and make meteor use less resources for building, decreasing even more build and rebuild time.
 - Expanding compatibility and updates based on the feedback from the community, so that we can have a better experience with our new build tools, in this case SWC
 
 #### Phase 5: External Bundler integration
 
-**Target Release:** 3.4 ⏳
+**Target Release:** 3.4 ✅
 
-**Goal:**  And an external bundler (like Rspack, ESBuild, or Rollup) working with Meteor and producing a bundle that is smaller or faster than the current Meteor bundle.
-- This will also allow Meteor to have features like tree-shaking, code-splitting, and other optimizations that will make our apps leaner and faster.
+**Goal:** Integrate an external bundler like Rspack with Meteor, producing a bundle that is smaller or faster than the current Meteor bundle.
+- This also enables features like tree-shaking, code-splitting, full ESM support, community plugins, and other optimizations that make Meteor apps leaner, faster, and more standardized to configure.
 
-#### Phase 6: Build Process Optimization
+#### Phase 6: Resource Optimization & Feedback
 
 **Target Release:** 3.4.x ⏳
 
-**Goal:** Improve the build size and make meteor use less resources for building, decreasing even more build and rebuild time.
-- Expanding compatibility and updates based on the feedback from the community, so that we can have a better experience with our new build tools
-
+**Goal:** Improve memory consumption on large apps when using Meteor and Rspack. This comes mainly from [identified optimizations on the Meteor side](https://forums.meteor.com/t/3-4-rc-3-release-candidate-faster-builds-smaller-bundles-and-modern-setups-with-the-rspack-integration/64124/225), and also from [new improvements in Rspack 2.0](https://rspack.rs/misc/planning/roadmap) as they become available.
+- Expanding compatibility and updates based on community feedback, to improve the experience when working with the integrated Rspack bundler, like a clearer debugging process, more stable testing flows, and better support for different kinds of projects.
 
 #### Documentation Strategy
 
 We plan to document the changes in the Meteor documentation, including:
-- How to use the new features
-- How to integrate with the new bundler
-- How the meteor bundler pipeline works for future contributors
-- Examples and guides on how to integrate with the new bundler
+* How to use the new features
+* How to integrate with the new bundler
+* How the Meteor bundler pipeline works for future contributors
+* Examples and guides for integrating with the new bundler
 
-## Next releases
+## Next project: Change streams
 
-- Support package.json exports fields ([Discussion](https://github.com/meteor/meteor/discussions/11727))
-- Tree-shaking
+> Provide a unified API for MongoDB change notifications to improve efficiency and consistency.
 
-  > Tree-shaking and exports fields may be implemented by integrating with more modern build tools.
+**Feedback and discussion**
 
-- Capacitor support
+🔗 [MongoDB Change Streams support in Meteor](https://forums.meteor.com/t/mongodb-change-streams-support-in-meteor/63681)
 
-  > Capacitor is a modern alternative to Cordova; we should provide an easy way to build mobile apps using Capacitor.
+### TODO Develop the sections of release phases
 
-- MongoDB Change Streams support ([Discussion](https://github.com/meteor/meteor/discussions/11842))
+## Next priorities
 
-  > Change Streams is the official way to listen to changes in MongoDB. We should provide a way to use it seamlessly in Meteor. It has been planned for a long time, and now we’re in a position to do it.
+The priorities listed below represent tasks that are large enough to be considered major items we want to pursue next, similar to bundler optimizations and change streams.
 
-- Improve TypeScript support for Meteor and packages ([Discussion](https://github.com/meteor/meteor/discussions/12080))
+* Mobile/Capacitor Support
+* Release CI/CD Speed & Reliability
+* TypeScript Improvements
+* Client-side Type Safety
+* Test Support Improvements
 
-  > Should be an ongoing effort to improve the TypeScript support in Meteor and packages. We should provide a better experience for TypeScript users, including better type definitions and support for TypeScript features.
+We will expand their descriptions and open feedback channels once we have time to address them.
 
-- Improve release CI/CD speed and reliability (optimized build times will help)
-  > Our CI/CD takes too long to run, causing long queues and delays in our release process and feedback loop; we need to improve that.
-
-### Candidate items
-
-We need to discuss further to decide whether to proceed with these implementations.
-
-- Performance improvements (Async Hooks/Async Local Storage optimization)
-- HTTP/3 Support
-- Improve DDP Client
-- Improve Passwordless package ([Discussion](https://github.com/meteor/meteor/discussions/12075))
-- Integrate with Tauri, it might replace Cordova and Electron in a single tool
-- Bring Redis-oplog to core ([Repository](https://github.com/Meteor-Community-Packages/redis-oplog))
-- Better file upload support via DDP ([Discussion](https://github.com/meteor/meteor/discussions/11523))
-- Improve usage in Windows environments
-
-### Finished items
-
-- Change how Meteor executes Async code ([Discussion](https://github.com/meteor/meteor/discussions/11505))
-  - Provide new async APIs where Fibers are required
-    - Mongo package with Async API ([PR](https://github.com/meteor/meteor/pull/12028))
-    - Provide async versions for Accounts and core packages
-    - Adapt Meteor Promise implementation
-- Enable Top-Level Await (TLA) on Meteor server-side ([PR](https://github.com/meteor/meteor/pull/12095))
-- Support Top-Level Await (TLA) on Reify
-- Remove Fibers dependency from Meteor Public APIs
-- Remove Fibers entirely
-- Update Cordova integration to Meteor 3.0
-- Run Meteor on Node.js v20
-- Change web engine from Connect to Express
+Beyond these, we also track smaller tasks delivered in each release. These focus on improving existing areas in Meteor (like Node 24, OpenTelemetry, and Express integration), Meteor core code quality (linting and standards), easing contributions through documentation and engagement programs, and reviewing and validating existing and incoming community contributions.
 
 ---
 
