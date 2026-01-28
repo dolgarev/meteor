@@ -26,11 +26,11 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 🔗 [Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
 
-🔗 [TODO]() Add link to the next 3.4 article
+🔗 TODO - Add link to the next 3.4 article
 
 **Feedback and discussion**
 
-[TODO]() Add link to the new 3.4 forum post for feedback
+💬 TODO -  Add link to the new 3.4 forum post for feedback
 
 ### Implementation plan:
 
