@@ -58,3 +58,11 @@ On first run, the package installs the required Rspack setup at the project leve
 ### [Modern Build Stack in Meteor 3: Empower Your Meteor Apps with Faster, Feature-Rich Bundling](https://www.youtube.com/watch?v=LqU1eDbnG4I)
 
 Presented by [@nachocodoner](https://github.com/nachocodoner) at [Meteor Impact](https://impact.meteorjs.community/), this video covers the motivation behind this new era of Meteor bundler optimizations and modernization with Rspack integration, what initially drove us there, what we have achieved, and how you can adopt it today. It was recorded while Meteor 3.4 was in beta, but the content is still accurate. The only difference is that you can now upgrade directly to the official Meteor 3.4 release.
+
+### [Unlocking Meteor 3.2: New Profiling Tool to Track Bundler Performance and Size](https://dev.to/meteor/unlocking-meteor-32-new-profiling-tool-to-track-bundler-performance-and-size-1jc8)
+
+Release article introducing the profiling tool that laid the groundwork for measuring and improving bundler performance.
+
+### [Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
+
+Release article covering the SWC transpiler adoption and the bundler optimizations shipped in Meteor 3.3.
