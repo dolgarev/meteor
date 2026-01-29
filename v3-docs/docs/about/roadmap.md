@@ -22,12 +22,6 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 [📄 Modern Build Stack Documentation](./modern-build-stack)
 
-**Release articles**
-
-[🔗 Unlocking Meteor 3.2: New Profiling Tool to Track Bundler Performance and Size](https://dev.to/meteor/unlocking-meteor-32-new-profiling-tool-to-track-bundler-performance-and-size-1jc8)
-
-[🔗 Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
-
 ### Implementation plan:
 
 #### Phase 1: Profiling
@@ -36,6 +30,7 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 **Goal:** Add a command([meteor profile](/cli/#meteorprofile)) to measure if our changes are actually making our builds faster and smaller.
 
+[🔗 Unlocking Meteor 3.2: New Profiling Tool to Track Bundler Performance and Size](https://dev.to/meteor/unlocking-meteor-32-new-profiling-tool-to-track-bundler-performance-and-size-1jc8)
 
 #### Phase 2: External Transpiler Integration (SWC)
 
@@ -46,6 +41,7 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
    the same benefits.
  - To have an external transpiler working with Meteor and producing a bundle that is smaller or faster than the current Meteor bundle.
 
+[🔗 Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
 
 #### Phase 3: HMR Improvements
 
