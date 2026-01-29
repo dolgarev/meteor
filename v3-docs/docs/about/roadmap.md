@@ -14,17 +14,19 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 > If you have new feature requests or ideas, you should open a new [discussion](https://github.com/meteor/meteor/discussions/new).
 
-## Current project: Bundler optimizations
+## Current project: Modern Build Stack
 
 > We need to improve the bundle size and performance of Meteor apps. We should consider tree-shaking, code-splitting,
 > and other optimizations to make our apps leaner and faster.
 > To achieve that we plan to integrate or have an easy way to integrate with modern bundlers like Rspack.
 
+[📄 Modern Build Stack Documentation](./modern-build-stack)
+
 **Release articles**
 
-🔗 [Unlocking Meteor 3.2: New Profiling Tool to Track Bundler Performance and Size](https://dev.to/meteor/unlocking-meteor-32-new-profiling-tool-to-track-bundler-performance-and-size-1jc8)
+[🔗 Unlocking Meteor 3.2: New Profiling Tool to Track Bundler Performance and Size](https://dev.to/meteor/unlocking-meteor-32-new-profiling-tool-to-track-bundler-performance-and-size-1jc8)
 
-🔗 [Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
+[🔗 Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
 
 ### Implementation plan:
 
@@ -35,7 +37,7 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 **Goal:** Add a command([meteor profile](/cli/#meteorprofile)) to measure if our changes are actually making our builds faster and smaller.
 
 
-#### Phase 2: External Transpiler Integration
+#### Phase 2: External Transpiler Integration (SWC)
 
 **Target Release:** 3.3 ✅
 
@@ -58,7 +60,7 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 **Goal:** Improve the build size and make meteor use less resources for building, decreasing even more build and rebuild time.
 - Expanding compatibility and updates based on the feedback from the community, so that we can have a better experience with our new build tools, in this case SWC
 
-#### Phase 5: External Bundler integration
+#### Phase 5: External Bundler integration (Rspack)
 
 **Target Release:** 3.4 ✅
 
@@ -86,7 +88,7 @@ We plan to document the changes in the Meteor documentation, including:
 
 **Feedback and discussion**
 
-🔗 [MongoDB Change Streams support in Meteor](https://forums.meteor.com/t/mongodb-change-streams-support-in-meteor/63681)
+[🔗 MongoDB Change Streams support in Meteor](https://forums.meteor.com/t/mongodb-change-streams-support-in-meteor/63681)
 
 ### Phase 1: Opined implementation
 
