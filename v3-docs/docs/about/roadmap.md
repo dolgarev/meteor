@@ -26,12 +26,6 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 🔗 [Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
 
-🔗 TODO - Add link to the next 3.4 article
-
-**Feedback and discussion**
-
-💬 TODO -  Add link to the new 3.4 forum post for feedback
-
 ### Implementation plan:
 
 #### Phase 1: Profiling
@@ -93,7 +87,6 @@ We plan to document the changes in the Meteor documentation, including:
 **Feedback and discussion**
 
 🔗 [MongoDB Change Streams support in Meteor](https://forums.meteor.com/t/mongodb-change-streams-support-in-meteor/63681)
-💬 TODO -  Add link to the new Change Streams beta/RC forum post
 
 ### Phase 1: Opined implementation
 
@@ -105,8 +98,6 @@ We plan to document the changes in the Meteor documentation, including:
 **Target Release:** 3.5.x ⏳
 
 **Goal:** Make MongoDB Change Streams more configurable to bring better performance in specific scenarios for real-time updates in Meteor, while gathering feedback from the community to refine and improve the implementation based on real-world usage.
-
-💬 TODO -  Add link to the new Change Streams forum post for feedback
 
 ## Next priorities
 
