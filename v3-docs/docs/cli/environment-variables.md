@@ -91,9 +91,9 @@ METEOR_IGNORE="node_modules/pdfkit node_modules/sharp" meteor test --driver-pack
 
 This way each command only processes the files it actually needs, reducing build times on both workflows without requiring changes to your project's `.meteorignore` file.
 
-:: info
+::: info
 `METEOR_IGNORE` is automatically set when using the [Rspack bundler integration](../about/modern-build-stack/rspack-bundler-integration.md). Since Rspack handles the client and server app bundling, Meteor's bundler should only worry about what it strictly needs for the Meteor-Rspack integration. By using `METEOR_IGNORE` to exclude folders and dependencies that Rspack already manages or that are irrelevant to Meteor's side of the build, you ensure the most speed is gained from the Rspack delegation.
-::
+:::
 
 ## METEOR_PROFILE
 (_development_)
