@@ -43,14 +43,14 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 🔗 [Faster Builds in Meteor 3.3: Modern Build Stack with SWC and Bundler Optimizations](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
 
-#### Phase 4: Bundler Improvements & Feedback
+#### Phase 3: Bundler Improvements & Feedback
 
 **Target Release:** 3.3.2 ✅
 
 **Goal:** Improve the build size and make meteor use less resources for building, decreasing even more build and rebuild time.
 - Expanding compatibility and updates based on the feedback from the community, so that we can have a better experience with our new build tools, in this case SWC
 
-#### Phase 5: External Bundler integration (Rspack)
+#### Phase 4: External Bundler integration (Rspack)
 
 **Target Release:** 3.4 ✅
 
@@ -59,7 +59,7 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 🔗 [Meteor 3.4 is out: Rspack integration, 4x faster builds, 8x smaller bundles, and extended bundler features](https://blog.galaxycloud.app/meteor-3-4-is-out-rspack-integration-4x-faster-builds-8x-smaller-bundles-and-extended-bundler-features)
 
-#### Phase 6: Resource Optimization & Feedback
+#### Phase 5: Resource Optimization & Feedback
 
 **Target Release:** 3.4.x ⏳
 
