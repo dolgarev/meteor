@@ -13,10 +13,17 @@ Test patterns, commands, and utilities for the Meteor codebase.
 # CLI self-tests
 ./meteor self-test                           # Run all CLI tests
 ./meteor self-test "test name"               # Run specific test
+./meteor self-test --list                    # List available tests
+./meteor self-test --exclude "^[a-b]"        # Exclude tests by regex
+./meteor self-test --retries 0               # Skip retries in development
 
-# Package tests
-./meteor test-packages ./packages/my-pkg     # Test single package
-./meteor test-packages ./packages/my-pkg --driver-package meteortesting:mocha
+# Package tests (TinyTest — view results at http://localhost:3000)
+./meteor test-packages                       # Test all core packages
+./meteor test-packages mongo                 # Test specific package
+TINYTEST_FILTER="collection" ./meteor test-packages  # Filter specific tests
+
+# Package tests in console (headless via Puppeteer)
+PUPPETEER_DOWNLOAD_PATH=~/.npm/chromium ./packages/test-in-console/run.sh
 
 # Modern E2E tests (Jest + Playwright)
 npm run install:modern                       # Install dependencies
@@ -102,16 +109,16 @@ Tinytest.addAsync('async test', async function (test) {
 
 ```bash
 # Verbose build output
-METEOR_DEBUG_BUILD=1 meteor run
+METEOR_DEBUG_BUILD=1 ./meteor run
 
 # Profile build performance
-METEOR_PROFILE=1 meteor build
+METEOR_PROFILE=1 ./meteor build
 
 # Force rebuild
-meteor reset && meteor run
+./meteor reset && ./meteor run
 
-# Run specific package tests with driver
-meteor test-packages ./packages/my-package --driver-package meteortesting:mocha
+# Debug Meteor tool with Chrome inspector
+TOOL_NODE_FLAGS="--inspect-brk" ./meteor
 ```
 
 ## Writing Package Tests
