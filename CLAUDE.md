@@ -11,3 +11,4 @@ Load these for detailed context on specific topics:
 | [testing](.github/skills/testing/SKILL.md) | Writing tests, debugging failures, test infrastructure |
 | [packages](.github/skills/packages/SKILL.md) | Finding packages by feature, understanding dependencies |
 | [modern-tools](.github/skills/modern-tools/SKILL.md) | tools-core utilities, rspack, modern integrations |
+| [ai-context](.github/skills/ai-context/SKILL.md) | Creating, updating, or maintaining AI documentation files |
