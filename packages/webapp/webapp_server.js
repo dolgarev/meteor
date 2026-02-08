@@ -688,7 +688,7 @@ WebAppInternals.staticFilesMiddleware = async function(
   // so we force Vary to be safe.
   const varyAgentMode = Meteor.settings.packages?.webapp?.varyAgent ?? true;
 
-  if (info.cacheable && (!info.hash || Meteor.isDevelopment) && varyAgentMode) {
+  if (info.cacheable && !info.hash && varyAgentMode) {
     res.setHeader('Vary', 'User-Agent');
   }
 
