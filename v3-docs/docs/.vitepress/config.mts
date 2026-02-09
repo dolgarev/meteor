@@ -199,10 +199,6 @@ export default defineConfig({
             text: "Cordova",
             link: "/about/cordova",
           },
-          {
-            text: "Build System",
-            link: "/about/build-tool",
-          },
         ],
         collapsed: true,
       },
@@ -418,14 +414,6 @@ export default defineConfig({
             ]
           },
           {
-            text: "Using npm packages",
-            link: "/packages/4.using-npm-packages",
-          },
-          {
-            text: "Writing npm packages",
-            link: "/packages/5.writing-npm-packages",
-          },
-          {
             text: "Using Atmosphere packages",
             link: "/packages/6.using-atmosphere-packages",
           },
@@ -436,6 +424,14 @@ export default defineConfig({
           {
             link: "/packages/packages-listing",
             text: "Maintained Packages",
+          },
+          {
+            text: "Using npm packages",
+            link: "/packages/4.using-npm-packages",
+          },
+          {
+            text: "Writing npm packages",
+            link: "/packages/5.writing-npm-packages",
           },
           {
             link: "/community-packages/index",
@@ -529,6 +525,10 @@ export default defineConfig({
           {
             link: "/tutorials/application-structure/index",
             text: "Application structure",
+          },
+          {
+            text: "Build System",
+            link: "/about/build-tool",
           },
           {
             text: "Core Concepts",
