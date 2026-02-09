@@ -1,62 +1,61 @@
-```text
+---
 name: changelog
-description: Use for writing, reviewing, editing, or generating Meteor release changelog entries. Defines canonical file locations, naming rules, required section structure, formatting conventions, PR-based generation workflow, and common entry patterns. Applies to files under v3-docs/docs/generators/changelog/versions/.
-```
+description: Use when writing, reviewing, editing, or generating Meteor release changelog entries. Defines source location, file naming, required structure, formatting rules, PR-based generation workflow, and common patterns used in v3-docs/docs/generators/changelog/versions/.
+---
 
-# Meteor Changelog Authoring Guide
+# Meteor Changelog Rules
 
-Rules for creating, reviewing, and auto-generating Meteor release changelog entries.
+Guidelines for authoring and generating Meteor release changelog entries.
 
-## Canonical Source
+## Source of Truth
 
-All changelog source files live in:
+All changelog files live in:
 
 ```
 v3-docs/docs/generators/changelog/versions/
 ```
 
 These files are consumed by a generator that produces the public changelog.
-Never edit generated output—only modify files in this directory.
+**Never edit generated output directly.**
 
-Special file:
-`99999-generated-code-warning.md` is the static header for the generated page. Do not alter its structure.
+Special file: `99999-generated-code-warning.md` (page header). Do not change its structure.
 
-## File Naming Rules
+---
+
+## File Naming
 
 * One file per release
-* Filename format: `MAJOR.MINOR.PATCH.md`
-* Do not prefix versions with `v`
-* Do not add suffixes or metadata
+* Format: `MAJOR.MINOR.PATCH.md`
+* No `v` prefix
+* No suffixes or metadata
 
 Examples:
 
-* `3.4.0.md`
-* `3.1.1.md`
-* ❌ `v3.0.0.md`
-* ❌ `3.2.0-final.md`
+* ✅ `3.4.0.md`
+* ❌ `v3.4.0.md`
+* ❌ `3.4.0-final.md`
+
+---
 
 ## Required Entry Structure
 
-Every changelog file must contain **all sections below**, in this exact order.
-If a section has no content, use `N/A`.
+All sections are required and must appear **in this exact order**.
+Use `N/A` when a section has no content.
 
 ````markdown
-## v<VERSION>, <DATE>
+## v<VERSION>, <YYYY-MM-DD>
 
 ### Highlights
 
-- Description of change
+- Summary of change
 
 #### Breaking Changes
-
 N/A
 
 #### Internal API changes
-
 N/A
 
 #### Migration Steps
-
 Please run the following command to update your project:
 
 ```bash
@@ -65,7 +64,7 @@ meteor update --release <VERSION>
 
 #### Bumped Meteor Packages
 
-* package-name@version
+* package@version
 
 #### Bumped NPM Packages
 
@@ -74,101 +73,188 @@ N/A
 #### Special thanks to
 
 N/A
-
 ````
+
+---
 
 ## Formatting Rules
 
 ### Version Header
+- Format: `## vX.Y.Z, YYYY-MM-DD`
+- Comma + space separator
+- Always H2
+
+### Highlights
+- Bullet list (`-`)
+- Concise, imperative voice
+- Include PR links inline
 
 ```markdown
-## v3.4.0, 2025-01-30
+- Upgrade to Node v22, [PR#13997](...)
 ````
 
-* Prefix version with `v`
-* Date format: `YYYY-MM-DD`
-* Use comma + space as separator
-
-### Highlights
-
-* Use dash (`-`) bullets
-* Each bullet describes a user-facing change
-* Append PR links inline
-
-Example:
+For large features, use nested bullets with emoji markers:
 
 ```markdown
-### Highlights
-
-- Upgrade to Node v22, [PR#13997](https://github.com/meteor/meteor/pull/13997)
-- Fix bulk remove in LocalCollection to remove all items, [PR#13965](https://github.com/meteor/meteor/pull/13965)
-```
-
-For major features, use nested bullets with emoji markers:
-
-```markdown
-- **Meteor-Rspack Integration**, [PR#13910](https://github.com/meteor/meteor/pull/13910)
+- **Meteor-Rspack Integration**, [PR#13910](...)
   - ⚡ New `rspack` atmosphere package
   - 📦 New `@meteorjs/rspack` npm package
-  - 📃 Documentation link
 ```
 
-For feature-heavy releases, add this link **after** the Highlights list:
+For feature-heavy releases, append:
 
 ```markdown
-All Merged PRs@[GitHub PRs 3.4](https://github.com/meteor/meteor/pulls?q=is%3Apr+is%3Amerged+base%3Arelease-3.4)
+All Merged PRs@[GitHub PRs X.Y](https://github.com/meteor/meteor/pulls?q=is%3Apr+is%3Amerged+base%3Arelease-X.Y)
 ```
 
-## Breaking Changes
+External package changelogs go after the PR link block.
 
-If none:
+---
 
-```markdown
-#### Breaking Changes
+### Breaking Changes
 
-N/A
-```
+* Use `N/A` if none
+* Package-level changes:
 
-For package-specific breaks, wrap package names in backticks and list API changes.
+    * Backtick package names
+    * List affected APIs
+* Non-package changes use plain bullets
 
-## Migration Steps
+---
 
-Always start with:
+### Migration Steps
+
+* Always start with:
 
 ```bash
 meteor update --release <VERSION>
 ```
 
-Add additional commands or documentation links as needed.
+* Add extra commands, config steps, or doc links if needed
 
-## Bumped Meteor Packages
+---
+
+### Bumped Packages
+
+**Meteor & NPM**
 
 * One package per line
 * Format: `name@version`
 * No backticks
+* Use `N/A` if empty
+* Include `meteor-tool@<version>` when applicable
 
-## Bumped NPM Packages
+---
 
-Same format as Meteor packages. Use `N/A` if none.
+### Special Thanks
 
-## Special Thanks
+* Wrap contributor list with `✨✨✨`
+* GitHub users:
+  `[@user](https://github.com/user)`
+* Forum users:
+  `[@user](https://forums.meteor.com/u/user/summary)`
+* Use `N/A` if none
 
-Wrap contributor lists with sparkle lines:
+---
 
-```markdown
-✨✨✨
-- [@username](https://github.com/username)
-✨✨✨
+## Linking Conventions
+
+* PR: `[PR#123](https://github.com/meteor/meteor/pull/123)`
+* Docs: `[text](https://docs.meteor.com/...)`
+* External changelog: `[pkg@ver](url)`
+* All PRs: `[GitHub PRs X.Y](...)`
+
+---
+
+## Common Highlight Patterns
+
+* Dependency upgrade
+* Bug fix
+* New feature
+* Package integration
+* Deprecation
+* Dependency-only bump
+* Async API migration
+
+---
+
+## Generating a Changelog from PRs
+
+Use merged PRs targeting the release branch.
+
+### PR Feed
+
+```
+https://github.com/meteor/meteor/pulls?q=is%3Apr+is%3Amerged+base%3Arelease-<VERSION>
 ```
 
-Use `N/A` if there are no external contributors.
+### Fetch PRs
+
+```bash
+gh pr list --repo meteor/meteor \
+  --base release-<VERSION> \
+  --state merged \
+  --limit 200 \
+  --json number,title,labels,author,body,url
+```
+
+### Categorization Signals
+
+* **Labels** (`Project:*`, `Type:*`) are primary
+* **Titles** supplement labels
+* Exclude:
+    * Release tooling only
+    * Docs-only PRs
+    * CI/test-only PRs
+    * Dependabot PRs unless user-facing
+
+---
+
+### Breaking Change Detection
+
+Scan PR title, body, labels, and phrases such as:
+
+* “breaking”, “removed”, “renamed”, “is now async”
+
+---
+
+### Assembly Order
+
+1. Version header
+2. Highlights (grouped, most impactful first)
+3. All merged PRs link (if needed)
+4. Breaking Changes
+5. Internal API changes
+6. Migration Steps
+7. Bumped Meteor Packages (`TBD` if unknown)
+8. Bumped NPM Packages (`TBD` or `N/A`)
+9. Special thanks to
+
+---
+
+## Writing Rules
+
+**Do**
+
+* Use imperative voice
+* Be specific
+* Mention user-facing impact
+* Merge related PRs
+
+**Don’t**
+
+* Use past tense
+* Expose internal-only details
+* List trivial PRs individually
+
+---
 
 ## Review Checklist
 
-* Filename matches `MAJOR.MINOR.PATCH.md`
-* Header format is correct
-* All required sections present and ordered
+* Correct filename
+* Correct version header
+* All sections present and ordered
 * Empty sections use `N/A`
-* PR links and contributor links are correct
-* Package lists use `name@version`
+* Proper bullet and link formats
 * No YAML frontmatter
+* PR links point to `meteor/meteor`
