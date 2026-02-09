@@ -56,7 +56,7 @@ meteor add accounts-meetup
 meteor add accounts-meteor-developer
 ```
 
-Now open your app, follow the configuration steps, and you're good to go - if you've done one of our [Meteor tutorials](/tutorials), you've already seen this in action. Of course, in a production application, you probably want a more custom user interface and some logic to have a more tailored UX, but that's why we have the rest of this guide.
+Now open your app, follow the configuration steps, and you're good to go - if you've done one of our [Meteor tutorials](/tutorials/react/1.creating-the-app), you've already seen this in action. Of course, in a production application, you probably want a more custom user interface and some logic to have a more tailored UX, but that's why we have the rest of these tutorials.
 
 ## Password login
 
@@ -66,7 +66,7 @@ Meteor comes with a secure and fully-featured password login system out of the b
 meteor add accounts-password
 ```
 
-To see what options are available to you, read the complete description of the [`accounts-password` API in the Meteor docs](/api/passwords).
+To see what options are available to you, read the complete description of the [`accounts-password` API in the Meteor docs](/api/accounts).
 
 ### Requiring username or email
 
@@ -92,7 +92,7 @@ Accounts.validateNewUser((user) => {
 
 ### Multiple emails
 
-Often, users might want to associate multiple email addresses with the same account. `accounts-password` addresses this case by storing the email addresses as an array in the user collection. There are some handy API methods to deal with [adding](/api/passwords#Accounts-addEmail), [removing](/api/passwords#Accounts-removeEmail), and [verifying](/api/passwords#Accounts-verifyEmail) emails.
+Often, users might want to associate multiple email addresses with the same account. `accounts-password` addresses this case by storing the email addresses as an array in the user collection. There are some handy API methods to deal with [adding](/api/accounts#Accounts-addEmail), [removing](/api/accounts#Accounts-removeEmail), and [verifying](/api/accounts#Accounts-verifyEmail) emails.
 
 One useful thing to add for your app can be the concept of a "primary" email address. This way, if the user has added multiple emails, you know where to send confirmation emails and similar.
 
@@ -102,7 +102,7 @@ Meteor handles case sensitivity for email addresses and usernames. Since MongoDB
 
 **What does this mean for your app?**
 
-Follow one rule: don't query the database by `username` or `email` directly. Instead, use the [`Accounts.findUserByUsername`](/api/passwords#Accounts-findUserByUsername) and [`Accounts.findUserByEmail`](/api/passwords#Accounts-findUserByEmail) methods provided by Meteor. This will run a query for you that is case-insensitive, so you will always find the user you are looking for.
+Follow one rule: don't query the database by `username` or `email` directly. Instead, use the [`Accounts.findUserByUsername`](/api/accounts#Accounts-findUserByUsername) and [`Accounts.findUserByEmail`](/api/accounts#Accounts-findUserByEmail) methods provided by Meteor. This will run a query for you that is case-insensitive, so you will always find the user you are looking for.
 
 ### Email flows
 
@@ -116,19 +116,19 @@ When you have a login system for your app based on user emails, that opens up th
 
 `accounts-password` comes with handy functions that you can call from the server to send an email:
 
-1. [`Accounts.sendResetPasswordEmail`](/api/passwords#Accounts-sendResetPasswordEmail)
-2. [`Accounts.sendEnrollmentEmail`](/api/passwords#Accounts-sendEnrollmentEmail)
-3. [`Accounts.sendVerificationEmail`](/api/passwords#Accounts-sendVerificationEmail)
+1. [`Accounts.sendResetPasswordEmail`](/api/accounts#Accounts-sendResetPasswordEmail)
+2. [`Accounts.sendEnrollmentEmail`](/api/accounts#Accounts-sendEnrollmentEmail)
+3. [`Accounts.sendVerificationEmail`](/api/accounts#Accounts-sendVerificationEmail)
 
-The email is generated using the email templates from [`Accounts.emailTemplates`](/api/passwords#Accounts-emailTemplates), and include links generated with `Accounts.urls`.
+The email is generated using the email templates from [`Accounts.emailTemplates`](/api/accounts#Accounts-emailTemplates), and include links generated with `Accounts.urls`.
 
 #### Identifying when the link is clicked
 
 When the user receives the email and clicks the link inside, their web browser will take them to your app. Now, you need to be able to identify these special links and act appropriately. If you haven't customized the link URL, then you can use some built-in callbacks to identify when the app is in the middle of an email flow:
 
-1. [`Accounts.onResetPasswordLink`](/api/passwords#Accounts-onResetPasswordLink)
-2. [`Accounts.onEnrollmentLink`](/api/passwords#Accounts-onEnrollmentLink)
-3. [`Accounts.onEmailVerificationLink`](/api/passwords#Accounts-onEmailVerificationLink)
+1. [`Accounts.onResetPasswordLink`](/api/accounts#Accounts-onResetPasswordLink)
+2. [`Accounts.onEnrollmentLink`](/api/accounts#Accounts-onEnrollmentLink)
+3. [`Accounts.onEmailVerificationLink`](/api/accounts#Accounts-onEmailVerificationLink)
 
 Here's how you would use one of these functions:
 
@@ -161,14 +161,14 @@ If you have customized the URL, you will need to add a new route to your router 
 
 When the user submits the form, you need to call the appropriate function to commit their change to the database:
 
-1. [`Accounts.resetPasswordAsync`](/api/passwords#Accounts-resetPassword) - this one should be used both for resetting the password, and enrolling a new user; it accepts both kinds of tokens.
-2. [`Accounts.verifyEmailAsync`](/api/passwords#Accounts-verifyEmail)
+1. [`Accounts.resetPasswordAsync`](/api/accounts#Accounts-resetPassword) - this one should be used both for resetting the password, and enrolling a new user; it accepts both kinds of tokens.
+2. [`Accounts.verifyEmailAsync`](/api/accounts#Accounts-verifyEmail)
 
 After you have called one of the two functions above or the user has cancelled the process, call the `done` function you got in the link callback.
 
 ### Customizing accounts emails
 
-You will probably want to customize the emails `accounts-password` will send on your behalf. This can be done through the [`Accounts.emailTemplates` API](/api/passwords#Accounts-emailTemplates). Below is some example code:
+You will probably want to customize the emails `accounts-password` will send on your behalf. This can be done through the [`Accounts.emailTemplates` API](/api/accounts#Accounts-emailTemplates). Below is some example code:
 
 ```js
 Accounts.emailTemplates.siteName = "Meteor Guide Todos Example";
@@ -265,7 +265,7 @@ Once a user is logged into your app with one of the methods described above, it 
 
 For code that runs on the client, the global `Meteor.userId()` reactive function will give you the ID of the currently logged in user.
 
-In addition to that core API, there are some helpful shorthand helpers: `Meteor.user()`, which is exactly equal to calling `Meteor.users.findOne(Meteor.userId())`, and the `{{currentUser}}` Blaze helper that returns the value of `Meteor.user()`.
+In addition to that core API, there are some helpful shorthand helpers: `Meteor.user()`, which is exactly equal to calling `Meteor.users.findOne(Meteor.userId())`, and the <span v-pre>`{{currentUser}}`</span> Blaze helper that returns the value of `Meteor.user()`.
 
 #### On the server: this.userId
 
@@ -399,7 +399,7 @@ You can use any field name other than those [used by the Accounts system](/api/a
 
 ### Adding fields on user registration
 
-Sometimes, you want to set a field when the user first creates their account. You can do this using [`Accounts.onCreateUser`](/api/passwords#Accounts-onCreateUser):
+Sometimes, you want to set a field when the user first creates their account. You can do this using [`Accounts.onCreateUser`](/api/accounts#Accounts-onCreateUser):
 
 ```js
 // Generate user initials after Facebook login
@@ -499,7 +499,7 @@ const user = await Accounts.findUserByUsername(userName, { fields: { _id: 1 } })
 const userId = user?._id;
 ```
 
-You can also use [`Accounts.config({defaultFieldSelector: {...}})`](/api/accounts-multi#AccountsCommon-config) to include or omit specific user fields by default:
+You can also use [`Accounts.config({defaultFieldSelector: {...}})`](/api/accounts#AccountsCommon-config) to include or omit specific user fields by default:
 
 ```js
 Accounts.config({

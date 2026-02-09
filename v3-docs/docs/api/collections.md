@@ -748,13 +748,13 @@ Get all registered static methods. Returns a Map of method names to functions. U
 
 ### Legacy Aliases
 
-<ApiBox name="Mongo.Collection.addPrototype" />
+### Mongo.Collection.addPrototype
 
-Backwards compatibility alias for `addPrototypeMethod`. **Deprecated** - use `addPrototypeMethod` instead.
+> **Deprecated** — backwards compatibility alias for [`addPrototypeMethod`](#Mongo-Collection-addPrototypeMethod). Use `addPrototypeMethod` instead.
 
-<ApiBox name="Mongo.Collection.removePrototype" />
+### Mongo.Collection.removePrototype
 
-Backwards compatibility alias for `removePrototypeMethod`. **Deprecated** - use `removePrototypeMethod` instead.
+> **Deprecated** — backwards compatibility alias for [`removePrototypeMethod`](#Mongo-Collection-removePrototypeMethod). Use `removePrototypeMethod` instead.
 
 
 ## Cursors {#mongo_cursor}

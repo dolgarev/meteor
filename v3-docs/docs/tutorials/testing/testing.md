@@ -55,7 +55,7 @@ This is similar to test mode, with key differences:
 This means that the entirety of your application (including for instance the web server and client side router) is loaded and will run as normal. This enables you to write much more [complex integration tests](#full-app-integration-test) and also load additional files for [acceptance tests](#acceptance-testing).
 
 ::: info
-There is another test command in the Meteor tool; `meteor test-packages` is a way of testing Atmosphere packages, which is discussed in the [Writing Packages article](/packages/3.writing-atmosphere-packages).
+There is another test command in the Meteor tool; `meteor test-packages` is a way of testing Atmosphere packages, which is discussed in the [Writing Packages article](/packages/7.writing-atmosphere-packages).
 :::
 
 ### Driver packages
@@ -355,7 +355,7 @@ When we run our app in test mode, only our test files will be eagerly loaded. In
 
 #### Stubbing
 
-To be a unit test, we must stub out the dependencies of the module. In this case, thanks to the way we've isolated our code into a reusable component, there's not much to do; principally we need to stub out the `{% raw %}{{_}}{% endraw %}` helper that's created by the internationalization system. Note that we stub it out in a `beforeEach` and restore it in the `afterEach`.
+To be a unit test, we must stub out the dependencies of the module. In this case, thanks to the way we've isolated our code into a reusable component, there's not much to do; principally we need to stub out the <span v-pre>`{{_}}`</span> helper that's created by the internationalization system. Note that we stub it out in a `beforeEach` and restore it in the `afterEach`.
 
 #### Creating data
 
