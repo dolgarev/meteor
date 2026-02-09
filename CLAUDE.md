@@ -12,3 +12,4 @@ Load these for detailed context on specific topics:
 | [packages](.github/skills/packages/SKILL.md) | Finding packages by feature, understanding dependencies |
 | [modern-tools](.github/skills/modern-tools/SKILL.md) | tools-core utilities, rspack, modern integrations |
 | [ai-context](.github/skills/ai-context/SKILL.md) | Creating, updating, or maintaining AI documentation files |
+| [changelog](.github/skills/changelog/SKILL.md) | Writing, reviewing, or editing changelog entries for releases |
