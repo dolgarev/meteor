@@ -681,14 +681,17 @@ WebAppInternals.staticFilesMiddleware = async function(
   // We cache them ~forever (1yr).
   const maxAge = info.cacheable ? 1000 * 60 * 60 * 24 * 365 : 0;
 
-  // Resources identified by a hash (info.hash) are unique per
-  // architecture (modern vs legacy), so Vary: User-Agent is redundant.
+  // Resources whose URL already contains the content hash are immutable
+  // and unique per architecture (modern vs legacy), so Vary: User-Agent
+  // is unnecessary and harms CDN cache efficiency.
   //
-  // However, in Development/Test mode, hashes might be identical or missing,
-  // so we force Vary to be safe.
-  const varyAgentMode = Meteor.settings.packages?.webapp?.varyAgent ?? true;
+  // If the requested URL does not contain the hash (e.g. development
+  // or unhashed assets), we keep Vary: User-Agent to prevent cache
+  // poisoning across different browsers.
+  const includeVaryUserAgent =
+  Meteor.settings.packages?.webapp?.includeVaryUserAgent ?? true;
 
-  if (info.cacheable && !info.hash && varyAgentMode) {
+  if (info.cacheable && !pathname.includes(info.hash) && includeVaryUserAgent) {
     res.setHeader('Vary', 'User-Agent');
   }
 
