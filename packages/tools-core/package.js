@@ -18,13 +18,5 @@ Package.onTest(function (api) {
   // This structure allows easy addition of tests for other lib/ categories
   api.addFiles([
     'tests/meteor_tests.js',
-    // Add more test files here as needed:
-    // 'tests/process_tests.js',
-    // 'tests/npm_tests.js',
-    // 'tests/git_tests.js',
-    // 'tests/global-state_tests.js',
-    // 'tests/ignore_tests.js',
-    // 'tests/log_tests.js',
-    // 'tests/string_tests.js',
   ], 'server');
 });
