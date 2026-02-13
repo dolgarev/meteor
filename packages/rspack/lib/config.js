@@ -342,9 +342,13 @@ export function configureMeteorForRspack() {
     mainClient: `${RSPACK_BUILD_CONTEXT}/${mainClientModule}`,
     mainServer: `${RSPACK_BUILD_CONTEXT}/${mainServerModule}`,
     ...((isTestModule && {
+      mainClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
+      mainServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
       testClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
       testServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
     }) || {
+      mainClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
+      mainServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
       testClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
       testServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
     }),

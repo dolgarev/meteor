@@ -230,8 +230,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
   const configPath = Meteor.configPath;
   const testEntry = Meteor.testEntry;
-  const testClientEntry = Meteor.testClientEntry;
-  const testServerEntry = Meteor.testServerEntry;
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
@@ -451,8 +449,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         })
       : isTest && testEntry
       ? path.resolve(process.cwd(), testEntry)
-      : isTest && testClientEntry
-      ? path.resolve(process.cwd(), testClientEntry)
       : path.resolve(process.cwd(), buildContext, entryPath);
   const clientNameConfig = `[${(isTest && 'test-') || ''}client-rspack]`;
   // Base client config
@@ -570,8 +566,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         })
       : isTest && testEntry
       ? path.resolve(process.cwd(), testEntry)
-      : isTest && testServerEntry
-      ? path.resolve(process.cwd(), testServerEntry)
       : path.resolve(projectDir, buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}server-rspack]`;
   // Base server config
