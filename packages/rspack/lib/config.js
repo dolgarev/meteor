@@ -17,6 +17,7 @@ const {
   isMeteorAppBuild,
   isMeteorAppDebug,
   isMeteorAppTest,
+  isMeteorAppTestFullApp,
   isMeteorAppConfigModernVerbose,
   isMeteorBlazeProject,
   isMeteorLessProject,
@@ -338,12 +339,10 @@ export function configureMeteorForRspack() {
     isServer: true,
   });
 
-  const appEntrypoints = {
+  let appEntrypoints = {
     mainClient: `${RSPACK_BUILD_CONTEXT}/${mainClientModule}`,
     mainServer: `${RSPACK_BUILD_CONTEXT}/${mainServerModule}`,
     ...((isTestModule && {
-      mainClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
-      mainServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
       testClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
       testServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
     }) || {
@@ -351,6 +350,13 @@ export function configureMeteorForRspack() {
       testServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
     }),
   };
+  if (isMeteorAppTestFullApp()) {
+    appEntrypoints = {
+      ...appEntrypoints,
+      mainClient: `${RSPACK_BUILD_CONTEXT}/${testClientModule}`,
+      mainServer: `${RSPACK_BUILD_CONTEXT}/${testServerModule}`,
+    };
+  }
   // Set entry points in environment variables if they exist
   setMeteorAppEntrypoints(appEntrypoints);
 

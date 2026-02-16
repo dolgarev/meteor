@@ -67,7 +67,6 @@ const {
   getMeteorAppEntrypoints,
   isMeteorAppTest,
   isMeteorAppTestWatch,
-  isMeteorAppTestFullApp,
   isMeteorAppDevelopment,
   isMeteorAppProduction,
   isMeteorAppDebug,
