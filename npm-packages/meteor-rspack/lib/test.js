@@ -42,14 +42,9 @@ const generateEagerTestFile = ({
   const excludeFoldersRegex = createIgnoreRegex(
     createIgnoreGlobConfig(ignoreEntries)
   );
-
+  // Create regex from meteor ignore entries
   const excludeMeteorIgnoreRegex = createIgnoreRegex(
     createIgnoreGlobConfig(inMeteorIgnoreEntries)
-  );
-  console.log(
-    "--> (test.js-Line: 41)\n createIgnoreGlobConfig(ignoreEntries): ",
-    createIgnoreGlobConfig(ignoreEntries),
-    excludeFoldersRegex.toString()
   );
 
   const prefix = (inPrefix && `${inPrefix}-`) || "";
@@ -75,7 +70,9 @@ const generateEagerTestFile = ({
   ctx.keys().filter((k) => {
     // Make the check strictly relative to the context root.
     // If k is absolute and starts with root, strip it; if it's already relative, leave it.
-    const rel = k.startsWith('${projectDir}') ? k.slice(${projectDir.length}) : k.replace(/^\\.\\//, '');
+    const rel = k.startsWith('${projectDir}') ? k.slice(${
+    projectDir.length
+  }) : k.replace(/^\\.\\//, '');
     // Only exclude based on *relative* path segments.
     return !MeteorIgnoreRegex.test(rel);
   }).forEach(ctx);
