@@ -43,9 +43,9 @@ const generateEagerTestFile = ({
     createIgnoreGlobConfig(ignoreEntries)
   );
   // Create regex from meteor ignore entries
-  const excludeMeteorIgnoreRegex = createIgnoreRegex(
-    createIgnoreGlobConfig(inMeteorIgnoreEntries)
-  );
+  const excludeMeteorIgnoreRegex = inMeteorIgnoreEntries.length > 0
+    ? createIgnoreRegex(createIgnoreGlobConfig(inMeteorIgnoreEntries))
+    : null;
 
   const prefix = (inPrefix && `${inPrefix}-`) || "";
   const filename = isAppTest
@@ -58,9 +58,12 @@ const generateEagerTestFile = ({
 
   const content = `${
     globalImportPath ? `import '${globalImportPath}';\n\n` : ""
+  }${
+    excludeMeteorIgnoreRegex
+      ? `const MeteorIgnoreRegex = ${excludeMeteorIgnoreRegex.toString()};`
+      : ""
   }
-  const MeteorIgnoreRegex = ${excludeMeteorIgnoreRegex.toString()};
-  {
+{
   const ctx = import.meta.webpackContext('${projectDir}', {
     recursive: true,
     regExp: ${regExp},
@@ -68,13 +71,12 @@ const generateEagerTestFile = ({
     mode: 'eager',
   });
   ctx.keys().filter((k) => {
-    // Make the check strictly relative to the context root.
-    // If k is absolute and starts with root, strip it; if it's already relative, leave it.
-    const rel = k.startsWith('${projectDir}') ? k.slice(${
-    projectDir.length
-  }) : k.replace(/^\\.\\//, '');
-    // Only exclude based on *relative* path segments.
-    return !MeteorIgnoreRegex.test(rel);
+    ${
+      excludeMeteorIgnoreRegex
+        ? `// Only exclude based on *relative* path segments.
+    return !MeteorIgnoreRegex.test(k);`
+        : "return true;"
+    }
   }).forEach(ctx);
   ${
     extraEntry
