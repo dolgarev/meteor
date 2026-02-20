@@ -66,3 +66,14 @@ export function logRaw(message) {
 export function logSuccess(message) {
   console.log(`${colors.green}${padMessage(message)}${colors.reset}`);
 }
+
+/**
+ * Get the runLogInstance from the Plugin object if it exists
+ * @returns {Object|undefined} The runLogInstance or undefined
+ */
+export function getRunLog() {
+  if (typeof Plugin !== 'undefined') {
+    return Plugin.runLogInstance;
+  }
+  return undefined;
+}

@@ -16,7 +16,8 @@ const {
   logError,
   logInfo,
   logRaw,
-} = require('meteor/tools-core/lib/log');
+  getRunLog,
+} = require("meteor/tools-core/lib/log");
 
 const {
   getMeteorAppDir,
@@ -339,8 +340,20 @@ export function startRspackClientServe(options = {}) {
       env: { ...process.env, ...envs },
       onStdout: (data) => {
         const { cleanedData, config } = parseMeteorRspackOutput(data);
-        logHmrServerStarted(config);
-        onCompile(cleanedData, config);
+        if (config && !!config?.devServerUrl) {
+          logHmrServerStarted(config);
+        }
+        if (config && (config?.compilationCount || 0) > 0) {
+          onCompile(cleanedData, config);
+
+          if (
+            config?.name?.includes("client") &&
+            !config?.hasErrors &&
+            config?.isRebuild
+          ) {
+            getRunLog()?.logClientRestart();
+          }
+        }
         if (!cleanedData) return;
         if (shouldLogVerbose()) {
           logInfo(`[Rspack Client] ${cleanedData}`);
@@ -429,7 +442,9 @@ export function startRspackServerWatch(options = {}) {
     env: { ...process.env, ...envs },
     onStdout: (data) => {
       const { cleanedData, config } = parseMeteorRspackOutput(data);
-      onCompile(cleanedData, config);
+      if (config && (config?.compilationCount || 0) > 0) {
+        onCompile(cleanedData, config);
+      }
       if (!cleanedData) return;
       if (shouldLogVerbose()) {
         logInfo(`[Rspack Server] ${cleanedData}`);

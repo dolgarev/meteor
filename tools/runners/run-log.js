@@ -225,3 +225,6 @@ var runLogInstance = new RunLog;
   function (method) {
     exports[method] = runLogInstance[method].bind(runLogInstance);
   });
+
+// Export the singleton instance for use in plugins
+exports.runLogInstance = runLogInstance;

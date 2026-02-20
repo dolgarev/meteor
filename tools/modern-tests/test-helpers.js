@@ -207,7 +207,7 @@ export function testMeteorRspackBundler(options) {
 
       // Run the Meteor app to install Rspack
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         isMonorepo
       });
       meteorProcess = result.meteorProcess;
@@ -249,7 +249,7 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         isMonorepo
       });
       meteorProcess = result.meteorProcess;
@@ -337,7 +337,7 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: ['--production'],
         isMonorepo
       });
@@ -431,7 +431,7 @@ export function testMeteorRspackBundler(options) {
       test(`"meteor run --extra-packages bundle-visualizer --production" / should run with bundle-visualizer in production mode`, async () => {
         // Run the Meteor app with bundle-visualizer in production mode
         const result = await runMeteorApp(tempDir, port, {
-          waitForOutput: "=> App running at:",
+          waitForOutput: "=> App running at",
           commandOptions: ['--extra-packages', 'bundle-visualizer', '--production'],
           isMonorepo
         });
@@ -486,7 +486,7 @@ export function testMeteorRspackBundler(options) {
 
     test(`"meteor test${testFullApp ? ' --full-app' : ''}" / should run tests with Rspack`, async () => {
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: testFullApp ? ['--full-app'] : [],
         checkTestResults: false,
         isMonorepo
@@ -561,7 +561,7 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor test${testFullApp ? ' --full-app' : ''} --once" / should run tests once with Rspack`, async () => {
       // Test the app with Rspack once
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: testFullApp ? ['--full-app', '--once'] : ['--once'],
         checkTestResults: true,
         isMonorepo
@@ -778,7 +778,7 @@ export function testMeteorSkeleton(options) {
     test(`"meteor run" / should run the ${skeletonName} app`, async () => {
       // Run the newly created app
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:"
+        waitForOutput: "=> App running at"
       });
       meteorProcess = result.meteorProcess;
 
@@ -811,7 +811,7 @@ export function testMeteorSkeleton(options) {
     test(`"meteor run --production" / should run the ${skeletonName} app in production mode`, async () => {
       // Run the app in production mode
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: ["--production"]
       });
       meteorProcess = result.meteorProcess;
@@ -855,7 +855,7 @@ export function testMeteorSkeleton(options) {
 
       // Run tests once for the app
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: ["--once"],
         checkTestResults: true
       });

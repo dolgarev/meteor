@@ -22,6 +22,7 @@ const {
   extendSwcConfig,
   makeWebNodeBuiltinsAlias,
   disablePlugins,
+  outputMeteorRspack,
 } = require('./lib/meteorRspackHelpers.js');
 const { prepareMeteorRspackConfig } = require("./lib/meteorRspackConfigFactory");
 
@@ -428,7 +429,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     : [];
   // Not supported in Meteor yet (Rspack 1.7+ is enabled by default)
   const lazyCompilationConfig = { lazyCompilation: false };
-  const loggingConfig = { infrastructureLogging: { level: "none"  } };
+  const loggingConfig = { stats: 'none', infrastructureLogging: { level: "none"  } };
 
   const clientEntry =
     isClient && isTest && isTestEager && isTestFullApp
@@ -546,6 +547,13 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         devMiddleware: {
           writeToDisk: filePath =>
             /\.(html)$/.test(filePath) && !filePath.includes('.hot-update.'),
+        },
+        onListening(devServer) {
+          if (!devServer) return;
+          const { host, port } = devServer.options;
+          const protocol = devServer.options.server?.type === "https" ? "https" : "http";
+          const devServerUrl = `${protocol}://${host || "localhost"}:${port}`;
+          outputMeteorRspack({ devServerUrl });
         },
       },
     }),
@@ -821,13 +829,15 @@ module.exports = async function (inMeteor = {}, argv = {}) {
 
   // Add MeteorRspackOutputPlugin as the last plugin to output compilation info
   const meteorRspackOutputPlugin = new MeteorRspackOutputPlugin({
-    getData: (stats) => ({
+    getData: (stats, { isRebuild, compilationCount }) => ({
       name: config.name,
       mode: config.mode,
       hasErrors: stats.hasErrors(),
       hasWarnings: stats.hasWarnings(),
       timestamp: Date.now(),
       statsOverrided,
+      compilationCount,
+      isRebuild,
     }),
   });
   config.plugins = [meteorRspackOutputPlugin, ...(config.plugins || [])];

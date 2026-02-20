@@ -66,7 +66,7 @@ export function logHmrServerStarted(config) {
   if (hmrServerLogged) return;
   if (!config?.devServerUrl) return;
   hmrServerLogged = true;
-  logRaw(`=> Started Rspack HMR server at: ${config.devServerUrl}`);
+  logRaw(`=> Started Rspack HMR server at ${config.devServerUrl}/`);
 }
 
 /**
@@ -93,6 +93,6 @@ export function logCompilationOutput(output, target, statsOverrided = false) {
   }
   compilationCount[target] = (compilationCount[target] || 0) + 1;
   const prefix =
-    target === "server" && compilationCount[target] > 1 ? "\n=>" : "=>";
+    compilationCount[target] > 1 ? "\n=>" : "=>";
   logRaw(`${prefix} Compiled Rspack ${target} app${separator}${cleaned}`);
 }
