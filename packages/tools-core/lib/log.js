@@ -35,6 +35,14 @@ export function logInfo(message) {
 }
 
 /**
+ * Log a raw message without any color
+ * @param {string} message - The message to log
+ */
+export function logRaw(message) {
+  console.log(message);
+}
+
+/**
  * Log a success message in green
  * @param {string} message - The message to log
  */

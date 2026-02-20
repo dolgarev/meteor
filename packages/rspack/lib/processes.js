@@ -3,8 +3,8 @@
  * @description Functions for managing Rspack processes
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 const {
   spawnProcess,
@@ -15,6 +15,7 @@ const {
 const {
   logError,
   logInfo,
+  logRaw,
 } = require('meteor/tools-core/lib/log');
 
 const {
@@ -57,6 +58,14 @@ const {
   getBuildFilePath,
   getBuildFileContent,
 } = require('./build-context');
+
+import {
+  logCompilationOutput,
+  logHmrServerStarted,
+  parseMeteorRspackOutput,
+  shouldLogVerbose,
+  stripRspackLabel,
+} from "./logging";
 
 /**
  * Calculates the devServerPort based on process.env.PORT
@@ -329,35 +338,62 @@ export function startRspackClientServe(options = {}) {
       cwd: appDir,
       env: { ...process.env, ...envs },
       onStdout: (data) => {
-        logInfo(`[Rspack Client] ${data}`);
-        if (onCompile && data.trim().includes("compiled")) {
-          onCompile(data);
+        const { cleanedData, config } = parseMeteorRspackOutput(data);
+        logHmrServerStarted(config);
+        onCompile(cleanedData, config);
+        if (!cleanedData) return;
+        if (shouldLogVerbose()) {
+          logInfo(`[Rspack Client] ${cleanedData}`);
+        } else {
+          logCompilationOutput(cleanedData, 'client', config?.statsOverrided);
         }
       },
       onStderr: (data) => {
+        const { cleanedData } = parseMeteorRspackOutput(data);
+        if (!cleanedData) return;
         // Check if this is an EADDRINUSE error in development mode (which we want to completely ignore)
-        if (isMeteorAppDevelopment() && data.includes('EADDRINUSE')) {
-          logError(`[Rspack Client Error] ${data}`);
+        if (isMeteorAppDevelopment() && cleanedData.includes('EADDRINUSE')) {
+          if (shouldLogVerbose()) {
+            logError(`[Rspack Client Error] ${cleanedData}`);
+          } else {
+            logError(stripRspackLabel(cleanedData));
+          }
           return;
         }
         // Check if this is actually an informational message (like webpack-dev-server messages)
-        if (data.includes('Loopback:') || data.includes('Project is running at:')) {
-          logInfo(`[Rspack Client] ${data}`);
+        if (cleanedData.includes('Loopback:') || cleanedData.includes('Project is running at:')) {
+          if (shouldLogVerbose()) {
+            logInfo(`[Rspack Client] ${cleanedData}`);
+          } else {
+            logRaw(stripRspackLabel(cleanedData));
+          }
         } else {
           // Check if this is the "npm error could not determine executable to run" error
-          if (data.includes('npm error could not determine executable to run')) {
+          if (cleanedData.includes('npm error could not determine executable to run')) {
             const errorMsg = '[Rspack Client Error] Try running "meteor npm install" to ensure rspack is available';
-            logError(errorMsg);
+            if (shouldLogVerbose()) {
+              logError(errorMsg);
+            } else {
+              logError('Try running "meteor npm install" to ensure rspack is available');
+            }
             throw new Error(errorMsg);
           }
-          logError(`[Rspack Client Error] ${data}`);
+          if (shouldLogVerbose()) {
+            logError(`[Rspack Client Error] ${cleanedData}`);
+          } else {
+            logError(stripRspackLabel(cleanedData));
+          }
         }
       },
       onError: (err) => {
         const errorMsg = `Rspack Error: ${err.message}`;
-        logError(errorMsg);
+        if (shouldLogVerbose()) {
+          logError(errorMsg);
+        } else {
+          logError(err.message);
+        }
         throw new Error(errorMsg);
-      }
+      },
     });
 
   // Store the new process in global state
@@ -392,28 +428,50 @@ export function startRspackServerWatch(options = {}) {
     cwd: appDir,
     env: { ...process.env, ...envs },
     onStdout: (data) => {
-      logInfo(`[Rspack Server] ${data}`);
-      if (onCompile && data.trim().includes("compiled")) {
-        onCompile(data);
+      const { cleanedData, config } = parseMeteorRspackOutput(data);
+      onCompile(cleanedData, config);
+      if (!cleanedData) return;
+      if (shouldLogVerbose()) {
+        logInfo(`[Rspack Server] ${cleanedData}`);
+      } else {
+        logCompilationOutput(cleanedData, 'server', config?.statsOverrided);
       }
     },
     onStderr: (data) => {
+      const { cleanedData } = parseMeteorRspackOutput(data);
+      if (!cleanedData) return;
       // Check if this is actually an informational message (like webpack-dev-server messages)
-      if (data.includes('Project is running at:')) {
-        logInfo(`[Rspack Server] ${data}`);
+      if (cleanedData.includes('Project is running at:')) {
+        if (shouldLogVerbose()) {
+          logInfo(`[Rspack Server] ${cleanedData}`);
+        } else {
+          logRaw(stripRspackLabel(cleanedData));
+        }
       } else {
         // Check if this is the "npm error could not determine executable to run" error
-        if (data.includes('npm error could not determine executable to run')) {
+        if (cleanedData.includes('npm error could not determine executable to run')) {
           const errorMsg = '[Rspack Server Error] Try running "meteor npm install" to ensure rspack is available';
-          logError(errorMsg);
+          if (shouldLogVerbose()) {
+            logError(errorMsg);
+          } else {
+            logError('Try running "meteor npm install" to ensure rspack is available');
+          }
           throw new Error(errorMsg);
         }
-        logError(`[Rspack Server Error] ${data}`);
+        if (shouldLogVerbose()) {
+          logError(`[Rspack Server Error] ${cleanedData}`);
+        } else {
+          logError(stripRspackLabel(cleanedData));
+        }
       }
     },
     onError: (err) => {
       const errorMsg = `Rspack Error: ${err.message}`;
-      logError(errorMsg);
+      if (shouldLogVerbose()) {
+        logError(errorMsg);
+      } else {
+        logError(err.message);
+      }
       throw new Error(errorMsg);
     }
   });
@@ -459,23 +517,43 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
       cwd: appDir,
       env: { ...process.env, ...envs },
       onStdout: (data) => {
-        logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
-        if (onCompile && data.trim().includes("compiled")) {
-          onCompile(data);
+        const { cleanedData, config } = parseMeteorRspackOutput(data);
+        if (onCompile) {
+          onCompile(cleanedData, config);
+        }
+        if (!cleanedData) return;
+        if (shouldLogVerbose()) {
+          logInfo(`[Rspack ${label} ${endpoint}] ${cleanedData}`);
+        } else {
+          logCompilationOutput(cleanedData, endpoint.toLowerCase(), config?.statsOverrided);
         }
       },
       onStderr: (data) => {
+        const { cleanedData } = parseMeteorRspackOutput(data);
+        if (!cleanedData) return;
         // Check if this is actually an informational message (like webpack-dev-server messages)
-        if (data.includes('Project is running at:')) {
-          logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
+        if (cleanedData.includes('Project is running at:')) {
+          if (shouldLogVerbose()) {
+            logInfo(`[Rspack ${label} ${endpoint}] ${cleanedData}`);
+          } else {
+            logRaw(stripRspackLabel(cleanedData));
+          }
         } else {
           // Check if this is the "npm error could not determine executable to run" error
-          if (data.includes('npm error could not determine executable to run')) {
+          if (cleanedData.includes('npm error could not determine executable to run')) {
             const errorMsg = `[Rspack ${label} Error ${endpoint}] Try running "meteor npm install" to ensure rspack is available`;
-            logError(errorMsg);
+            if (shouldLogVerbose()) {
+              logError(errorMsg);
+            } else {
+              logError(`Try running "meteor npm install" to ensure rspack is available`);
+            }
             throw new Error(errorMsg);
           }
-          logError(`[Rspack ${label} Error ${endpoint}] ${data}`);
+          if (shouldLogVerbose()) {
+            logError(`[Rspack ${label} Error ${endpoint}] ${cleanedData}`);
+          } else {
+            logError(stripRspackLabel(cleanedData));
+          }
         }
       },
       onExit: (code) => {
@@ -483,12 +561,20 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
           resolve();
         } else {
           const error = new Error(`Rspack ${label} failed in ${endpoint} with exit code ${code}`);
-          logError(error.message);
+          if (shouldLogVerbose()) {
+            logError(error.message);
+          } else {
+            logError(`Rspack ${label} failed with exit code ${code}`);
+          }
           reject(error);
         }
       },
       onError: (err) => {
-        logError(`Rspack ${label} ${endpoint} error: ${err.message}`);
+        if (shouldLogVerbose()) {
+          logError(`Rspack ${label} ${endpoint} error: ${err.message}`);
+        } else {
+          logError(err.message);
+        }
         reject(err);
       }
     });

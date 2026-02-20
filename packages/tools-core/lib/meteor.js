@@ -293,6 +293,14 @@ export function isMeteorAppDebug() {
 }
 
 /**
+ * Checks if the Meteor application is running with METEOR_PROFILE enabled.
+ * @returns {boolean} True if METEOR_PROFILE is set, false otherwise.
+ */
+export function isMeteorAppProfile() {
+  return !!process.env.METEOR_PROFILE;
+}
+
+/**
  * Sets a custom script URL for the Meteor application in the environment variable.
  * @param {string} scriptUrl - The URL of the custom script.
  */
