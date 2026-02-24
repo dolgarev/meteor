@@ -168,6 +168,8 @@ export function testMeteorRspackBundler(options) {
     buildDir = '_build',
     // Rspack config file (default: 'rspack.config.js')
     configFile = 'rspack.config.js',
+    // Custom environment variables
+    env = {},
   } = options;
 
   return () => {
@@ -208,7 +210,8 @@ export function testMeteorRspackBundler(options) {
       // Run the Meteor app to install Rspack
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
-        isMonorepo
+        isMonorepo,
+        env
       });
       meteorProcess = result.meteorProcess;
 
@@ -250,7 +253,8 @@ export function testMeteorRspackBundler(options) {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
-        isMonorepo
+        isMonorepo,
+        env
       });
       meteorProcess = result.meteorProcess;
 
@@ -339,7 +343,8 @@ export function testMeteorRspackBundler(options) {
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
         commandOptions: ['--production'],
-        isMonorepo
+        isMonorepo,
+        env
       });
       meteorProcess = result.meteorProcess;
 

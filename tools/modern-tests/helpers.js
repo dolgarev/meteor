@@ -109,7 +109,8 @@ export async function runMeteorApp(tempDir, port, options = {}) {
     args, 
     appDir,
     {
-      captureOutput
+      captureOutput,
+      env: options.env
     }
   );
 
@@ -216,10 +217,14 @@ async function killSingleProcessByPort(port) {
 export async function runMeteorCommand(command, args = [], cwd, options = {}) {
   console.log(`Running Meteor command: ${command} ${args.join(' ')}...`);
 
-  const { captureOutput = false, checkExitCode = false, execaOptions: extraExecaOptions = {} } = options;
+  const { captureOutput = false, checkExitCode = false, execaOptions: extraExecaOptions = {}, env = {} } = options;
 
   const execaOptions = {
     cwd,
+    env: {
+      ...process.env,
+      ...env
+    },
     ...extraExecaOptions
   };
 

@@ -120,6 +120,31 @@ describe('React App Bundling /', () => {
       },
     }
   }));
+
+  describe('Meteor+Rspack Bundler / (Custom METEOR_LOCAL_DIR)', testMeteorRspackBundler({
+    appName: 'react',
+    port: 3103,
+    filePaths: {
+      client: 'client/main.jsx',
+      server: 'server/main.js',
+      test: 'tests/main.js'
+    },
+    configFile: 'rspack.config.cjs',
+    buildDir: '_build-local-custom',
+    env: { METEOR_LOCAL_DIR: '.meteor/local-custom' },
+    customAssertions: {
+      afterRun: async ({ tempDir }) => {
+        const appDir = tempDir; // testMeteorRspackBundler uses tempDir as appDir if not monorepo
+
+        const localDir = path.join(appDir, ".meteor", 'local-custom');
+        const buildDir = path.join(appDir, '_build-local-custom');
+        const cacheDir = path.join(appDir, 'node_modules', '.cache', 'rspack-_build-local-custom');
+
+        expect(await fs.pathExists(buildDir)).toBe(true);
+        expect(await fs.pathExists(cacheDir)).toBe(true);
+      }
+    }
+  }));
 });
 
 /**
