@@ -81,6 +81,7 @@ export function logHmrServerStarted(config) {
 export function logCompilationOutput(output, target, statsOverrided = false) {
   let cleaned;
   let separator;
+  // Logs original Rspack logging when stats overrided by user
   if (statsOverrided) {
     cleaned = stripRspackLabel(output);
     separator = "\n";
@@ -90,9 +91,10 @@ export function logCompilationOutput(output, target, statsOverrided = false) {
       .trim()
       .replace(/\s*compiled\s*/g, "");
     separator = cleaned.includes("\n") ? ":\n" : " ";
+    // Ignore successful logs on default Meteor-Rspack logging
+    if (/\s*successfully\s*/g.test(cleaned)) return;
   }
   compilationCount[target] = (compilationCount[target] || 0) + 1;
-  const prefix =
-    compilationCount[target] > 1 ? "\n=>" : "=>";
+  const prefix = compilationCount[target] > 1 ? "\n=>" : "=>";
   logRaw(`${prefix} Compiled Rspack ${target} app${separator}${cleaned}`);
 }

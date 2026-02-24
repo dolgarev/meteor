@@ -2,7 +2,7 @@
 const shouldDisableColors = !!process.env.METEOR_DISABLE_COLORS;
 
 // Minimum message length for consistent log formatting
-const MIN_MESSAGE_LENGTH = 50;
+const MIN_MESSAGE_LENGTH = 80;
 
 // ANSI color codes
 const colors = {
