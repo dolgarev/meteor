@@ -42,7 +42,11 @@ function safeRequire(moduleName) {
 }
 
 // Persistent filesystem cache strategy
-function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {}) {
+function createCacheStrategy(
+  mode,
+  side,
+  { projectConfigPath, configPath, buildContext } = {},
+) {
   // Check for configuration files
   const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
   const hasTsconfig = fs.existsSync(tsconfigPath);
@@ -83,7 +87,9 @@ function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {})
         type: "persistent",
         storage: {
           type: "filesystem",
-          directory: `node_modules/.cache/rspack${(side && `/${side}`) || ""}`,
+          directory: `node_modules/.cache/rspack${
+            (buildContext && `-${buildContext}`) || ''
+          }${(side && `/${side}`) || ''}`,
         },
         ...(buildDependencies.length > 0 && {
           buildDependencies: buildDependencies,
@@ -286,7 +292,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const cacheStrategy = createCacheStrategy(
     mode,
     (Meteor.isClient && 'client') || 'server',
-    { projectConfigPath, configPath }
+    { projectConfigPath, configPath, buildContext }
   );
 
   // Expose Meteor's helpers to expand Rspack configs
