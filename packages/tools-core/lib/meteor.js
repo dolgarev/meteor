@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { logError } = require('./log');
 
 /**
  * Returns the current working directory of the Meteor application.
@@ -391,11 +392,11 @@ export function getMeteorAppFilesAndFolders(options = {}) {
           }
         } catch (error) {
           // Skip items that can't be accessed
-          console.error(`Error accessing ${itemPath}: ${error.message}`);
+          logError(`=> Failed to access ${itemPath}: ${error.message}`);
         }
       }
     } catch (error) {
-      console.error(`Error reading directory ${dirPath}: ${error.message}`);
+      logError(`=> Failed to read directory ${dirPath}: ${error.message}`);
     }
 
     return result;
