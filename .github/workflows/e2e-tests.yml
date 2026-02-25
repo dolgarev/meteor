@@ -32,8 +32,8 @@ jobs:
           - Babel
           - Blaze
           - Coffeescript
-          - Library
           - Monorepo
+          - Other
           - React
           - R.Router
           - Solid

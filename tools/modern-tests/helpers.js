@@ -123,11 +123,13 @@ export async function runMeteorApp(tempDir, port, options = {}) {
   }
 
   // Wait for server to be up
-  console.log(`Waiting for app to be available on port ${port}...`);
-  await waitOn({
-    resources: [`http-get://localhost:${port}`],
-    timeout: 90000
-  });
+  if (!options.skipWaitOn) {
+    console.log(`Waiting for app to be available on port ${port}...`);
+    await waitOn({
+      resources: [`http-get://localhost:${port}`],
+      timeout: 90000
+    });
+  }
 
   return { meteorProcess, outputLines };
 }

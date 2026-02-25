@@ -168,6 +168,8 @@ export function testMeteorRspackBundler(options) {
     buildDir = '_build',
     // Rspack config file (default: 'rspack.config.js')
     configFile = 'rspack.config.js',
+    // Whether to skip client-specific assertions
+    skipClient = false,
   } = options;
 
   return () => {
@@ -207,8 +209,9 @@ export function testMeteorRspackBundler(options) {
 
       // Run the Meteor app to install Rspack
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
-        isMonorepo
+        waitForOutput: "=> App running at",
+        isMonorepo,
+        skipWaitOn: skipClient
       });
       meteorProcess = result.meteorProcess;
 
@@ -249,8 +252,9 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
-        isMonorepo
+        waitForOutput: "=> App running at",
+        isMonorepo,
+        skipWaitOn: skipClient
       });
       meteorProcess = result.meteorProcess;
 
@@ -258,24 +262,28 @@ export function testMeteorRspackBundler(options) {
       await wait(WAIT_ON);
 
       // Assert that the app files exists
-      await assertFileExist(appDir, `${buildDir}/main-dev/client-entry.js`);
-      await assertFileExist(appDir, `${buildDir}/main-dev/client-rspack.js`);
-      await assertFileExist(appDir, `${buildDir}/main-dev/client-meteor.js`);
+      if (!skipClient) {
+        await assertFileExist(appDir, `${buildDir}/main-dev/client-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/main-dev/client-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/main-dev/client-meteor.js`);
+      }
       await assertFileExist(appDir, `${buildDir}/main-dev/server-entry.js`);
       await assertFileExist(appDir, `${buildDir}/main-dev/server-rspack.js`);
       await assertFileExist(appDir, `${buildDir}/main-dev/server-meteor.js`);
 
-      // Assert that the Meteor app is running correctly
-      await assertMeteorReactApp(port, { title: appName });
+      if (!skipClient) {
+        // Assert that the Meteor app is running correctly
+        await assertMeteorReactApp(port, { title: appName });
 
-      // Assert that the app is using Rspack
-      await assertRspackScriptTag(port, true);
+        // Assert that the app is using Rspack
+        await assertRspackScriptTag(port, true);
 
-      // Assert that the body has the expected CSS styles
-      await assertBodyStyles({
-        'padding': '10px',
-        'font-family': 'sans-serif'
-      });
+        // Assert that the body has the expected CSS styles
+        await assertBodyStyles({
+          'padding': '10px',
+          'font-family': 'sans-serif'
+        });
+      }
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRun) {
@@ -283,20 +291,22 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Update the client code
-      await appendFileContent(tempDir, filePaths.client, {
-        content: customUpdates.devClient(customMessages.devClient),
-      });
-      const consoleLogs = await waitForPlaywrightConsole(customMessages.devClient, { returnAllLogs: true });
-
-      // Run custom assertions if provided
-      if (customAssertions && customAssertions.afterRunRebuildClient) {
-        await customAssertions.afterRunRebuildClient({
-          tempDir,
-          port,
-          meteorProcess,
-          result,
-          allConsoleLogs: consoleLogs.allLogs
+      if (!skipClient) {
+        await appendFileContent(tempDir, filePaths.client, {
+          content: customUpdates.devClient(customMessages.devClient),
         });
+        const consoleLogs = await waitForPlaywrightConsole(customMessages.devClient, { returnAllLogs: true });
+
+        // Run custom assertions if provided
+        if (customAssertions && customAssertions.afterRunRebuildClient) {
+          await customAssertions.afterRunRebuildClient({
+            tempDir,
+            port,
+            meteorProcess,
+            result,
+            allConsoleLogs: consoleLogs.allLogs
+          });
+        }
       }
 
       // Update the server code
@@ -337,9 +347,10 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: ['--production'],
-        isMonorepo
+        isMonorepo,
+        skipWaitOn: skipClient
       });
       meteorProcess = result.meteorProcess;
 
@@ -347,27 +358,34 @@ export function testMeteorRspackBundler(options) {
       await wait(WAIT_ON);
 
       // Assert that the app files exists
-      await assertFileExist(appDir, `${buildDir}/main-prod/client-entry.js`);
-      await assertFileExist(appDir, `${buildDir}/main-prod/client-rspack.js`);
-      await assertFileExist(appDir, `${buildDir}/main-prod/client-meteor.js`);
+      if (!skipClient) {
+        await assertFileExist(appDir, `${buildDir}/main-prod/client-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/client-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/client-meteor.js`);
+      }
       await assertFileExist(appDir, `${buildDir}/main-prod/server-entry.js`);
       await assertFileExist(appDir, `${buildDir}/main-prod/server-rspack.js`);
       await assertFileExist(appDir, `${buildDir}/main-prod/server-meteor.js`);
-      await assertFileExist(appDir, `${buildDir}/main-prod/index.html`);
+
+      if (!skipClient) {
+        await assertFileExist(appDir, `${buildDir}/main-prod/index.html`);
+      }
 
       await assertFileExist(tempDir, filePaths.server);
 
-      // Assert that the Meteor app is running correctly
-      await assertMeteorReactApp(port, { title: appName });
+      if (!skipClient) {
+        // Assert that the Meteor app is running correctly
+        await assertMeteorReactApp(port, { title: appName });
 
-      // Assert that the app is using Rspack
-      await assertRspackScriptTag(port, false);
+        // Assert that the app is using Rspack
+        await assertRspackScriptTag(port, false);
 
-      // Assert that the body has the expected CSS styles
-      await assertBodyStyles({
-        'padding': '10px',
-        'font-family': 'sans-serif'
-      });
+        // Assert that the body has the expected CSS styles
+        await assertBodyStyles({
+          'padding': '10px',
+          'font-family': 'sans-serif'
+        });
+      }
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRunProduction) {
@@ -375,20 +393,22 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Update the client code
-      await appendFileContent(tempDir, filePaths.client, {
-        content: customUpdates.prodClient(customMessages.prodClient),
-      });
-      const consoleLogs = await waitForPlaywrightConsole(customMessages.prodClient, { returnAllLogs: true });
-
-      // Run custom assertions if provided
-      if (customAssertions && customAssertions.afterRunProductionRebuildClient) {
-        await customAssertions.afterRunProductionRebuildClient({
-          tempDir,
-          port,
-          meteorProcess,
-          result,
-          allConsoleLogs: consoleLogs.allLogs
+      if (!skipClient) {
+        await appendFileContent(tempDir, filePaths.client, {
+          content: customUpdates.prodClient(customMessages.prodClient),
         });
+        const consoleLogs = await waitForPlaywrightConsole(customMessages.prodClient, { returnAllLogs: true });
+
+        // Run custom assertions if provided
+        if (customAssertions && customAssertions.afterRunProductionRebuildClient) {
+          await customAssertions.afterRunProductionRebuildClient({
+            tempDir,
+            port,
+            meteorProcess,
+            result,
+            allConsoleLogs: consoleLogs.allLogs
+          });
+        }
       }
 
       // Update the server code
@@ -431,7 +451,7 @@ export function testMeteorRspackBundler(options) {
       test(`"meteor run --extra-packages bundle-visualizer --production" / should run with bundle-visualizer in production mode`, async () => {
         // Run the Meteor app with bundle-visualizer in production mode
         const result = await runMeteorApp(tempDir, port, {
-          waitForOutput: "=> App running at:",
+          waitForOutput: "=> App running at",
           commandOptions: ['--extra-packages', 'bundle-visualizer', '--production'],
           isMonorepo
         });
@@ -486,7 +506,7 @@ export function testMeteorRspackBundler(options) {
 
     test(`"meteor test${testFullApp ? ' --full-app' : ''}" / should run tests with Rspack`, async () => {
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: testFullApp ? ['--full-app'] : [],
         checkTestResults: false,
         isMonorepo
@@ -499,9 +519,11 @@ export function testMeteorRspackBundler(options) {
       const isTestModule = filePaths.test && !filePaths.testClient && !filePaths.testServer;
 
       // Assert that the app files exists
-      await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);
-      await assertFileExist(appDir, `${buildDir}/test/client-rspack.js`);
-      await assertFileExist(appDir, `${buildDir}/test/client-meteor.js`);
+      if (!skipClient) {
+        await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-meteor.js`);
+      }
       await assertFileExist(appDir, `${buildDir}/test/server-entry.js`);
       await assertFileExist(appDir, `${buildDir}/test/server-rspack.js`);
       await assertFileExist(appDir, `${buildDir}/test/server-meteor.js`);
@@ -518,13 +540,15 @@ export function testMeteorRspackBundler(options) {
         });
         await waitForMeteorOutput(result.outputLines, customMessages.test);
       } else {
-        await appendFileContent(tempDir, filePaths.testClient, {
-          content: customUpdates.test(customMessages.testClient),
-        });
-        await waitForMeteorOutput(
-          result.outputLines,
-          customMessages.testClient
-        );
+        if (!skipClient) {
+          await appendFileContent(tempDir, filePaths.testClient, {
+            content: customUpdates.test(customMessages.testClient),
+          });
+          await waitForMeteorOutput(
+            result.outputLines,
+            customMessages.testClient
+          );
+        }
 
         await appendFileContent(tempDir, filePaths.testServer, {
           content: customUpdates.test(customMessages.testServer),
@@ -561,7 +585,7 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor test${testFullApp ? ' --full-app' : ''} --once" / should run tests once with Rspack`, async () => {
       // Test the app with Rspack once
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: testFullApp ? ['--full-app', '--once'] : ['--once'],
         checkTestResults: true,
         isMonorepo
@@ -778,7 +802,7 @@ export function testMeteorSkeleton(options) {
     test(`"meteor run" / should run the ${skeletonName} app`, async () => {
       // Run the newly created app
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:"
+        waitForOutput: "=> App running at"
       });
       meteorProcess = result.meteorProcess;
 
@@ -811,7 +835,7 @@ export function testMeteorSkeleton(options) {
     test(`"meteor run --production" / should run the ${skeletonName} app in production mode`, async () => {
       // Run the app in production mode
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: ["--production"]
       });
       meteorProcess = result.meteorProcess;
@@ -855,7 +879,7 @@ export function testMeteorSkeleton(options) {
 
       // Run tests once for the app
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at:",
+        waitForOutput: "=> App running at",
         commandOptions: ["--once"],
         checkTestResults: true
       });
