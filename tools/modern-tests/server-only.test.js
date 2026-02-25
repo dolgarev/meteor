@@ -1,24 +1,24 @@
 import {
   waitForMeteorOutput,
-} from "./helpers";
+} from './helpers';
 import { testMeteorRspackBundler } from './test-helpers';
 
-describe("Other / Server-only App Bundling /", () => {
+describe('Other / Server-only App Bundling /', () => {
   describe(
-    "Meteor+Rspack Bundler /",
+    'Meteor+Rspack Bundler /',
     testMeteorRspackBundler({
-      appName: "server-only",
+      appName: 'server-only',
       port: 3123,
       skipClient: true,
       filePaths: {
-        server: "server/main.js",
+        server: 'server/main.js',
         test: null,
       },
       customAssertions: {
         afterRun: async ({ result }) => {
           await waitForMeteorOutput(
             result.outputLines,
-            "server/main.js loaded"
+            'server/main.js loaded'
           );
         },
       },

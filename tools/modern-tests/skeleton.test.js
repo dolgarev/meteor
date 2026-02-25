@@ -93,14 +93,14 @@ describe('Meteor Skeletons /', () => {
   );
 
   describe(
-    "Other / Full Skeleton /",
+    'Other / Full Skeleton /',
     testMeteorSkeleton({
-      skeletonName: "full",
+      skeletonName: 'full',
       port: 3204,
       filePaths: {
-        client: "client/main.js",
-        server: "server/main.js",
-        test: "imports/api/links/methods.tests.js",
+        client: 'client/main.js',
+        server: 'server/main.js',
+        test: 'imports/api/links/methods.tests.js',
       },
     })
   );
@@ -150,26 +150,26 @@ describe('Meteor Skeletons /', () => {
   );
 
   describe(
-    "Other / Tailwind Skeleton /",
+    'Other / Tailwind Skeleton /',
     testMeteorSkeleton({
-      skeletonName: "tailwind",
+      skeletonName: 'tailwind',
       port: 3208,
       filePaths: {
-        client: "client/main.tsx",
-        server: "server/main.ts",
-        test: "tests/main.ts",
+        client: 'client/main.tsx',
+        server: 'server/main.ts',
+        test: 'tests/main.ts',
       },
       customAssertions: {
         afterRun: async () => {
-          // Verify Tailwind styles for ".bg-gray-100" element
-          await assertStyles(".bg-gray-100", {
-            ["background-color"]: "oklch(0.967 0.003 264.542)",
+          // Verify Tailwind styles for '.bg-gray-100' element
+          await assertStyles('.bg-gray-100', {
+            ['background-color']: 'oklch(0.967 0.003 264.542)',
           });
         },
         afterRunProduction: async () => {
-          // Verify Tailwind styles for ".bg-gray-100" element
-          await assertStyles(".bg-gray-100", {
-            ["background-color"]: "lab(96.1596 -0.0823438 -1.13575)",
+          // Verify Tailwind styles for '.bg-gray-100' element
+          await assertStyles('.bg-gray-100', {
+            ['background-color']: 'lab(96.1596 -0.0823438 -1.13575)',
           });
         },
       },
