@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import type { Contributor } from '../../community/contributors.data'
 
-defineProps<{
+withDefaults(defineProps<{
   contributors: Contributor[]
-}>()
+  showContributions?: boolean
+}>(), {
+  showContributions: true,
+})
+
+function avatarUrl(url: string): string {
+  return url.includes('?') ? `${url}&s=80` : `${url}?s=80`
+}
 </script>
 
 <template>
@@ -17,7 +24,7 @@ defineProps<{
       class="contributor-card"
     >
       <img
-        :src="contributor.avatar_url + '&s=80'"
+        :src="avatarUrl(contributor.avatar_url)"
         :alt="contributor.login"
         class="contributor-avatar"
         loading="lazy"
@@ -26,7 +33,7 @@ defineProps<{
       />
       <div class="contributor-info">
         <span class="contributor-name">{{ contributor.login }}</span>
-        <span class="contributor-commits">
+        <span v-if="showContributions" class="contributor-commits">
           {{ contributor.contributions.toLocaleString() }}
           {{ contributor.contributions === 1 ? 'commit' : 'commits' }}
         </span>
