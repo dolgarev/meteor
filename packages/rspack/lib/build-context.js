@@ -510,8 +510,8 @@ if (module.hot) {
  * @returns {string} The import content
  */
 function getImportContent(config, side, role) {
-  if (!config?.entryFile) {
-    return '';
+  if (!config?.entryFile && !config?.isTest) {
+    return "";
   }
 
   if (role === FILE_ROLE.entry) {
