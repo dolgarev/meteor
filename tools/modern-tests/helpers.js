@@ -525,6 +525,7 @@ export async function appendFileContent(tempDir, filePath, options = {}) {
  * @param {string|RegExp} options.waitForOutput - Output pattern to wait for
  * @param {Object} options.waitOptions - Options for waitForMeteorOutput
  * @param {string[]} options.commandOptions - Additional command line options for the test command
+ * @param {boolean} options.testClient - Whether to enable client-side tests with a browser driver
  * @param {boolean} options.checkTestResults - Whether to check test results and propagate failures to Jest
  * @param {boolean} options.isMonorepo - Whether the app is a monorepo
  * @returns {Object} - The meteor process and output lines
@@ -556,7 +557,7 @@ export async function runMeteorTests(tempDir, port, options = {}) {
       execaOptions: {
         env: {
           ...process.env,
-          TEST_BROWSER_DRIVER: 'playwright'
+          ...(options.testClient ? { TEST_BROWSER_DRIVER: 'playwright' } : { TEST_CLIENT: 0 })
         }
       },
       captureOutput,

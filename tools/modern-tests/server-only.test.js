@@ -12,7 +12,7 @@ describe("Other / Server-only App Bundling /", () => {
       skipClient: true,
       filePaths: {
         server: "server/main.js",
-        test: "tests/main.js",
+        test: null,
       },
       customAssertions: {
         afterRun: async ({ result }) => {

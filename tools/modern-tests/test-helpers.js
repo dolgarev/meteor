@@ -506,10 +506,13 @@ export function testMeteorRspackBundler(options) {
 
     test(`"meteor test${testFullApp ? ' --full-app' : ''}" / should run tests with Rspack`, async () => {
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at",
-        commandOptions: testFullApp ? ['--full-app'] : [],
+        waitForOutput: !filePaths.testClient
+          ? 'TEST_CLIENT=0'
+          : '=> App running at',
+        commandOptions: testFullApp ? ["--full-app"] : [],
         checkTestResults: false,
-        isMonorepo
+        isMonorepo,
+        testClient: !!filePaths.testClient,
       });
       meteorProcess = result.meteorProcess;
 
@@ -535,12 +538,14 @@ export function testMeteorRspackBundler(options) {
 
       // Update the test code
       if (isTestModule) {
-        await appendFileContent(tempDir, filePaths.test, {
-          content: customUpdates.test(customMessages.test),
-        });
-        await waitForMeteorOutput(result.outputLines, customMessages.test);
+        if (filePaths.test) {
+          await appendFileContent(tempDir, filePaths.test, {
+            content: customUpdates.test(customMessages.test),
+          });
+          await waitForMeteorOutput(result.outputLines, customMessages.test);
+        }
       } else {
-        if (!skipClient) {
+        if (!skipClient && filePaths.testClient) {
           await appendFileContent(tempDir, filePaths.testClient, {
             content: customUpdates.test(customMessages.testClient),
           });
@@ -550,13 +555,15 @@ export function testMeteorRspackBundler(options) {
           );
         }
 
-        await appendFileContent(tempDir, filePaths.testServer, {
-          content: customUpdates.test(customMessages.testServer),
-        });
-        await waitForMeteorOutput(
-          result.outputLines,
-          customMessages.testServer
-        );
+        if (filePaths.testServer) {
+          await appendFileContent(tempDir, filePaths.testServer, {
+            content: customUpdates.test(customMessages.testServer),
+          });
+          await waitForMeteorOutput(
+            result.outputLines,
+            customMessages.testServer
+          );
+        }
       }
 
       if (verbose) {
@@ -585,10 +592,13 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor test${testFullApp ? ' --full-app' : ''} --once" / should run tests once with Rspack`, async () => {
       // Test the app with Rspack once
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at",
+        waitForOutput: !filePaths.testClient
+          ? 'TEST_CLIENT=0'
+          : '=> App running at',
         commandOptions: testFullApp ? ['--full-app', '--once'] : ['--once'],
         checkTestResults: true,
-        isMonorepo
+        isMonorepo,
+        testClient: !!filePaths.testClient,
       });
 
       // Wait for a margin
@@ -881,7 +891,7 @@ export function testMeteorSkeleton(options) {
       const result = await runMeteorTests(tempDir, port, {
         waitForOutput: "=> App running at",
         commandOptions: ["--once"],
-        checkTestResults: true
+        checkTestResults: true,
       });
 
       // Wait for a margin
