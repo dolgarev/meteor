@@ -219,27 +219,24 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const projectConfigPath =
     Meteor.projectConfigPath || path.resolve(projectDir, "rspack.config.js");
 
-  // Load and apply project-level overrides for the selected build
-  const { nextUserConfig, nextOverrideConfig } =
-    await loadUserAndOverrideConfig(projectConfigPath, Meteor, argv);
+  // Compute build paths before loading user config (needed by Meteor helpers below)
+  const buildContext = Meteor.buildContext || "_build";
+  const outputPath = Meteor.outputPath;
+  const outputDir = path.dirname(Meteor.outputPath || "");
+  Meteor.buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
 
-  // Determine the mode
-  const getModeFromConfig = () => {
-    if (nextOverrideConfig?.mode) return nextOverrideConfig.mode;
-    if (nextUserConfig?.mode) return nextUserConfig.mode;
+  // Defined here so it can be called both before and after the first config load;
+  // without loaded configs it falls through to argv/Meteor flags.
+  const getModeFromConfig = (userConfig = undefined, overrideConfig = undefined) => {
+    if (overrideConfig?.mode) return overrideConfig.mode;
+    if (userConfig?.mode) return userConfig.mode;
     if (argv.mode) return argv.mode;
     if (Meteor.isProduction) return "production";
     if (Meteor.isDevelopment) return "development";
     return null;
   };
 
-  const currentMode = getModeFromConfig();
-  const isProd = currentMode
-    ? currentMode === "production"
-    : !!Meteor.isProduction;
-  const isDev = currentMode
-    ? currentMode === "development"
-    : !!Meteor.isDevelopment || !isProd;
+  // Meteor flags derived purely from input; independent of loaded user/override configs
   const isTest = !!Meteor.isTest;
   const isClient = !!Meteor.isClient;
   const isServer = !!Meteor.isServer;
@@ -249,54 +246,37 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTestModule = !!Meteor.isTestModule;
   const isTestEager = !!Meteor.isTestEager;
   const isTestFullApp = !!Meteor.isTestFullApp;
-
-  const mode = isProd ? "production" : "development";
-  const configPath = Meteor.configPath;
-  const testEntry = Meteor.testEntry;
-
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
-  const isJsxEnabled =
-    Meteor.isJsxEnabled || (!isTypescriptEnabled && isReactEnabled) || false;
-  const isTsxEnabled =
-    Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
+  const isJsxEnabled = Meteor.isJsxEnabled || (!isTypescriptEnabled && isReactEnabled) || false;
+  const isTsxEnabled = Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
   const isBundleVisualizerEnabled = Meteor.isBundleVisualizerEnabled || false;
   const isAngularEnabled = Meteor.isAngularEnabled || false;
+  const enableSwcExternalHelpers = !isServer && swcExternalHelpers;
 
-  // Determine entry points
-  const entryPath = Meteor.entryPath || "";
+  // Initial mode before user/override configs are loaded
+  const initialCurrentMode = getModeFromConfig();
+  const initialIsProd = initialCurrentMode ? initialCurrentMode === "production" : !!Meteor.isProduction;
+  const initialIsDev = initialCurrentMode ? initialCurrentMode === "development" : !!Meteor.isDevelopment || !initialIsProd;
+  const initialMode = initialIsProd ? "production" : "development";
 
-  // Determine output points
-  const outputPath = Meteor.outputPath;
-  const outputDir = path.dirname(Meteor.outputPath || "");
-
-  const outputFilename = Meteor.outputFilename;
-
-  // Determine context for bundles and assets
-  const buildContext = Meteor.buildContext || "_build";
-  const assetsContext = Meteor.assetsContext || "build-assets";
-  const chunksContext = Meteor.chunksContext || "build-chunks";
-
-  // Determine build output and pass to Meteor
-  const buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
-  Meteor.buildOutputDir = buildOutputDir;
-
-  const cacheStrategy = createCacheStrategy(
-    mode,
-    (Meteor.isClient && "client") || "server",
-    { projectConfigPath, configPath }
+  // Initialized with pre-load values so helpers work during the first config load;
+  // reassigned after load once mode is fully resolved.
+  let cacheStrategy = createCacheStrategy(
+    initialMode,
+    (isClient && "client") || "server",
+    { projectConfigPath, configPath: Meteor.configPath }
   );
-
-  // Determine run point
-  const runPath = Meteor.runPath || "";
-
-  // Determine banner
-  const bannerOutput = JSON.parse(
-    Meteor.bannerOutput || process.env.RSPACK_BANNER || '""'
-  );
-
-  // Determine output directories
-  const clientOutputDir = path.resolve(projectDir, "public");
-  const serverOutputDir = path.resolve(projectDir, "private");
+  let swcConfigRule = createSwcConfig({
+    isTypescriptEnabled,
+    isReactEnabled,
+    isJsxEnabled,
+    isTsxEnabled,
+    externalHelpers: enableSwcExternalHelpers,
+    isDevEnvironment: isRun && initialIsDev && !isTest && !isNative,
+    isClient,
+    isAngularEnabled,
+  });
+  Meteor.swcConfigOptions = swcConfigRule.options;
 
   // Expose Meteor's helpers to expand Rspack configs
   Meteor.compileWithMeteor = (deps) => compileWithMeteor(deps);
@@ -337,6 +317,51 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     });
   };
 
+  // First pass: resolve user/override configs early so mode overrides (e.g. "production")
+  // are available before computing isProd/isDev and the rest of the build flags.
+  let { nextUserConfig, nextOverrideConfig } =
+    await loadUserAndOverrideConfig(projectConfigPath, Meteor, argv);
+
+  // Determine the final mode with loaded configs
+  const currentMode = getModeFromConfig(nextUserConfig, nextOverrideConfig);
+  const isProd = currentMode
+    ? currentMode === "production"
+    : !!Meteor.isProduction;
+  const isDev = currentMode
+    ? currentMode === "development"
+    : !!Meteor.isDevelopment || !isProd;
+  const mode = isProd ? "production" : "development";
+  const configPath = Meteor.configPath;
+  const testEntry = Meteor.testEntry;
+
+  // Determine entry points
+  const entryPath = Meteor.entryPath || "";
+
+  // Determine output points
+  const outputFilename = Meteor.outputFilename;
+
+  // Determine context for bundles and assets
+  const assetsContext = Meteor.assetsContext || "build-assets";
+  const chunksContext = Meteor.chunksContext || "build-chunks";
+
+  cacheStrategy = createCacheStrategy(
+    mode,
+    (Meteor.isClient && "client") || "server",
+    { projectConfigPath, configPath }
+  );
+
+  // Determine run point
+  const runPath = Meteor.runPath || "";
+
+  // Determine banner
+  const bannerOutput = JSON.parse(
+    Meteor.bannerOutput || process.env.RSPACK_BANNER || '""'
+  );
+
+  // Determine output directories
+  const clientOutputDir = path.resolve(projectDir, "public");
+  const serverOutputDir = path.resolve(projectDir, "private");
+
   // Get Meteor ignore entries
   const meteorIgnoreEntries = getMeteorIgnoreEntries(projectDir);
 
@@ -361,9 +386,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     console.log("[i] Meteor flags:", Meteor);
   }
 
-  const enableSwcExternalHelpers = !isServer && swcExternalHelpers;
   const isDevEnvironment = isRun && isDev && !isTest && !isNative;
-  const swcConfigRule = createSwcConfig({
+  swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
     isReactEnabled,
     isJsxEnabled,
@@ -373,7 +397,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     isClient,
     isAngularEnabled,
   });
-  // Expose swc config to use in custom configs
   Meteor.swcConfigOptions = swcConfigRule.options;
 
   const externals = [
@@ -695,6 +718,13 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           plugins: [new NodePolyfillPlugin()],
         }
       : {};
+
+  // Second pass: re-run only when a mode override was detected, so the user config
+  // can depend on fully-computed Meteor flags and helpers (swcConfigOptions, buildOutputDir, etc.).
+  if (nextUserConfig?.mode || nextOverrideConfig?.mode) {
+    ({ nextUserConfig, nextOverrideConfig } =
+      await loadUserAndOverrideConfig(projectConfigPath, Meteor, argv));
+  }
 
   let config = mergeSplitOverlap(
     isClient ? clientConfig : serverConfig,
