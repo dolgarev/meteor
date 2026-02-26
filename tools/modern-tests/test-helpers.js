@@ -30,12 +30,24 @@ import path from "path";
 import execa from "execa";
 import waitOn from "wait-on";
 
-// Clear NODE_ENV so meteor commands don't inherit any value from the test runner environment
-process.env.NODE_ENV = '';
-
 const isCI = process.env.GITHUB_ACTIONS === "true";
+// Link local npm-packages/meteor-rspack so tests run against the latest dev version.
+// Set NPM_LINK_RSPACK=false to disable.
+const npmLinkLocalRspack = process.env.NPM_LINK_RSPACK !== 'false';
 
 const WAIT_ON = isCI ? 2000 : 500;
+
+async function linkLocalRspack(appDir) {
+  if (!npmLinkLocalRspack) return;
+  const repoRoot = path.resolve(process.cwd(), '..', '..');
+  const rspackPackageDir = path.join(repoRoot, 'npm-packages', 'meteor-rspack');
+  const rspackPkg = JSON.parse(await fs.readFile(path.join(rspackPackageDir, 'package.json'), 'utf8'));
+  console.log(`Installing ${rspackPkg.name}@${rspackPkg.version} in the app...`);
+  await execa('npm', ['install', `${rspackPkg.name}@${rspackPkg.version}`, '--save'], { cwd: appDir });
+  console.log(`Linking local meteor-rspack from ${rspackPackageDir}...`);
+  await execa('npm', ['link', rspackPackageDir], { cwd: appDir });
+  console.log('Local meteor-rspack linked successfully.');
+}
 
 /**
  * Helper function to set up and run tests for the Meteor Bundler
@@ -65,6 +77,9 @@ export function testMeteorBundler(options) {
 
       // Setup the Meteor app
       tempDir = (await setupMeteorApp(appName))?.tempDir;
+
+      // Link local meteor-rspack so the app picks up the latest dev version
+      await linkLocalRspack(tempDir);
     });
 
     afterAll(async () => {
@@ -200,6 +215,10 @@ export function testMeteorRspackBundler(options) {
 
       // Add Rspack package
       appDir = isMonorepo ? path.join(tempDir, 'app') : tempDir;
+
+      // Link local meteor-rspack so the app picks up the latest dev version
+      await linkLocalRspack(appDir);
+
       await runMeteorCommand('add', ['rspack'], appDir, { checkExitCode: true });
 
       // Set meteor.modern.verbose to true
@@ -772,6 +791,9 @@ export function testMeteorSkeleton(options) {
       const packageJsonExists = await fs.pathExists(packageJsonPath);
       expect(packageJsonExists).toBe(true);
 
+      // Link local meteor-rspack so the app picks up the latest dev version
+      await linkLocalRspack(tempDir);
+
       // Run custom assertions if provided
       if (customAssertions.afterCreate) {
         await customAssertions.afterCreate({ tempDir, packageJsonPath });
@@ -855,6 +877,7 @@ export function testMeteorSkeleton(options) {
         stdio: "inherit",
         shell: true
       });
+      await linkLocalRspack(tempDir);
 
       // Run tests once for the app
       const result = await runMeteorTests(tempDir, port, {

@@ -214,6 +214,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTestLike = !!Meteor.isTestLike;
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const isNative = !!Meteor.isNative;
+  const devServerPort = Meteor.devServerPort || 8080;
 
   const projectDir = process.cwd();
   const projectConfigPath =
@@ -224,17 +225,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const outputPath = Meteor.outputPath;
   const outputDir = path.dirname(Meteor.outputPath || "");
   Meteor.buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
-
-  // Defined here so it can be called both before and after the first config load;
-  // without loaded configs it falls through to argv/Meteor flags.
-  const getModeFromConfig = (userConfig = undefined, overrideConfig = undefined) => {
-    if (overrideConfig?.mode) return overrideConfig.mode;
-    if (userConfig?.mode) return userConfig.mode;
-    if (argv.mode) return argv.mode;
-    if (Meteor.isProduction) return "production";
-    if (Meteor.isDevelopment) return "development";
-    return null;
-  };
 
   // Meteor flags derived purely from input; independent of loaded user/override configs
   const isTest = !!Meteor.isTest;
@@ -247,16 +237,33 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTestEager = !!Meteor.isTestEager;
   const isTestFullApp = !!Meteor.isTestFullApp;
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
-  const isJsxEnabled = Meteor.isJsxEnabled || (!isTypescriptEnabled && isReactEnabled) || false;
-  const isTsxEnabled = Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
+  const isJsxEnabled =
+    Meteor.isJsxEnabled || (!isTypescriptEnabled && isReactEnabled) || false;
+  const isTsxEnabled =
+    Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
   const isBundleVisualizerEnabled = Meteor.isBundleVisualizerEnabled || false;
   const isAngularEnabled = Meteor.isAngularEnabled || false;
   const enableSwcExternalHelpers = !isServer && swcExternalHelpers;
 
+  // Defined here so it can be called both before and after the first config load;
+  // without loaded configs it falls through to argv/Meteor flags.
+  const getModeFromConfig = (userConfig, overrideConfig) => {
+    if (overrideConfig?.mode) return overrideConfig.mode;
+    if (userConfig?.mode) return userConfig.mode;
+    if (argv.mode) return argv.mode;
+    if (Meteor.isProduction) return "production";
+    if (Meteor.isDevelopment) return "development";
+    return null;
+  };
+
   // Initial mode before user/override configs are loaded
   const initialCurrentMode = getModeFromConfig();
-  const initialIsProd = initialCurrentMode ? initialCurrentMode === "production" : !!Meteor.isProduction;
-  const initialIsDev = initialCurrentMode ? initialCurrentMode === "development" : !!Meteor.isDevelopment || !initialIsProd;
+  const initialIsProd = initialCurrentMode
+    ? initialCurrentMode === "production"
+    : !!Meteor.isProduction;
+  const initialIsDev = initialCurrentMode
+    ? initialCurrentMode === "development"
+    : !!Meteor.isDevelopment || !initialIsProd;
   const initialMode = initialIsProd ? "production" : "development";
 
   // Initialized with pre-load values so helpers work during the first config load;
@@ -319,8 +326,10 @@ module.exports = async function (inMeteor = {}, argv = {}) {
 
   // First pass: resolve user/override configs early so mode overrides (e.g. "production")
   // are available before computing isProd/isDev and the rest of the build flags.
-  let { nextUserConfig, nextOverrideConfig } =
-    await loadUserAndOverrideConfig(projectConfigPath, Meteor, argv);
+  // Skipped for Angular since it manages its own mode via the second pass.
+  let { nextUserConfig, nextOverrideConfig } = isAngularEnabled
+    ? {}
+    : await loadUserAndOverrideConfig(projectConfigPath, Meteor, argv);
 
   // Determine the final mode with loaded configs
   const currentMode = getModeFromConfig(nextUserConfig, nextOverrideConfig);
@@ -586,7 +595,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         hot: true,
         liveReload: true,
         ...(Meteor.isBlazeEnabled && { hot: false }),
-        port: Meteor.devServerPort || 8080,
+        port: devServerPort,
         devMiddleware: {
           writeToDisk: (filePath) =>
             /\.(html)$/.test(filePath) && !filePath.includes(".hot-update."),
@@ -692,7 +701,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const angularExpandConfig = isAngularEnabled
     ? {
         mode: isProd ? "production" : "development",
-        devServer: { port: Meteor.devServerPort },
+        devServer: { port: devServerPort },
         stats: { preset: "normal" },
         infrastructureLogging: { level: "info" },
         ...(isProd && isClient && { output: { module: false } }),
@@ -719,22 +728,23 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         }
       : {};
 
+
   // Second pass: re-run only when a mode override was detected, so the user config
   // can depend on fully-computed Meteor flags and helpers (swcConfigOptions, buildOutputDir, etc.).
-  if (nextUserConfig?.mode || nextOverrideConfig?.mode) {
-    ({ nextUserConfig, nextOverrideConfig } =
-      await loadUserAndOverrideConfig(projectConfigPath, Meteor, argv));
+  if (nextUserConfig?.mode || nextOverrideConfig?.mode || isAngularEnabled) {
+    ({ nextUserConfig, nextOverrideConfig } = await loadUserAndOverrideConfig(
+      projectConfigPath,
+      Meteor,
+      argv
+    ));
   }
-
-  let config = mergeSplitOverlap(
-    isClient ? clientConfig : serverConfig,
-    angularExpandConfig
-  );
-  config = mergeSplitOverlap(config, testClientExpandConfig);
-
+  let config = isClient ? clientConfig : serverConfig;
   if (nextUserConfig) {
     config = mergeSplitOverlap(config, nextUserConfig);
   }
+
+  config = mergeSplitOverlap(config, angularExpandConfig);
+  config = mergeSplitOverlap(config, testClientExpandConfig);
 
   if (nextOverrideConfig) {
     config = mergeSplitOverlap(config, nextOverrideConfig);
@@ -746,9 +756,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     delete config.disablePlugins;
   }
 
-  if (Meteor.isDebug || Meteor.isVerbose) {
+  // if (Meteor.isDebug || Meteor.isVerbose) {
     console.log("Config:", inspect(config, { depth: null, colors: true }));
-  }
+  // }
 
   // Check if lazyCompilation is enabled and warn the user
   if (
