@@ -42,6 +42,24 @@ async function linkLocalRspack(appDir) {
   const repoRoot = path.resolve(process.cwd(), '..', '..');
   const rspackPackageDir = path.join(repoRoot, 'npm-packages', 'meteor-rspack');
   const rspackPkg = JSON.parse(await fs.readFile(path.join(rspackPackageDir, 'package.json'), 'utf8'));
+  const constantsPath = path.join(repoRoot, 'packages', 'rspack', 'lib', 'constants.js');
+  const constantsContent = await fs.readFile(constantsPath, 'utf8');
+  const rspackVersionMatch = constantsContent.match(/DEFAULT_RSPACK_VERSION\s*=\s*['"]([^'"]+)['"]/);
+  const rspackVersion = rspackVersionMatch?.[1];
+  if (rspackVersion) {
+    console.log(`Installing @rspack/core@${rspackVersion} and @rspack/cli@${rspackVersion}...`);
+    await execa(
+      "npm",
+      [
+        "install",
+        `@rspack/core@${rspackVersion}`,
+        `@rspack/cli@${rspackVersion}`,
+        "--no-save",
+        "--no-package-lock",
+      ],
+      { cwd: rspackPackageDir }
+    );
+  }
   console.log(`Installing ${rspackPkg.name}@${rspackPkg.version} in the app...`);
   await execa('npm', ['install', `${rspackPkg.name}@${rspackPkg.version}`, '--save'], { cwd: appDir });
   console.log(`Linking local meteor-rspack from ${rspackPackageDir}...`);
