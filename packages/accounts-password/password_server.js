@@ -472,7 +472,7 @@ Meteor.methods(
 Accounts.setPasswordAsync =
   async (userId, newPlaintextPassword, options) => {
     check(userId, String);
-    check(newPlaintextPassword, Match.Where(str => Match.test(str, String) && str.length <= Meteor.settings?.packages?.accounts?.passwordMaxLength || 256));
+    check(newPlaintextPassword, Match.Where(str => Match.test(str, String) && str.length <= (Meteor.settings?.packages?.accounts?.passwordMaxLength || 256)));
     check(options, Match.Maybe({ logout: Boolean }));
     options = { logout: true, ...options };
 
