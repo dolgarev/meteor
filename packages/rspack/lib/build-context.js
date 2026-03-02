@@ -89,6 +89,7 @@ export function ensureRspackBuildContextExists() {
       `*/${RSPACK_ASSETS_CONTEXT}`,
       `*/${RSPACK_CHUNKS_CONTEXT}`,
       RSPACK_DOCTOR_CONTEXT,
+      ...(process.env.METEOR_LOCAL_DIR ? [process.env.METEOR_LOCAL_DIR] : []),
     ],
     'Meteor Modern-Tools build context directories',
   );

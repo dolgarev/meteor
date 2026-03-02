@@ -9,7 +9,7 @@ import {
 import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
 import fs from 'fs-extra';
 import path from 'path';
-import { assertMeteorReactApp, assertConsoleEval } from "./assertions";
+import { assertMeteorReactApp, assertConsoleEval, assertFileExist } from "./assertions";
 
 describe('React App Bundling /', () => {
 
@@ -86,6 +86,8 @@ describe('React App Bundling /', () => {
 
           expect(await fs.pathExists(buildDir)).toBe(true);
           expect(await fs.pathExists(localDir)).toBe(true);
+
+          await assertFileExist(appDir, '.gitignore', { content: '.meteor/local-custom' });
 
           await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
 
