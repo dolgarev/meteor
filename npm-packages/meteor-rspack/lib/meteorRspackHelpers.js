@@ -202,6 +202,12 @@ function disablePlugins(config, matchers) {
   return config;
 }
 
+function outputMeteorRspack(data) {
+  const jsonString = JSON.stringify(data);
+  const output = `[Meteor-Rspack]${jsonString}[/Meteor-Rspack]`;
+  console.log(output);
+}
+
 module.exports = {
   compileWithMeteor,
   compileWithRspack,
@@ -210,4 +216,5 @@ module.exports = {
   extendSwcConfig,
   makeWebNodeBuiltinsAlias,
   disablePlugins,
+  outputMeteorRspack,
 };

@@ -10,6 +10,7 @@ const { getMeteorAppSwcConfig } = require('./lib/swc.js');
 const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
 const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
 const { AssetExternalsPlugin } = require('./plugins/AssetExternalsPlugin.js');
+const { MeteorRspackOutputPlugin } = require('./plugins/MeteorRspackOutputPlugin.js');
 const { generateEagerTestFile } = require("./lib/test.js");
 const { getMeteorIgnoreEntries, createIgnoreGlobConfig } = require("./lib/ignore");
 const { mergeMeteorRspackFragments } = require("./lib/meteorRspackConfigFactory.js");
@@ -21,6 +22,7 @@ const {
   extendSwcConfig,
   makeWebNodeBuiltinsAlias,
   disablePlugins,
+  outputMeteorRspack,
 } = require('./lib/meteorRspackHelpers.js');
 const { prepareMeteorRspackConfig } = require("./lib/meteorRspackConfigFactory");
 
@@ -225,6 +227,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTestLike = !!Meteor.isTestLike;
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const isNative = !!Meteor.isNative;
+  const isProfile = !!Meteor.isProfile;
+  const isVerbose = !!Meteor.isVerbose;
   const mode = isProd ? 'production' : 'development';
   const projectDir = process.cwd();
   const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
@@ -427,6 +431,10 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     : [];
   // Not supported in Meteor yet (Rspack 1.7+ is enabled by default)
   const lazyCompilationConfig = { lazyCompilation: false };
+  const shouldLogVerbose = isProfile || isVerbose;
+  const loggingConfig = shouldLogVerbose
+    ? {}
+    : { stats: "errors-warnings", infrastructureLogging: { level: "warn" } };
 
   const clientEntry =
     isClient && isTest && isTestEager && isTestFullApp
@@ -545,10 +553,18 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           writeToDisk: filePath =>
             /\.(html)$/.test(filePath) && !filePath.includes('.hot-update.'),
         },
+        onListening(devServer) {
+          if (!devServer) return;
+          const { host, port } = devServer.options;
+          const protocol = devServer.options.server?.type === "https" ? "https" : "http";
+          const devServerUrl = `${protocol}://${host || "localhost"}:${port}`;
+          outputMeteorRspack({ devServerUrl });
+        },
       },
     }),
     ...merge(cacheStrategy, { experiments: { css: true } }),
     ...lazyCompilationConfig,
+    ...loggingConfig,
   };
 
   const serverEntry =
@@ -639,6 +655,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     ...((isDevEnvironment || (isTest && !isTestEager) || isNative) &&
       cacheStrategy),
     ...lazyCompilationConfig,
+    ...loggingConfig,
   };
 
   // Helper function to load and process config files
@@ -698,6 +715,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   // Load and apply project-level overrides for the selected build
   // Check if we're in a Meteor package directory by looking at the path
   const isMeteorPackageConfig = projectDir.includes('/packages/rspack');
+  // Track if user config overrides stats and infrastructureLogging
+  let statsOverrided = false;
   if (fs.existsSync(projectConfigPath) && !isMeteorPackageConfig) {
     // Check if there's a .mjs or .cjs version of the config file
     const mjsConfigPath = projectConfigPath.replace(/\.js$/, '.mjs');
@@ -718,7 +737,11 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       isAngularEnabled
     );
 
+    // Track if user config overrides stats
     if (nextUserConfig) {
+      if (nextUserConfig.stats != null) {
+        statsOverrided = true;
+      }
       if (Meteor.isClient) {
         clientConfig = mergeSplitOverlap(clientConfig, nextUserConfig);
       }
@@ -808,6 +831,21 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         '   If you encounter any issues, please disable it in your rspack config.\n',
     );
   }
+
+  // Add MeteorRspackOutputPlugin as the last plugin to output compilation info
+  const meteorRspackOutputPlugin = new MeteorRspackOutputPlugin({
+    getData: (stats, { isRebuild, compilationCount }) => ({
+      name: config.name,
+      mode: config.mode,
+      hasErrors: stats.hasErrors(),
+      hasWarnings: stats.hasWarnings(),
+      timestamp: Date.now(),
+      statsOverrided,
+      compilationCount,
+      isRebuild,
+    }),
+  });
+  config.plugins = [meteorRspackOutputPlugin, ...(config.plugins || [])];
 
   return [config];
 }

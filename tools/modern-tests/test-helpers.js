@@ -513,7 +513,7 @@ export function testMeteorRspackBundler(options) {
         waitForOutput: skipTestClient
           ? 'TEST_CLIENT=0'
           : '=> App running at',
-        commandOptions: testFullApp ? ["--full-app"] : [],
+        commandOptions: testFullApp ? ['--full-app'] : [],
         checkTestResults: false,
         isMonorepo,
         testClient: !skipTestClient,

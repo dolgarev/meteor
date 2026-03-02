@@ -162,14 +162,45 @@ You can use flags to control the final configuration based on the environment. T
 
 Some configurations in the Rspack config are reserved for the Meteor-Rspack setup to work, such as Rspack options inside the `entry` and `output` objects. These will trigger warnings if modified. All other settings can be overridden, giving you the flexibility to make any setup compatible with the modern bundler.
 
-If you want to see the final Rspack config applying your overrides, you can enable verbose mode in the modern build stack.
+If you want to see the final Rspack config applying your overrides, you can enable [verbose mode](#enable-verbose-mode) in the modern build stack.
+
+## Logging
+
+Starting with Meteor 3.4.1, the log output for the default Meteor-Rspack app is simplified to stay as close as possible to Meteor's native experience. By default, logs are less verbose and only show essential information like server restarts and client modifications.
+
+If there are any compilation warnings or errors, Rspack logs will be shown with their own style and colors.
+
+### Enable Verbose Mode
+
+If you need more details about Meteor and Rspack processes, you can enable verbose mode in your `package.json`:
 
 ```json
-"meteor": {
-  "modern": {
-    "verbose": true
+{
+  "meteor": {
+    "modern": {
+      "verbose": true
+    }
   }
 }
+```
+
+### Advanced Rspack Logging
+
+For even deeper insights into the Rspack compilation process, you can configure [`stats`](https://rspack.rs/config/stats#stats) and [`infrastructureLogging`](https://rspack.rs/config/infrastructure-logging#infrastructurelogging) directly in your `rspack.config.js`.
+
+- **`stats`**: Controls what bundle information is displayed on each compilation.
+- **`infrastructureLogging`**: Controls Rspack infrastructure logs, including HMR verbosity in both the terminal and the browser. To enable detailed logs for updates and serving client code changes, set `infrastructureLogging.level` to `'info'` or higher (it is not enabled by default).
+
+```javascript
+module.exports = defineConfig(Meteor => {
+  return {
+    stats: 'detailed', // or other Rspack stats options
+    infrastructureLogging: {
+      level: 'info',
+    },
+    // ... rest of your config
+  };
+});
 ```
 
 ## Migration Topics
@@ -232,15 +263,7 @@ if (condition) {
 
 For background, see: [Why nested import](https://github.com/benjamn/reify/blob/main/WHY_NEST_IMPORTS.md).
 
-To use Rspack, migrate your nested imports to a standard form. To identify and fix nested imports in your project, [use verbose mode in Meteor 3.3’s modern transpiler](./meteor-bundler-optimizations.md#optimize-swc-and-handle-fallbacks). Enable it with:
-
-```json  
-"meteor": {
-  "modern": {
-    "verbose": true
-  }
-}
-```
+To use Rspack, migrate your nested imports to a standard form. To identify and fix nested imports in your project, use [verbose mode](#enable-verbose-mode) to see which files are failing.
 
 When you run your app, `[Transpiler]` logs will show each file. Focus on `(app)` files that fail with messages like:
 
@@ -671,7 +694,7 @@ Meteor cache remains active and continues to handle Atmosphere packages and inte
 
 This Rspack cache is enabled by default in persistent mode. If you [encounter issues](https://github.com/web-infra-dev/rspack/issues/11804) or prefer to disable it, you can do so in your `rspack.config.js` using the helper:
 
-```json
+```javascript
 const { defineConfig } = require('@meteorjs/rspack');
 const { rspack } = require('@rspack/core');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');

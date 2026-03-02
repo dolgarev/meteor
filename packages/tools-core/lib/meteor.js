@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { logError } = require('./log');
 
 /**
  * Returns the current working directory of the Meteor application.
@@ -293,6 +294,14 @@ export function isMeteorAppDebug() {
 }
 
 /**
+ * Checks if the Meteor application is running with METEOR_PROFILE enabled.
+ * @returns {boolean} True if METEOR_PROFILE is set, false otherwise.
+ */
+export function isMeteorAppProfile() {
+  return !!process.env.METEOR_PROFILE;
+}
+
+/**
  * Sets a custom script URL for the Meteor application in the environment variable.
  * @param {string} scriptUrl - The URL of the custom script.
  */
@@ -383,11 +392,11 @@ export function getMeteorAppFilesAndFolders(options = {}) {
           }
         } catch (error) {
           // Skip items that can't be accessed
-          console.error(`Error accessing ${itemPath}: ${error.message}`);
+          logError(`=> Failed to access ${itemPath}: ${error.message}`);
         }
       }
     } catch (error) {
-      console.error(`Error reading directory ${dirPath}: ${error.message}`);
+      logError(`=> Failed to read directory ${dirPath}: ${error.message}`);
     }
 
     return result;
