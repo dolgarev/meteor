@@ -255,6 +255,7 @@ async function injectNpmScripts(packageJsonPath, envVars = {}) {
   }
 
   pkg.scripts = scripts;
+  pkg.meteor = { ...meteorConfig, modern: { verbose: true } };
   await fs.writeJson(packageJsonPath, pkg, { spaces: 2 });
 }
 
