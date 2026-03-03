@@ -364,18 +364,23 @@ async function setupFromApp(appName, destDir, { isMonorepo = false, force = fals
     stdio: 'inherit',
   });
 
+  log.step('Updating Meteor npm dependencies...');
+  await execa(METEOR_EXECUTABLE, ['update', '--npm'], {
+    cwd: meteorAppDir,
+    stdio: 'inherit',
+  });
+
   if (isMonorepo) {
-    log.step('Running npm install at root level...');
-    await execa.command('npm install', { cwd: destDir, stdio: 'inherit', shell: true });
-    log.step('Running npm install at app level...');
-    await execa.command('npm install', {
+    log.step('Running meteor npm install at root level...');
+    await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit' });
+    log.step('Running meteor npm install at app level...');
+    await execa(METEOR_EXECUTABLE, ['npm', 'install'], {
       cwd: path.join(destDir, 'app'),
       stdio: 'inherit',
-      shell: true,
     });
   } else {
-    log.step('Running npm install...');
-    await execa.command('npm install', { cwd: destDir, stdio: 'inherit', shell: true });
+    log.step('Running meteor npm install...');
+    await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit' });
   }
 
   return { destDir, appPackageJsonPath };
@@ -409,6 +414,15 @@ async function setupFromSkeleton(skeletonName, destDir, { force = false } = {}) 
     cwd: destDir,
     stdio: 'inherit',
   });
+
+  log.step('Updating Meteor npm dependencies...');
+  await execa(METEOR_EXECUTABLE, ['update', '--npm'], {
+    cwd: destDir,
+    stdio: 'inherit',
+  });
+
+  log.step('Running meteor npm install...');
+  await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit' });
 
   const appPackageJsonPath = path.join(destDir, 'package.json');
 
