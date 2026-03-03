@@ -376,7 +376,7 @@ export function startRspackClientServe(options = {}) {
         if (config && !!config?.devServerUrl) {
           logHmrServerStarted(config);
         }
-        if (config && (config?.compilationCount || 0) > 0) {
+        if (onCompile && config && (config?.compilationCount || 0) > 0) {
           onCompile(cleanedData, config);
 
           if (
@@ -475,7 +475,7 @@ export function startRspackServerWatch(options = {}) {
     env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
     onStdout: (data) => {
       const { cleanedData, config } = parseMeteorRspackOutput(data);
-      if (config && (config?.compilationCount || 0) > 0) {
+      if (onCompile && config && (config?.compilationCount || 0) > 0) {
         onCompile(cleanedData, config);
       }
       if (!cleanedData) return;
@@ -566,7 +566,7 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
       env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
       onStdout: (data) => {
         const { cleanedData, config } = parseMeteorRspackOutput(data);
-        if (onCompile) {
+        if (onCompile && config && (config?.compilationCount || 0) > 0) {
           onCompile(cleanedData, config);
         }
         if (!cleanedData) return;

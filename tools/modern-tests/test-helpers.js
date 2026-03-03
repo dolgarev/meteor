@@ -174,6 +174,8 @@ export function testMeteorRspackBundler(options) {
     skipClient = false,
     // Whether to skip client-side tests
     skipTestClient = false,
+    // Custom environment variables
+    env = {},
   } = options;
 
   return () => {
@@ -215,7 +217,8 @@ export function testMeteorRspackBundler(options) {
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
         isMonorepo,
-        skipWaitOn: skipClient
+        skipWaitOn: skipClient,
+        env,
       });
       meteorProcess = result.meteorProcess;
 
@@ -258,7 +261,8 @@ export function testMeteorRspackBundler(options) {
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
         isMonorepo,
-        skipWaitOn: skipClient
+        skipWaitOn: skipClient,
+        env,
       });
       meteorProcess = result.meteorProcess;
 
@@ -354,7 +358,8 @@ export function testMeteorRspackBundler(options) {
         waitForOutput: "=> App running at",
         commandOptions: ['--production'],
         isMonorepo,
-        skipWaitOn: skipClient
+        skipWaitOn: skipClient,
+        env,
       });
       meteorProcess = result.meteorProcess;
 

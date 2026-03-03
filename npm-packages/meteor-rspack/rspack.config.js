@@ -42,7 +42,11 @@ function safeRequire(moduleName) {
 }
 
 // Persistent filesystem cache strategy
-function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {}) {
+function createCacheStrategy(
+  mode,
+  side,
+  { projectConfigPath, configPath, buildContext } = {},
+) {
   // Check for configuration files
   const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
   const hasTsconfig = fs.existsSync(tsconfigPath);
@@ -83,7 +87,9 @@ function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {})
         type: "persistent",
         storage: {
           type: "filesystem",
-          directory: `node_modules/.cache/rspack${(side && `/${side}`) || ""}`,
+          directory: `node_modules/.cache/rspack/${
+            [buildContext, side].filter(Boolean).join('-') || 'default'
+          }`,
         },
         ...(buildDependencies.length > 0 && {
           buildDependencies: buildDependencies,
@@ -263,9 +269,21 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const serverOutputDir = path.resolve(projectDir, 'private');
 
   // Determine context for bundles and assets
-  const buildContext = Meteor.buildContext || '_build';
-  const assetsContext = Meteor.assetsContext || 'build-assets';
-  const chunksContext = Meteor.chunksContext || 'build-chunks';
+  const meteorLocalDirName = process.env.METEOR_LOCAL_DIR
+    ? path.basename(process.env.METEOR_LOCAL_DIR.replace(/\\/g, '/'))
+    : '';
+  const buildContext =
+    Meteor.buildContext ||
+    process.env.RSPACK_BUILD_CONTEXT ||
+    `_build${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
+  const assetsContext =
+    Meteor.assetsContext ||
+    process.env.RSPACK_ASSETS_CONTEXT ||
+    `build-assets${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
+  const chunksContext =
+    Meteor.chunksContext ||
+    process.env.RSPACK_CHUNKS_CONTEXT ||
+    `build-chunks${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
 
   // Determine build output and pass to Meteor
   const buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
@@ -274,7 +292,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const cacheStrategy = createCacheStrategy(
     mode,
     (Meteor.isClient && 'client') || 'server',
-    { projectConfigPath, configPath }
+    { projectConfigPath, configPath, buildContext }
   );
 
   // Expose Meteor's helpers to expand Rspack configs
