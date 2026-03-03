@@ -347,40 +347,44 @@ async function setupFromApp(appName, destDir, { isMonorepo = false, force = fals
     : path.join(destDir, 'package.json');
 
   const envVars = extractEnvVarsFromTestFile(appName, true);
-
-  if (fs.existsSync(appPackageJsonPath)) {
-    log.step('Injecting npm scripts into package.json...');
-    if (Object.keys(envVars).length > 0) {
-      log.detail(`env from test file: ${c.magenta}${Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' ')}${c.reset}`);
-    }
-    await injectNpmScripts(appPackageJsonPath, envVars);
+  if (Object.keys(envVars).length > 0) {
+    log.detail(`env from test file: ${c.magenta}${Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' ')}${c.reset}`);
   }
 
   const meteorAppDir = isMonorepo ? path.join(destDir, 'app') : destDir;
+  const execEnv = Object.keys(envVars).length > 0 ? { env: { ...process.env, ...envVars } } : {};
 
   log.step('Adding rspack package...');
   await execa(METEOR_EXECUTABLE, ['add', 'rspack'], {
     cwd: meteorAppDir,
     stdio: 'inherit',
+    ...execEnv,
   });
 
   log.step('Updating Meteor npm dependencies...');
   await execa(METEOR_EXECUTABLE, ['update', '--npm'], {
     cwd: meteorAppDir,
     stdio: 'inherit',
+    ...execEnv,
   });
 
   if (isMonorepo) {
     log.step('Running meteor npm install at root level...');
-    await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit' });
+    await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit', ...execEnv });
     log.step('Running meteor npm install at app level...');
     await execa(METEOR_EXECUTABLE, ['npm', 'install'], {
       cwd: path.join(destDir, 'app'),
       stdio: 'inherit',
+      ...execEnv,
     });
   } else {
     log.step('Running meteor npm install...');
-    await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit' });
+    await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit', ...execEnv });
+  }
+
+  if (fs.existsSync(appPackageJsonPath)) {
+    log.step('Injecting npm scripts into package.json...');
+    await injectNpmScripts(appPackageJsonPath, envVars);
   }
 
   return { destDir, appPackageJsonPath };
@@ -409,30 +413,33 @@ async function setupFromSkeleton(skeletonName, destDir, { force = false } = {}) 
     stdio: 'inherit',
   });
 
+  const appPackageJsonPath = path.join(destDir, 'package.json');
+
+  const envVars = extractEnvVarsFromTestFile(skeletonName, false);
+  if (Object.keys(envVars).length > 0) {
+    log.detail(`env from test file: ${c.magenta}${Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' ')}${c.reset}`);
+  }
+  const execEnv = Object.keys(envVars).length > 0 ? { env: { ...process.env, ...envVars } } : {};
+
   log.step('Adding rspack package...');
   await execa(METEOR_EXECUTABLE, ['add', 'rspack'], {
     cwd: destDir,
     stdio: 'inherit',
+    ...execEnv,
   });
 
   log.step('Updating Meteor npm dependencies...');
   await execa(METEOR_EXECUTABLE, ['update', '--npm'], {
     cwd: destDir,
     stdio: 'inherit',
+    ...execEnv,
   });
 
   log.step('Running meteor npm install...');
-  await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit' });
-
-  const appPackageJsonPath = path.join(destDir, 'package.json');
-
-  const envVars = extractEnvVarsFromTestFile(skeletonName, false);
+  await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit', ...execEnv });
 
   if (fs.existsSync(appPackageJsonPath)) {
     log.step('Injecting npm scripts into package.json...');
-    if (Object.keys(envVars).length > 0) {
-      log.detail(`env from test file: ${c.magenta}${Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' ')}${c.reset}`);
-    }
     await injectNpmScripts(appPackageJsonPath, envVars);
   }
 
