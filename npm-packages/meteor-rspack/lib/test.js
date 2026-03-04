@@ -9,6 +9,7 @@ const { createIgnoreRegex, createIgnoreGlobConfig } = require("./ignore.js");
  * @param {string} options.projectDir - The project directory
  * @param {string} options.buildContext - The build context
  * @param {string[]} options.ignoreEntries - Array of ignore patterns
+ * @param {string[]} options.meteorIgnoreEntries - Array of meteor ignore patterns
  * @param {string} options.extraEntry - Extra entry to load
  * @returns {string} The path to the generated file
  */
@@ -17,6 +18,7 @@ const generateEagerTestFile = ({
   projectDir,
   buildContext,
   ignoreEntries: inIgnoreEntries = [],
+  meteorIgnoreEntries: inMeteorIgnoreEntries = [],
   prefix: inPrefix = '',
   extraEntry,
   globalImportPath,
@@ -40,6 +42,11 @@ const generateEagerTestFile = ({
   const excludeFoldersRegex = createIgnoreRegex(
     createIgnoreGlobConfig(ignoreEntries)
   );
+  console.log("inMeteorIgnoreEntries", inMeteorIgnoreEntries);
+  // Create regex from meteor ignore entries
+  const excludeMeteorIgnoreRegex = inMeteorIgnoreEntries.length > 0
+    ? createIgnoreRegex(createIgnoreGlobConfig(inMeteorIgnoreEntries))
+    : null;
 
   const prefix = (inPrefix && `${inPrefix}-`) || "";
   const filename = isAppTest
@@ -51,15 +58,27 @@ const generateEagerTestFile = ({
     : "/\\.(?:test|spec)s?\\.[^.]+$/";
 
   const content = `${
-    globalImportPath ? `import '${globalImportPath}';\n\n` : ''
-  }{
-  const ctx = import.meta.webpackContext('/', {
+    globalImportPath ? `import '${globalImportPath}';\n\n` : ""
+  }${
+    excludeMeteorIgnoreRegex
+      ? `const MeteorIgnoreRegex = ${excludeMeteorIgnoreRegex.toString()};`
+      : ""
+  }
+{
+  const ctx = import.meta.webpackContext('${projectDir}', {
     recursive: true,
     regExp: ${regExp},
     exclude: ${excludeFoldersRegex.toString()},
     mode: 'eager',
   });
-  ctx.keys().forEach(ctx);
+  ctx.keys().filter((k) => {
+    ${
+      excludeMeteorIgnoreRegex
+        ? `// Only exclude based on *relative* path segments.
+    return !MeteorIgnoreRegex.test(k);`
+        : "return true;"
+    }
+  }).forEach(ctx);
   ${
     extraEntry
       ? `const extra = import.meta.webpackContext('${path.dirname(

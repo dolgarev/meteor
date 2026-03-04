@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { logError } = require('./log');
 
 /**
  * Returns the current working directory of the Meteor application.
@@ -299,6 +300,14 @@ export function isMeteorAppDebug() {
 }
 
 /**
+ * Checks if the Meteor application is running with METEOR_PROFILE enabled.
+ * @returns {boolean} True if METEOR_PROFILE is set, false otherwise.
+ */
+export function isMeteorAppProfile() {
+  return !!process.env.METEOR_PROFILE;
+}
+
+/**
  * Sets a custom script URL for the Meteor application in the environment variable.
  * @param {string} scriptUrl - The URL of the custom script.
  */
@@ -389,11 +398,11 @@ export function getMeteorAppFilesAndFolders(options = {}) {
           }
         } catch (error) {
           // Skip items that can't be accessed
-          console.error(`Error accessing ${itemPath}: ${error.message}`);
+          logError(`=> Failed to access ${itemPath}: ${error.message}`);
         }
       }
     } catch (error) {
-      console.error(`Error reading directory ${dirPath}: ${error.message}`);
+      logError(`=> Failed to read directory ${dirPath}: ${error.message}`);
     }
 
     return result;
@@ -492,4 +501,37 @@ export function getMeteorEnvPackageDirs() {
     // PACKAGE_DIRS (deprecated) always used ':' separator (yes, even Windows)
     ...(packageDirsFromEnvVar('PACKAGE_DIRS', ':')),
   ];
+}
+
+/**
+ * Spreads Meteor's TOOL_NODE_FLAGS to NODE_OPTIONS for proper inheritance
+ * of Meteor-specific tool environment process variables.
+ * Only spreads if TOOL_NODE_FLAGS_INHERIT is truthy (enabled by default).
+ * @param {Object} env - The current environment variables
+ * @returns {Object} The updated environment variables with NODE_OPTIONS
+ */
+export function inheritMeteorToolNodeFlags(env = {}) {
+  const toolFlags = env.TOOL_NODE_FLAGS;
+  if (!toolFlags) {
+    return env;
+  }
+
+  // Check if spreading is enabled (default: true)
+  // Only disable if TOOL_NODE_FLAGS_INHERIT is explicitly set to a falsy value
+  // Treat "0" as falsy for this specific case
+  const shouldSpread = env.TOOL_NODE_FLAGS_INHERIT !== undefined 
+    ? (env.TOOL_NODE_FLAGS_INHERIT !== "0" && !!env.TOOL_NODE_FLAGS_INHERIT)
+    : true;
+
+  if (!shouldSpread) {
+    return env;
+  }
+
+  return {
+    ...env,
+    NODE_OPTIONS: [toolFlags, env.NODE_OPTIONS]
+      .filter(Boolean)
+      .map(s => s.trim())
+      .join(' '),
+  };
 }

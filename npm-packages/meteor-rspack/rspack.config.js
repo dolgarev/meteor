@@ -10,6 +10,7 @@ const { getMeteorAppSwcConfig } = require('./lib/swc.js');
 const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
 const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
 const { AssetExternalsPlugin } = require('./plugins/AssetExternalsPlugin.js');
+const { MeteorRspackOutputPlugin } = require('./plugins/MeteorRspackOutputPlugin.js');
 const { generateEagerTestFile } = require("./lib/test.js");
 const { getMeteorIgnoreEntries, createIgnoreGlobConfig } = require("./lib/ignore");
 const {
@@ -20,6 +21,7 @@ const {
   extendSwcConfig,
   makeWebNodeBuiltinsAlias,
   disablePlugins,
+  outputMeteorRspack,
   enablePortableBuild,
 } = require('./lib/meteorRspackHelpers.js');
 const { loadUserAndOverrideConfig } = require('./lib/meteorRspackConfigHelpers.js');
@@ -41,7 +43,11 @@ function safeRequire(moduleName) {
 }
 
 // Persistent filesystem cache strategy
-function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {}) {
+function createCacheStrategy(
+  mode,
+  side,
+  { projectConfigPath, configPath, buildContext } = {},
+) {
   // Check for configuration files
   const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
   const hasTsconfig = fs.existsSync(tsconfigPath);
@@ -82,7 +88,9 @@ function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {})
         type: "persistent",
         storage: {
           type: "filesystem",
-          directory: `node_modules/.cache/rspack${(side && `/${side}`) || ""}`,
+          directory: `node_modules/.cache/rspack/${
+            [buildContext, side].filter(Boolean).join('-') || 'default'
+          }`,
         },
         ...(buildDependencies.length > 0 && {
           buildDependencies: buildDependencies,
@@ -237,6 +245,11 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTestModule = !!Meteor.isTestModule;
   const isTestEager = !!Meteor.isTestEager;
   const isTestFullApp = !!Meteor.isTestFullApp;
+  const isProfile = !!Meteor.isProfile;
+  const isVerbose = !!Meteor.isVerbose;
+  const configPath = Meteor.configPath;
+  const testEntry = Meteor.testEntry;
+
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
     Meteor.isJsxEnabled || (!isTypescriptEnabled && isReactEnabled) || false;
@@ -267,12 +280,29 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     : !!Meteor.isDevelopment || !initialIsProd;
   const initialMode = initialIsProd ? "production" : "development";
 
+  // Determine context for bundles and assets
+  const meteorLocalDirName = process.env.METEOR_LOCAL_DIR
+    ? path.basename(process.env.METEOR_LOCAL_DIR.replace(/\\/g, '/'))
+    : '';
+  const buildContext =
+    Meteor.buildContext ||
+    process.env.RSPACK_BUILD_CONTEXT ||
+    `_build${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
+  const assetsContext =
+    Meteor.assetsContext ||
+    process.env.RSPACK_ASSETS_CONTEXT ||
+    `build-assets${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
+  const chunksContext =
+    Meteor.chunksContext ||
+    process.env.RSPACK_CHUNKS_CONTEXT ||
+    `build-chunks${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
+
   // Initialized with pre-load values so helpers work during the first config load;
   // reassigned after load once mode is fully resolved.
   let cacheStrategy = createCacheStrategy(
     initialMode,
-    (isClient && "client") || "server",
-    { projectConfigPath, configPath: Meteor.configPath }
+    (Meteor.isClient && 'client') || 'server',
+    { projectConfigPath, configPath, buildContext  }
   );
   let swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
@@ -346,18 +376,12 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     nextUserConfig?.["meteor.enablePortableBuild"] ||
     nextOverrideConfig?.["meteor.enablePortableBuild"]
   );
-  const configPath = Meteor.configPath;
-  const testEntry = Meteor.testEntry;
 
   // Determine entry points
   const entryPath = Meteor.entryPath || "";
 
   // Determine output points
   const outputFilename = Meteor.outputFilename;
-
-  // Determine context for bundles and assets
-  const assetsContext = Meteor.assetsContext || "build-assets";
-  const chunksContext = Meteor.chunksContext || "build-chunks";
 
   cacheStrategy = createCacheStrategy(
     mode,
@@ -487,6 +511,10 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     : [];
   // Not supported in Meteor yet (Rspack 1.7+ is enabled by default)
   const lazyCompilationConfig = { lazyCompilation: false };
+  const shouldLogVerbose = isProfile || isVerbose;
+  const loggingConfig = shouldLogVerbose
+    ? {}
+    : { stats: "errors-warnings", infrastructureLogging: { level: "warn" } };
 
   const clientEntry =
     isClient && isTest && isTestEager && isTestFullApp
@@ -494,7 +522,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isAppTest: true,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, "**/server/**"],
+          ignoreEntries: ["**/server/**"],
+          meteorIgnoreEntries,
           prefix: "client",
           extraEntry: path.resolve(process.cwd(), Meteor.mainClientEntry),
           globalImportPath: path.resolve(projectDir, buildContext, entryPath),
@@ -505,7 +534,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isClient: true,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, "**/server/**"],
+          ignoreEntries: ["**/server/**"],
+          meteorIgnoreEntries,
           prefix: "client",
           globalImportPath: path.resolve(projectDir, buildContext, entryPath),
         })
@@ -608,10 +638,18 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           writeToDisk: (filePath) =>
             /\.(html)$/.test(filePath) && !filePath.includes(".hot-update."),
         },
+        onListening(devServer) {
+          if (!devServer) return;
+          const { host, port } = devServer.options;
+          const protocol = devServer.options.server?.type === "https" ? "https" : "http";
+          const devServerUrl = `${protocol}://${host || "localhost"}:${port}`;
+          outputMeteorRspack({ devServerUrl });
+        },
       },
     }),
     ...merge(cacheStrategy, { experiments: { css: true } }),
     ...lazyCompilationConfig,
+    ...loggingConfig,
   };
 
   const serverEntry =
@@ -620,7 +658,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isAppTest: true,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, "**/client/**"],
+          ignoreEntries: ["**/client/**"],
+          meteorIgnoreEntries,
           prefix: "server",
           globalImportPath: path.resolve(projectDir, buildContext, entryPath),
         })
@@ -629,7 +668,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isAppTest: false,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, "**/client/**"],
+          ignoreEntries: ["**/client/**"],
+          meteorIgnoreEntries,
           prefix: "server",
           globalImportPath: path.resolve(projectDir, buildContext, entryPath),
         })
@@ -707,6 +747,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     ...((isDevEnvironment || (isTest && !isTestEager) || isNative) &&
       cacheStrategy),
     ...lazyCompilationConfig,
+    ...loggingConfig,
   };
 
   // Establish Angular overrides to ensure proper integration
@@ -785,6 +826,21 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         "   If you encounter any issues, please disable it in your rspack config.\n"
     );
   }
+
+  // Add MeteorRspackOutputPlugin as the last plugin to output compilation info
+  const meteorRspackOutputPlugin = new MeteorRspackOutputPlugin({
+    getData: (stats, { isRebuild, compilationCount }) => ({
+      name: config.name,
+      mode: config.mode,
+      hasErrors: stats.hasErrors(),
+      hasWarnings: stats.hasWarnings(),
+      timestamp: Date.now(),
+      statsOverrided,
+      compilationCount,
+      isRebuild,
+    }),
+  });
+  config.plugins = [meteorRspackOutputPlugin, ...(config.plugins || [])];
 
   return [config];
 }
