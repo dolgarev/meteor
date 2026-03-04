@@ -23,6 +23,7 @@ import {
   assertFileExist,
   assertMeteorApp,
   assertMeteorReactApp,
+  assertPathNotExist,
   assertRspackScriptTag
 } from "./assertions";
 import fs from "fs-extra";
@@ -776,6 +777,57 @@ export function testMeteorRspackBundler(options) {
         await cleanupTempDir(buildOutputDir);
       }
     });
+
+    test(`"meteor reset" / should clear all caches and build artifacts`, async () => {
+      // Derive METEOR_LOCAL_DIR-aware paths for assertions
+      const resetEnv = { ...env, ...(env.meteorReset || {}) };
+      const meteorLocalDirEnv = resetEnv.METEOR_LOCAL_DIR;
+      const meteorLocalDirName = meteorLocalDirEnv
+        ? path.basename(meteorLocalDirEnv.replace(/\\/g, '/'))
+        : '';
+      const localDirSuffix = meteorLocalDirName ? `-${meteorLocalDirName}` : '';
+
+      // Verify build artifacts exist from previous tests
+      await assertFileExist(appDir, buildDir);
+      await assertFileExist(appDir, 'node_modules/.cache/rspack');
+
+      // Run meteor reset
+      await runMeteorCommand("reset", [], appDir, {
+        checkExitCode: true,
+        env: resetEnv,
+      });
+
+      // Verify Rspack build artifacts removed (always check defaults)
+      await assertPathNotExist(appDir, buildDir);
+      await assertPathNotExist(appDir, 'node_modules/.cache/rspack');
+      await assertPathNotExist(appDir, '_build');
+      await assertPathNotExist(appDir, 'public/build-assets');
+      await assertPathNotExist(appDir, 'public/build-chunks');
+
+      // When METEOR_LOCAL_DIR is set, also verify suffixed paths are cleaned
+      if (localDirSuffix) {
+        await assertPathNotExist(appDir, `_build${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/build-assets${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/build-chunks${localDirSuffix}`);
+      }
+
+      // Verify default .meteor/local caches are always cleaned
+      await assertPathNotExist(appDir, '.meteor/local/build');
+      await assertPathNotExist(appDir, '.meteor/local/bundler-cache');
+      await assertPathNotExist(appDir, '.meteor/local/plugin-cache');
+
+      // When METEOR_LOCAL_DIR is set, also verify custom local dir is cleaned
+      if (meteorLocalDirEnv && meteorLocalDirEnv !== '.meteor/local') {
+        await assertPathNotExist(appDir, `${meteorLocalDirEnv}/build`);
+        await assertPathNotExist(appDir, `${meteorLocalDirEnv}/bundler-cache`);
+        await assertPathNotExist(appDir, `${meteorLocalDirEnv}/plugin-cache`);
+      }
+
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterReset) {
+        await customAssertions.afterReset({ tempDir, appDir });
+      }
+    });
   };
 }
 
@@ -1045,6 +1097,57 @@ export function testMeteorSkeleton(options) {
       } finally {
         // Clean up the build output directory
         await cleanupTempDir(buildOutputDir);
+      }
+    });
+
+    test(`"meteor reset" / should clear all caches and build artifacts`, async () => {
+      // Derive METEOR_LOCAL_DIR-aware paths for assertions
+      const resetEnv = { ...env, ...(env.meteorReset || {}) };
+      const meteorLocalDirEnv = resetEnv.METEOR_LOCAL_DIR;
+      const meteorLocalDirName = meteorLocalDirEnv
+        ? path.basename(meteorLocalDirEnv.replace(/\\/g, '/'))
+        : '';
+      const localDirSuffix = meteorLocalDirName ? `-${meteorLocalDirName}` : '';
+
+      // Verify build artifacts exist from previous tests
+      await assertFileExist(tempDir, '_build');
+      await assertFileExist(tempDir, 'node_modules/.cache/rspack');
+
+      // Run meteor reset
+      await runMeteorCommand('reset', [], tempDir, {
+        checkExitCode: true,
+        env: resetEnv,
+      });
+
+      // Verify Rspack build artifacts removed (always check defaults)
+      await assertPathNotExist(tempDir, '_build');
+      await assertPathNotExist(tempDir, 'node_modules/.cache/rspack');
+      await assertPathNotExist(tempDir, 'node_modules/.cache/meteor');
+      await assertPathNotExist(tempDir, 'public/build-assets');
+      await assertPathNotExist(tempDir, 'public/build-chunks');
+
+      // When METEOR_LOCAL_DIR is set, also verify suffixed paths are cleaned
+      if (localDirSuffix) {
+        await assertPathNotExist(tempDir, `_build${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/build-assets${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/build-chunks${localDirSuffix}`);
+      }
+
+      // Verify default .meteor/local caches are always cleaned
+      await assertPathNotExist(tempDir, '.meteor/local/build');
+      await assertPathNotExist(tempDir, '.meteor/local/bundler-cache');
+      await assertPathNotExist(tempDir, '.meteor/local/plugin-cache');
+
+      // When METEOR_LOCAL_DIR is set, also verify custom local dir is cleaned
+      if (meteorLocalDirEnv && meteorLocalDirEnv !== '.meteor/local') {
+        await assertPathNotExist(tempDir, `${meteorLocalDirEnv}/build`);
+        await assertPathNotExist(tempDir, `${meteorLocalDirEnv}/bundler-cache`);
+        await assertPathNotExist(tempDir, `${meteorLocalDirEnv}/plugin-cache`);
+      }
+
+      // Run custom assertions if provided
+      if (customAssertions.afterReset) {
+        await customAssertions.afterReset({ tempDir });
       }
     });
   };
