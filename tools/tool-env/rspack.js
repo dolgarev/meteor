@@ -44,16 +44,36 @@ exports.getRspackResourcesContexts = function() {
 };
 
 // Function to get the rspack app contexts for cleanup.
-// Always includes the default paths (_build, build-assets, build-chunks) to
-// prevent regressions, plus suffixed paths when METEOR_LOCAL_DIR is set.
+// Reads the app's package.json meteor config to resolve custom context names,
+// and always includes the default paths to prevent regressions.
 exports.getRspackAppContexts = function(appDir) {
+  let appConfig = null;
+  try {
+    const pkgPath = files.pathJoin(appDir, 'package.json');
+    if (files.exists(pkgPath)) {
+      const pkg = JSON.parse(files.readFile(pkgPath, 'utf8'));
+      appConfig = pkg?.meteor || null;
+    }
+  } catch (e) {
+    // Fall back to defaults if package.json can't be read
+  }
+
+  const appBuildContext = appConfig?.buildContext || process.env.RSPACK_BUILD_CONTEXT || `_build${localDirSuffix}`;
+  const appAssetsContext = appConfig?.assetsContext || process.env.RSPACK_ASSETS_CONTEXT || `build-assets${localDirSuffix}`;
+  const appChunksContext = appConfig?.chunksContext || process.env.RSPACK_CHUNKS_CONTEXT || `build-chunks${localDirSuffix}`;
+
   const contexts = [
     files.pathJoin(appDir, "node_modules", ".cache", "rspack"),
   ];
 
-  // Always include defaults
-  const defaults = ['_build', 'build-assets', 'build-chunks'];
-  for (const name of defaults) {
+  // Collect unique context names (configured + defaults to prevent regressions)
+  const allNames = new Set([
+    appBuildContext, '_build',
+    appAssetsContext, 'build-assets',
+    appChunksContext, 'build-chunks',
+  ]);
+
+  for (const name of allNames) {
     contexts.push(files.pathJoin(appDir, name));
     contexts.push(files.pathJoin(appDir, `public/${name}`));
     contexts.push(files.pathJoin(appDir, `private/${name}`));
@@ -61,11 +81,11 @@ exports.getRspackAppContexts = function(appDir) {
 
   // When METEOR_LOCAL_DIR is set, also include suffixed paths
   if (localDirSuffix) {
-    const suffixed = defaults.map(name => `${name}${localDirSuffix}`);
-    for (const name of suffixed) {
-      contexts.push(files.pathJoin(appDir, name));
-      contexts.push(files.pathJoin(appDir, `public/${name}`));
-      contexts.push(files.pathJoin(appDir, `private/${name}`));
+    for (const name of allNames) {
+      const suffixed = `${name}${localDirSuffix}`;
+      contexts.push(files.pathJoin(appDir, suffixed));
+      contexts.push(files.pathJoin(appDir, `public/${suffixed}`));
+      contexts.push(files.pathJoin(appDir, `private/${suffixed}`));
     }
   }
 

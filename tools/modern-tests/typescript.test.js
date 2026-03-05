@@ -19,6 +19,8 @@ describe('TypeScript App Bundling /', () => {
       testServer: 'tests/server.ts',
     },
     buildDir: 'build',
+    assetsContext: 'assets',
+    chunksContext: 'chunks',
     configFile: 'rspack.config.ts',
     customAssertions: {
       afterCreate({ tempDir }) {

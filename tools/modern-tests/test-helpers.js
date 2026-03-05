@@ -212,6 +212,10 @@ export function testMeteorRspackBundler(options) {
     afterAllBehavior,
     // Build directory (default: '_build')
     buildDir = '_build',
+    // Assets context directory (default: 'build-assets')
+    assetsContext = 'build-assets',
+    // Chunks context directory (default: 'build-chunks')
+    chunksContext = 'build-chunks',
     // Rspack config file (default: 'rspack.config.js')
     configFile = 'rspack.config.js',
     // Custom environment variables
@@ -797,15 +801,26 @@ export function testMeteorRspackBundler(options) {
         env: resetEnv,
       });
 
-      // Verify Rspack build artifacts removed (always check defaults)
+      // Verify Rspack build artifacts removed
       await assertPathNotExist(appDir, buildDir);
       await assertPathNotExist(appDir, 'node_modules/.cache/rspack');
+      await assertPathNotExist(appDir, assetsContext);
+      await assertPathNotExist(appDir, chunksContext);
+      await assertPathNotExist(appDir, `public/${assetsContext}`);
+      await assertPathNotExist(appDir, `public/${chunksContext}`);
+
+      // Also verify defaults are cleaned to prevent regressions
       await assertPathNotExist(appDir, '_build');
       await assertPathNotExist(appDir, 'public/build-assets');
       await assertPathNotExist(appDir, 'public/build-chunks');
 
       // When METEOR_LOCAL_DIR is set, also verify suffixed paths are cleaned
       if (localDirSuffix) {
+        await assertPathNotExist(appDir, `${buildDir}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `${chunksContext}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/${chunksContext}${localDirSuffix}`);
         await assertPathNotExist(appDir, `_build${localDirSuffix}`);
         await assertPathNotExist(appDir, `public/build-assets${localDirSuffix}`);
         await assertPathNotExist(appDir, `public/build-chunks${localDirSuffix}`);
@@ -878,6 +893,10 @@ export function testMeteorSkeleton(options) {
     env = {},
     // Bare skeleton may not create build artifacts (e.g. _build, node_modules/.cache/rspack)
     skipBuildCacheCheck = false,
+    // Assets context directory (default: 'build-assets')
+    assetsContext = 'build-assets',
+    // Chunks context directory (default: 'build-chunks')
+    chunksContext = 'build-chunks',
   } = options;
 
   return () => {
@@ -1123,16 +1142,26 @@ export function testMeteorSkeleton(options) {
         env: resetEnv,
       });
 
-      // Verify Rspack build artifacts removed (always check defaults)
+      // Verify Rspack build artifacts removed
       await assertPathNotExist(tempDir, '_build');
       await assertPathNotExist(tempDir, 'node_modules/.cache/rspack');
       await assertPathNotExist(tempDir, 'node_modules/.cache/meteor');
+      await assertPathNotExist(tempDir, assetsContext);
+      await assertPathNotExist(tempDir, chunksContext);
+      await assertPathNotExist(tempDir, `public/${assetsContext}`);
+      await assertPathNotExist(tempDir, `public/${chunksContext}`);
+
+      // Also verify defaults are cleaned to prevent regressions
       await assertPathNotExist(tempDir, 'public/build-assets');
       await assertPathNotExist(tempDir, 'public/build-chunks');
 
       // When METEOR_LOCAL_DIR is set, also verify suffixed paths are cleaned
       if (localDirSuffix) {
         await assertPathNotExist(tempDir, `_build${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `${chunksContext}${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/${chunksContext}${localDirSuffix}`);
         await assertPathNotExist(tempDir, `public/build-assets${localDirSuffix}`);
         await assertPathNotExist(tempDir, `public/build-chunks${localDirSuffix}`);
       }
