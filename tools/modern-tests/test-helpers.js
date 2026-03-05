@@ -876,6 +876,8 @@ export function testMeteorSkeleton(options) {
     afterAllBehavior,
     // Per-phase env vars: { meteorRun, meteorRunProduction, meteorTest, meteorBuild }
     env = {},
+    // Bare skeleton may not create build artifacts (e.g. _build, node_modules/.cache/rspack)
+    skipBuildCacheCheck = false,
   } = options;
 
   return () => {
@@ -1110,8 +1112,10 @@ export function testMeteorSkeleton(options) {
       const localDirSuffix = meteorLocalDirName ? `-${meteorLocalDirName}` : '';
 
       // Verify build artifacts exist from previous tests
-      await assertFileExist(tempDir, '_build');
-      await assertFileExist(tempDir, 'node_modules/.cache/rspack');
+      if (!skipBuildCacheCheck) {
+        await assertFileExist(tempDir, "_build");
+        await assertFileExist(tempDir, "node_modules/.cache/rspack");
+      }
 
       // Run meteor reset
       await runMeteorCommand('reset', [], tempDir, {
