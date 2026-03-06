@@ -28,7 +28,7 @@ module.exports = {
     path.resolve(__dirname, 'node_modules'),
   ],
   transform: {
-    "^.+\\.js$": ["@swc/jest", {
+    "^.+\\.js$": [require.resolve("@swc/jest"), {
       jsc: {
         parser: { syntax: "ecmascript" },
         target: "es2022",
