@@ -18,6 +18,7 @@ Every app and skeleton goes through these phases (unless skipped):
 | **Test** | `meteor test` — runs mocha test driver, verifies test rebuild |
 | **Test once** | `meteor test --once` — runs tests to completion, checks exit code |
 | **Build** | `meteor build` — verifies bundle structure (main.js, programs/server, web.browser, web.browser.legacy) |
+| **Reset** | `meteor reset` — clears rspack build artifacts, caches, asset/chunk context dirs, and `.meteor/local` subdirectories |
 
 Default assertions on every run phase: build artifacts exist, page title matches, body styles render, `__rspack__` script tag is present.
 
@@ -90,8 +91,10 @@ TypeScript with SCSS, type checking, and `.ts` rspack config.
 |----------------|-------|
 | TypeScript rspack config (`rspack.config.ts`) | All |
 | Custom build dir (`build`) | All |
+| Custom asset/chunk context dirs (`assets`, `chunks`) | All |
 | SCSS styles support (`white-space: break-spaces`) | Run, Prod |
 | TypeScript + TSX environment detection | Run, Prod, Test, Build |
+| Portable build (Meteor.isDevelopment/isProduction not defined) | Run, Prod, Build |
 | `TsCheckerRspackPlugin` type checking (no errors) | Run |
 | `.meteor/local/types` directory generated | Run |
 | Separate client/server test files | Test |
@@ -105,6 +108,9 @@ Babel transpilation with custom module rules and `.mjs` rspack config.
 | What is covered | Phase |
 |----------------|-------|
 | Custom rspack config (`rspack.config.mjs`) | All |
+| Custom `NODE_ENV` compilation per phase | All (env prefix) |
+| Rspack mode assertion (development/production) | Run, Prod, Test, Build |
+| `Meteor.isDevelopment`/`Meteor.isProduction` defines | Run, Prod, Test, Build |
 | Module rules for `.js`/`.jsx` files | Run, Prod, Test, Build |
 | Module rules for `.tsx`/`.ts`/`.mts`/`.cts`/`.mjs`/`.cjs` | Run, Prod, Test, Build |
 | Module rules for `.graphql`/`.gql` files | Run, Prod, Test, Build |
@@ -175,14 +181,14 @@ Server-only app (no client entry point).
 
 ## Skeletons
 
-Tested via `skeleton.test.js` using `meteor create --<skeleton>`. Each skeleton verifies: app creation, dev run, production run, test once, and build.
+Tested via `skeleton.test.js` using `meteor create --<skeleton>`. Each skeleton verifies: app creation, dev run, production run, test once, build, and reset.
 
 | Skeleton | Port | Language | Extra coverage |
 |----------|------|----------|----------------|
 | angular | 3213 | TypeScript | |
 | apollo | 3201 | JSX | |
 | babel | 3212 | JSX | |
-| bare | 3219 | JS | No title/style checks, no client tests |
+| bare | 3219 | JS | No title/style checks, no client tests, skip build cache check |
 | blaze | 3202 | JS | |
 | chakra-ui | 3203 | JSX | No body style checks (custom UI library) |
 | coffeescript | 3211 | CoffeeScript | |
@@ -246,6 +252,7 @@ Where each feature is tested across apps and skeletons.
 | Custom rspack config | react (.cjs), react-router, babel (.mjs), monorepo (.cjs), typescript (.ts) | |
 | Config override file | react-router, monorepo | |
 | Custom build dir | react, typescript | |
+| Custom asset/chunk context dirs | typescript | |
 | Custom env vars | react (METEOR_LOCAL_DIR), react-router (METEOR_PACKAGE_DIRS) | |
 | Static asset bundling | react-router, monorepo | |
 | Less styles | react-router | |
@@ -263,6 +270,9 @@ Where each feature is tested across apps and skeletons.
 | Monorepo layout | monorepo | |
 | Full-app test mode | react-router | |
 | Module rules override | babel | |
+| Custom NODE_ENV compilation | babel | |
+| Portable build (no isDev/isProd defines) | typescript | |
+| `meteor reset` cleanup | all apps | all skeletons |
 | Skeleton creation | | all 14 skeletons |
 | Body style assertions | | react, tailwind (custom); most others (default) |
 | Custom .gitignore entries | react | |
