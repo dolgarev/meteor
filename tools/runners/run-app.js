@@ -13,15 +13,18 @@ import { closeAllWatchers } from "../fs/safe-watcher";
 import { loadIsopackage } from '../tool-env/isopackets.js';
 import { eachline } from "../utils/eachline";
 
-// Parse a string as if it were a bash command line, handling single and
-// double quotes so that values like --flag="hello world" are kept as a
-// single token.  Escaping (\") inside double-quoted segments is supported.
-var bashParse = function (s) {
+// Minimal shell-like splitter for SERVER_NODE_OPTIONS.
+// Handles single/double quotes and backslash escapes so that values like
+// --flag="hello world" or --require='/path/with spaces/f.js' are kept as
+// single tokens.  This is NOT a full bash parser — it only covers the
+// quoting subset needed for Node CLI flags.
+var splitQuotedArgs = function (s) {
   const args = [];
   let current = '';
   let inDouble = false;
   let inSingle = false;
   let escaped = false;
+  let hasQuotes = false;
 
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
@@ -32,25 +35,29 @@ var bashParse = function (s) {
       continue;
     }
 
-    if (ch === '\\' && inDouble) {
+    // Backslash: escape next char in double quotes or unquoted context
+    if (ch === '\\' && !inSingle) {
       escaped = true;
       continue;
     }
 
     if (ch === '"' && !inSingle) {
       inDouble = !inDouble;
+      hasQuotes = true;
       continue;
     }
 
     if (ch === "'" && !inDouble) {
       inSingle = !inSingle;
+      hasQuotes = true;
       continue;
     }
 
     if (/\s/.test(ch) && !inDouble && !inSingle) {
-      if (current) {
+      if (current || hasQuotes) {
         args.push(current);
         current = '';
+        hasQuotes = false;
       }
       continue;
     }
@@ -58,7 +65,7 @@ var bashParse = function (s) {
     current += ch;
   }
 
-  if (current) {
+  if (current || hasQuotes) {
     args.push(current);
   }
 
@@ -72,7 +79,7 @@ var bashParse = function (s) {
 };
 
 var getNodeOptionsFromEnvironment = function () {
-  return bashParse(process.env.SERVER_NODE_OPTIONS || "");
+  return splitQuotedArgs(process.env.SERVER_NODE_OPTIONS || "");
 };
 
 ///////////////////////////////////////////////////////////////////////////////
