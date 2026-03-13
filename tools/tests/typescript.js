@@ -1,6 +1,5 @@
 var selftest = require('../tool-testing/selftest.js');
 var Sandbox = selftest.Sandbox;
-console.log("--> (typescript.js-Line: 3)\n Sandbox: ", Sandbox);
 
 selftest.define("typescript template works", async function () {
   const s = new Sandbox();
