@@ -3,7 +3,7 @@ var Sandbox = selftest.Sandbox;
 console.log("--> (typescript.js-Line: 3)\n Sandbox: ", Sandbox);
 
 selftest.define("typescript template works", async function () {
-  const s = new Sandbox;
+  const s = new Sandbox();
   await s.init();
 
   let run = s.run("create", "--typescript", "typescript");
@@ -15,15 +15,15 @@ selftest.define("typescript template works", async function () {
   s.cd("typescript");
 
   run = s.run("npm", "install");
-  run.expectExit(0);
+  await run.expectExit(0);
 
   run = s.run("lint");
   run.waitSecs(60);
-  await run.match("[zodern:types] Exiting \"meteor lint\" early");
-  run.expectExit(0);
+  await run.match('[zodern:types] Exiting "meteor lint" early');
+  await run.expectExit(0);
 
   run = s.run("npx", "tsc");
   run.waitSecs(60);
-  run.expectEnd();
-  run.expectExit(0);
+  await run.expectEnd();
+  await run.expectExit(0);
 });
