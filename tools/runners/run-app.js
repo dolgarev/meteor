@@ -13,12 +13,62 @@ import { closeAllWatchers } from "../fs/safe-watcher";
 import { loadIsopackage } from '../tool-env/isopackets.js';
 import { eachline } from "../utils/eachline";
 
-// Parse out s as if it were a bash command line.
+// Parse a string as if it were a bash command line, handling single and
+// double quotes so that values like --flag="hello world" are kept as a
+// single token.  Escaping (\") inside double-quoted segments is supported.
 var bashParse = function (s) {
-  if (s.search("\"") !== -1 || s.search("'") !== -1) {
-    throw new Error("Meteor cannot currently handle quoted SERVER_NODE_OPTIONS");
+  const args = [];
+  let current = '';
+  let inDouble = false;
+  let inSingle = false;
+  let escaped = false;
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+
+    if (escaped) {
+      current += ch;
+      escaped = false;
+      continue;
+    }
+
+    if (ch === '\\' && inDouble) {
+      escaped = true;
+      continue;
+    }
+
+    if (ch === '"' && !inSingle) {
+      inDouble = !inDouble;
+      continue;
+    }
+
+    if (ch === "'" && !inDouble) {
+      inSingle = !inSingle;
+      continue;
+    }
+
+    if (/\s/.test(ch) && !inDouble && !inSingle) {
+      if (current) {
+        args.push(current);
+        current = '';
+      }
+      continue;
+    }
+
+    current += ch;
   }
-  return s.split(/\s+/).filter(Boolean);
+
+  if (current) {
+    args.push(current);
+  }
+
+  if (inDouble || inSingle) {
+    throw new Error(
+      "Unterminated quote in SERVER_NODE_OPTIONS: " + s
+    );
+  }
+
+  return args;
 };
 
 var getNodeOptionsFromEnvironment = function () {
