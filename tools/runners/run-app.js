@@ -18,7 +18,7 @@ import { eachline } from "../utils/eachline";
 // --flag="hello world" or --require='/path/with spaces/f.js' are kept as
 // single tokens.  This is NOT a full bash parser — it only covers the
 // quoting subset needed for Node CLI flags.
-var splitQuotedArgs = function (s) {
+var splitQuotedArgs = exports.splitQuotedArgs = function (s) {
   const args = [];
   let current = '';
   let inDouble = false;

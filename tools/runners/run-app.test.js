@@ -1,74 +1,29 @@
 // Unit tests for splitQuotedArgs — the SERVER_NODE_OPTIONS parser in run-app.js
-//
-// splitQuotedArgs is not exported directly, so we extract and test an identical
-// copy.  Keep this in sync with the implementation in run-app.js.
 
-// --- Copy of splitQuotedArgs from run-app.js ---
-var splitQuotedArgs = function (s) {
-  const args = [];
-  let current = '';
-  let inDouble = false;
-  let inSingle = false;
-  let escaped = false;
-  let hasQuotes = false;
+// run-app.js pulls in most of the Meteor tool-chain (isobuild, catalog, etc.).
+// None of those are needed for splitQuotedArgs, so we stub them out to keep
+// the test fast and dependency-free.
+jest.mock('../fs/files', () => ({}));
+jest.mock('../fs/watch', () => ({}));
+jest.mock('../isobuild/bundler.js', () => ({}));
+jest.mock('../utils/buildmessage.js', () => ({}));
+jest.mock('./run-log.js', () => ({}));
+jest.mock('../meteor-services/stats.js', () => ({}));
+jest.mock('../console/console.js', () => ({ Console: {} }));
+jest.mock('../packaging/catalog/catalog.js', () => ({}));
+jest.mock('../tool-env/profile', () => ({ Profile: {} }));
+jest.mock('../packaging/release.js', () => ({}));
+jest.mock('../cordova/index.js', () => ({ pluginVersionsFromStarManifest: () => {} }));
+jest.mock('../fs/safe-watcher', () => ({ closeAllWatchers: () => {} }));
+jest.mock('../tool-env/isopackets.js', () => ({ loadIsopackage: () => {} }));
+jest.mock('../utils/eachline', () => ({ eachline: () => {} }));
 
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-
-    if (escaped) {
-      current += ch;
-      escaped = false;
-      continue;
-    }
-
-    // Backslash: escape next char in double quotes or unquoted context
-    if (ch === '\\' && !inSingle) {
-      escaped = true;
-      continue;
-    }
-
-    if (ch === '"' && !inSingle) {
-      inDouble = !inDouble;
-      hasQuotes = true;
-      continue;
-    }
-
-    if (ch === "'" && !inDouble) {
-      inSingle = !inSingle;
-      hasQuotes = true;
-      continue;
-    }
-
-    if (/\s/.test(ch) && !inDouble && !inSingle) {
-      if (current || hasQuotes) {
-        args.push(current);
-        current = '';
-        hasQuotes = false;
-      }
-      continue;
-    }
-
-    current += ch;
-  }
-
-  if (current || hasQuotes) {
-    args.push(current);
-  }
-
-  if (inDouble || inSingle) {
-    throw new Error(
-      "Unterminated quote in SERVER_NODE_OPTIONS: " + s
-    );
-  }
-
-  return args;
-};
+const { splitQuotedArgs } = require('./run-app.js');
 
 // --- Tests ---
 
 describe('splitQuotedArgs', () => {
-  // These pass with the current implementation
-  describe('existing behavior (should keep working)', () => {
+  describe('unquoted values', () => {
     test('empty string returns empty array', () => {
       expect(splitQuotedArgs('')).toEqual([]);
     });
@@ -85,8 +40,7 @@ describe('splitQuotedArgs', () => {
     });
   });
 
-  // These FAILED before the fix — now they should pass
-  describe('quoted values (previously broken)', () => {
+  describe('quoted values', () => {
     test('double-quoted value', () => {
       expect(splitQuotedArgs('--test-name-pattern="validation"')).toEqual([
         '--test-name-pattern=validation',
@@ -138,7 +92,6 @@ describe('splitQuotedArgs', () => {
     });
   });
 
-  // Edge cases raised during review
   describe('edge cases', () => {
     test('empty double-quoted arg is preserved', () => {
       expect(splitQuotedArgs('--foo ""')).toEqual(['--foo', '']);
@@ -164,7 +117,6 @@ describe('splitQuotedArgs', () => {
     });
   });
 
-  // Real-world SERVER_NODE_OPTIONS combinations
   describe('real-world examples', () => {
     test('node:test coverage + reporter', () => {
       expect(splitQuotedArgs(
