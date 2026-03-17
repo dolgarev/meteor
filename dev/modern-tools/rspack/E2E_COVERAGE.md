@@ -91,7 +91,7 @@ TypeScript with SCSS, type checking, `.ts` rspack config, and `.ts` SWC config.
 |----------------|-------|
 | TypeScript rspack config (`rspack.config.ts`) | All |
 | TypeScript SWC config (`swc.config.ts`) with automatic JSX runtime | All |
-| `@swc/core` used to transpile `.ts` config at load time | All |
+| `@swc/core` type-only import for SWC config typings | All |
 | Custom build dir (`build`) | All |
 | Custom asset/chunk context dirs (`assets`, `chunks`) | All |
 | SCSS styles support (`white-space: break-spaces`) | Run, Prod |
@@ -240,7 +240,7 @@ Several apps import specific npm packages to verify that Meteor + Rspack handles
 | Package | Reason |
 |---------|--------|
 | `node:module` (`createRequire`) | Node.js built-in in a `.ts` config file — tests CJS interop via `createRequire(import.meta.url)` in an ESM context |
-| `@swc/core` | Used at load time to transpile `swc.config.ts` from TypeScript before applying the SWC configuration |
+| `@swc/core` | Type-only import (`import type { Config }`) — provides typings for `swc.config.ts`, stripped at compile time |
 
 ---
 
