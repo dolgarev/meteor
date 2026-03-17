@@ -19,6 +19,7 @@ const {
   setCache,
   splitVendorChunk,
   extendSwcConfig,
+  replaceSwcConfig,
   makeWebNodeBuiltinsAlias,
   disablePlugins,
   outputMeteorRspack,
@@ -325,7 +326,11 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     setCache(!!enabled, enabled === "memory" ? undefined : cacheStrategy);
   Meteor.splitVendorChunk = () => splitVendorChunk();
   Meteor.extendSwcConfig = (customSwcConfig) =>
-    extendSwcConfig(customSwcConfig);
+    extendSwcConfig(
+      mergeSplitOverlap(Meteor.swcConfigOptions, customSwcConfig)
+    );
+  Meteor.replaceSwcConfig = (customSwcConfig) =>
+    replaceSwcConfig(customSwcConfig);
   Meteor.extendConfig = (...configs) => mergeSplitOverlap(...configs);
   Meteor.disablePlugins = (matchers) =>
     prepareMeteorRspackConfig({
@@ -817,9 +822,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
 
   delete config["meteor.enablePortableBuild"];
 
-  // if (Meteor.isDebug || Meteor.isVerbose) {
+  if (Meteor.isDebug || Meteor.isVerbose) {
   console.log("Config:", inspect(config, { depth: null, colors: true }));
-  // }
+  }
 
   // Check if lazyCompilation is enabled and warn the user
   if (
