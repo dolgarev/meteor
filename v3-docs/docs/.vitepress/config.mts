@@ -461,6 +461,10 @@ export default defineConfig({
                 text: "jam:offline",
                 link: "/community-packages/offline",
               },
+              {
+                text: "dupontbertrand:cluster",
+                link: "/community-packages/cluster",
+              },
             ],
             collapsed: true,
           },
