@@ -73,6 +73,16 @@ Template.hello.helpers({ /* ... */ });
 This restructuring step can be substantial for large applications. WeKan's migration involved splitting collection definitions (shared models vs. server-only hooks/methods) and rewriting their entire boot sequence.
 :::
 
+### Prepare for Express Early with `harry97:webapp`
+
+Meteor 3 replaces Connect with Express in the `webapp` package. If your app uses `WebApp.connectHandlers` or custom middleware, you can start writing Express-compatible code **while still on Meteor 2.x** by using the [`harry97:webapp`](https://github.com/harryadel/harry97-webapp) package — a backport of Meteor 3's Express-based webapp for Meteor 2.17.
+
+```bash
+meteor add harry97:webapp
+```
+
+This gives you access to the same Express API that Meteor 3 uses (`WebApp.handlers`, `WebApp.express`, etc.) with backward-compatible aliases for `WebApp.connectHandlers` and `WebApp.rawConnectHandlers`. When you eventually upgrade to Meteor 3, your middleware code will already be compatible — just remove `harry97:webapp` and the core `webapp` package takes over.
+
 ## Step 5: Convert Sync Code to Async
 
 On the server, all MongoDB collection methods must use their `*Async` counterparts:
