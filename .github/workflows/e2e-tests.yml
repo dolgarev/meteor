@@ -21,18 +21,32 @@ env:
   NODE_OPTIONS: "--max_old_space_size=12288"
 
 jobs:
+  cache-key:
+    name: Compute cache key
+    runs-on: oss-vm-01
+    outputs:
+      hash: ${{ steps.hash.outputs.hash }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compute hash
+        id: hash
+        run: echo "hash=${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}" >> "$GITHUB_OUTPUT"
+
   prepare:
     name: Prepare cache
+    needs: cache-key
     runs-on: oss-vm-01
     timeout-minutes: 30
     container:
       image: node:22-bookworm
       volumes:
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/npm:/root/.npm
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dev-bundle:/github/workspace/dev_bundle
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/playwright:/root/.cache/ms-playwright
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/babel:/github/workspace/.babel-cache
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dot-meteor:/github/workspace/.meteor
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/npm:/root/.npm
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/dev-bundle:/github/workspace/dev_bundle
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/playwright:/root/.cache/ms-playwright
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/babel:/github/workspace/.babel-cache
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/dot-meteor:/github/workspace/.meteor
 
     steps:
       - name: Checkout code
@@ -52,18 +66,18 @@ jobs:
 
   test:
     name: ${{ matrix.category }}
-    needs: prepare
+    needs: [cache-key, prepare]
     runs-on: oss-vm-01
     timeout-minutes: 60
     container:
       image: node:22-bookworm
       options: --cpus 4 --memory 12g
       volumes:
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/npm:/root/.npm
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dev-bundle:/github/workspace/dev_bundle
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/playwright:/root/.cache/ms-playwright
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/babel:/github/workspace/.babel-cache
-        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dot-meteor:/github/workspace/.meteor
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/npm:/root/.npm
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/dev-bundle:/github/workspace/dev_bundle
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/playwright:/root/.cache/ms-playwright
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/babel:/github/workspace/.babel-cache
+        - /cache/meteor/${{ needs.cache-key.outputs.hash }}/dot-meteor:/github/workspace/.meteor
 
     strategy:
       fail-fast: false
