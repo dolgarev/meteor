@@ -28,27 +28,15 @@ jobs:
     container:
       image: node:22-bookworm
       volumes:
-        - /cache/meteor/npm:/root/.npm
-        - /cache/meteor/dev-bundle:/github/workspace/dev_bundle
-        - /cache/meteor/playwright:/root/.cache/ms-playwright
-        - /cache/meteor/babel:/github/workspace/.babel-cache
-        - /cache/meteor/dot-meteor:/github/workspace/.meteor
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/npm:/root/.npm
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dev-bundle:/github/workspace/dev_bundle
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/playwright:/root/.cache/ms-playwright
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/babel:/github/workspace/.babel-cache
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dot-meteor:/github/workspace/.meteor
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Invalidate cache if dependencies changed
-        run: |
-          HASH_FILE="/cache/meteor/.cache-hash"
-          CURRENT_HASH=$(cat package-lock.json meteor tools/modern-tests/package.json 2>/dev/null | sha256sum | cut -d' ' -f1)
-          if [ -f "$HASH_FILE" ] && [ "$(cat "$HASH_FILE")" = "$CURRENT_HASH" ]; then
-            echo "Cache hash matches — keeping cache"
-          else
-            echo "Cache hash changed — clearing stale caches"
-            rm -rf /root/.npm/* /github/workspace/dev_bundle/* /root/.cache/ms-playwright/* /github/workspace/.babel-cache/* /github/workspace/.meteor/*
-            echo "$CURRENT_HASH" > "$HASH_FILE"
-          fi
 
       - name: Install system deps for Playwright
         run: npx playwright install --with-deps chromium chromium-headless-shell
@@ -71,11 +59,11 @@ jobs:
       image: node:22-bookworm
       options: --cpus 4 --memory 12g
       volumes:
-        - /cache/meteor/npm:/root/.npm
-        - /cache/meteor/dev-bundle:/github/workspace/dev_bundle
-        - /cache/meteor/playwright:/root/.cache/ms-playwright
-        - /cache/meteor/babel:/github/workspace/.babel-cache
-        - /cache/meteor/dot-meteor:/github/workspace/.meteor
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/npm:/root/.npm
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dev-bundle:/github/workspace/dev_bundle
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/playwright:/root/.cache/ms-playwright
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/babel:/github/workspace/.babel-cache
+        - /cache/meteor/${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}/dot-meteor:/github/workspace/.meteor
 
     strategy:
       fail-fast: false
