@@ -421,7 +421,7 @@ export function applyDelegatedExtensions(extensions) {
     setMeteorAppIgnore(ignorePatterns.join(' '));
 
     if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
-      logInfo(`[i] Rspack delegated extensions: ${extensions.join(', ')} (ignored in entry folders)`);
+      logInfo(`[i] Rspack delegated extensions: ${extensions.join(', ')} (ignored in entry folders)\n    ${process.env.METEOR_IGNORE}`);
     }
   }
 }
