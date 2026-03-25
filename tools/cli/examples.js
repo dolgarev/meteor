@@ -96,7 +96,7 @@ function findExample(examples, slug) {
   return examples.find(e => e.slug === slug) || null;
 }
 
-async function cloneRepo(url, destPath) {
+async function cloneRepo(url, destPath, { branch = null } = {}) {
   return new Promise((resolve, reject) => {
     exec('git --version', (error) => {
       if (error) {
@@ -110,7 +110,8 @@ async function cloneRepo(url, destPath) {
       const dest = isWindows
         ? `"${files.convertToOSPath(destPath)}"`
         : destPath;
-      const command = `git clone --progress ${url} ${dest}`;
+      const branchArg = branch ? `--branch ${branch} ` : '';
+      const command = `git clone --progress ${branchArg}${url} ${dest}`;
 
       exec(command, { env: process.env }, async (cloneError) => {
         if (cloneError) {

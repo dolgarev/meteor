@@ -741,6 +741,7 @@ main.registerCommand({
     prototype: { type: Boolean },
     from: { type: String },
     'from-dir': { type: String },
+    'from-branch': { type: String },
   },
   pretty: false,
   catalogRefresh: new catalog.Refresh.Never()
@@ -764,8 +765,8 @@ main.registerCommand({
       Console.error();
       throw new main.ShowUsage();
     }
-    if (options.from || options['from-dir']) {
-      Console.error("Package creation does not support --from or --from-dir.");
+    if (options.from || options['from-dir'] || options['from-branch']) {
+      Console.error("Package creation does not support --from, --from-dir, or --from-branch.");
       Console.error();
       throw new main.ShowUsage();
     }
@@ -1184,12 +1185,13 @@ main.registerCommand({
     return 0;
   }
 
-  if (options['from-dir'] && !options.from) {
-    Console.error('--from-dir requires --from to specify the source repository.');
+  if ((options['from-dir'] || options['from-branch']) && !options.from) {
+    Console.error('--from-dir and --from-branch require --from to specify the source repository.');
     return 1;
   }
 
   if (options.from) {
+    const branch = options['from-branch'] || null;
     try {
       if (options['from-dir']) {
         let repoUrl = options.from;
@@ -1203,10 +1205,10 @@ main.registerCommand({
           // If examples fetch fails, treat --from as a URL
         }
 
-        await cloneSubdirectory(repoUrl, null, options['from-dir'], appPath);
+        await cloneSubdirectory(repoUrl, branch, options['from-dir'], appPath);
         validateMeteorApp(appPath);
       } else {
-        await cloneRepo(options.from, appPath);
+        await cloneRepo(options.from, appPath, { branch });
         validateMeteorApp(appPath);
       }
 

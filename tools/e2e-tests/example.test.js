@@ -4,28 +4,59 @@ import os from 'os';
 
 import { runMeteorCommand, cleanupTempDir } from './helpers';
 
+function tempApp(prefix) {
+  const suffix = Math.random().toString(36).substring(2, 10);
+  const appName = `meteortest-${prefix}-${suffix}`;
+  return { appName, tempDir: path.join(os.tmpdir(), appName) };
+}
+
 describe('Examples /', () => {
   it('meteor create --list returns available examples', async () => {
     const { processResult } = await runMeteorCommand(
       'create', ['--list'], os.tmpdir(),
       { captureOutput: true, checkExitCode: true }
     );
-    // Should contain at least one example slug in the output
     expect(processResult.outputLines.join('\n')).toMatch(/Available examples/);
   });
 
   it('meteor create --example creates a Meteor app', async () => {
-    const randomSuffix = Math.random().toString(36).substring(2, 10);
-    const appName = `meteortest-example-${randomSuffix}`;
-    const tempDir = path.join(os.tmpdir(), appName);
-
+    const { appName, tempDir } = tempApp('example');
     try {
       await runMeteorCommand(
         'create', ['--example', 'tic-tac-toe', appName], os.tmpdir(),
         { checkExitCode: true }
       );
+      expect(fs.existsSync(path.join(tempDir, '.meteor'))).toBe(true);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  });
 
-      // Verify the app was created with a .meteor directory
+  it('meteor create --from clones an external repo', async () => {
+    const { appName, tempDir } = tempApp('from');
+    try {
+      await runMeteorCommand(
+        'create', ['--from', 'https://github.com/fredmaiaarantes/simpletasks', appName], os.tmpdir(),
+        { checkExitCode: true }
+      );
+      expect(fs.existsSync(path.join(tempDir, '.meteor'))).toBe(true);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  });
+
+  it('meteor create --from with --from-branch and --from-dir extracts a subdirectory', async () => {
+    const { appName, tempDir } = tempApp('fromdir');
+    try {
+      await runMeteorCommand(
+        'create', [
+          '--from', 'https://github.com/meteor/examples',
+          '--from-branch', 'migrate-examples',
+          '--from-dir', 'parties',
+          appName
+        ], os.tmpdir(),
+        { checkExitCode: true }
+      );
       expect(fs.existsSync(path.join(tempDir, '.meteor'))).toBe(true);
     } finally {
       await cleanupTempDir(tempDir);
