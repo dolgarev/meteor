@@ -159,7 +159,14 @@ async function cloneSubdirectory(repoUrl, branch, subdir, destPath) {
       });
     });
 
-    const subdirPath = files.pathJoin(tempDir, subdir);
+    const path = require('path');
+    const resolvedTemp = path.resolve(tempDir) + path.sep;
+    const subdirPath = path.resolve(files.pathJoin(tempDir, subdir));
+    if (!subdirPath.startsWith(resolvedTemp)) {
+      throw new Error(
+        `Invalid subdirectory '${subdir}': path escapes the repository.`
+      );
+    }
     if (!files.exists(subdirPath)) {
       throw new Error(
         `Directory '${subdir}' not found in the repository. The examples list may be outdated — try 'meteor create --list' to see current examples.`
