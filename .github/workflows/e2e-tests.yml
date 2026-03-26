@@ -119,4 +119,4 @@ jobs:
           retry_on: error
           timeout_minutes: 15
           retry_wait_seconds: 90
-          command: npm run test:e2e -- -t="${{ matrix.category }}"
+          command: METEOR_ALLOW_SUPERUSER=1 npm run test:e2e -- -t="${{ matrix.category }}"
