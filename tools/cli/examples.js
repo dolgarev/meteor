@@ -86,6 +86,11 @@ async function getExamples({ refresh = false } = {}) {
 
     return examples;
   } catch (fetchError) {
+    // When refresh is requested, don't fall back to stale cache
+    if (refresh) {
+      throw fetchError;
+    }
+
     // Network failed — fall back to cache if available
     const cached = readCache();
     if (cached && cached.examples) {
@@ -157,7 +162,7 @@ async function cloneSubdirectory(repoUrl, branch, subdir, destPath) {
     const subdirPath = files.pathJoin(tempDir, subdir);
     if (!files.exists(subdirPath)) {
       throw new Error(
-        `Directory '${subdir}' not found in the repository. The examples list may be outdated — try 'meteor create --list --refresh'.`
+        `Directory '${subdir}' not found in the repository. The examples list may be outdated — try 'meteor create --list' to see current examples.`
       );
     }
 
