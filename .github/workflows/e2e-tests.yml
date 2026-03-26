@@ -23,7 +23,7 @@ env:
 jobs:
   cache-key:
     name: Compute cache key
-    runs-on: self-hosted
+    runs-on: oss-vm
     outputs:
       hash: ${{ steps.hash.outputs.hash }}
     steps:
@@ -37,7 +37,7 @@ jobs:
   prepare:
     name: Prepare cache
     needs: cache-key
-    runs-on: self-hosted
+    runs-on: oss-vm
     timeout-minutes: 30
     container:
       image: node:22-bookworm
