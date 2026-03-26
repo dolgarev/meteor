@@ -13,7 +13,6 @@ Tinytest.add('facts-base - increments server facts', (test) => {
   test.equal(Facts._factsByPackage.newPackage, { skyIsBlue: 63, newFact: 7 });
 });
 
-
 Tinytest.add('facts-base - setUserIdFilter', (test) => {
   let called = false;
   Facts.setUserIdFilter((userId) => {
