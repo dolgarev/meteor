@@ -1,19 +1,19 @@
-Tinytest.add('facts-base - increments server facts', (test) => {
+Tinytest.add("facts-base - increments server facts", (test) => {
   Facts.resetServerFacts();
 
-  Facts.incrementServerFact('newPackage', 'skyIsBlue', 42);
+  Facts.incrementServerFact("newPackage", "skyIsBlue", 42);
   test.equal(Facts._factsByPackage.newPackage, { skyIsBlue: 42 });
 
-  Facts.incrementServerFact('newPackage', 'skyIsBlue', 21);
+  Facts.incrementServerFact("newPackage", "skyIsBlue", 21);
   test.equal(Facts._factsByPackage.newPackage, { skyIsBlue: 63 });
 
-  Facts.incrementServerFact('newPackage', 'newFact', 7);
+  Facts.incrementServerFact("newPackage", "newFact", 7);
   test.equal(Facts._factsByPackage.newPackage, { skyIsBlue: 63, newFact: 7 });
 });
 
-Tinytest.add('facts-base - setUserIdFilter', (test) => {
+Tinytest.add("facts-base - setUserIdFilter", (test) => {
   Facts.setUserIdFilter((userId) => {
-    return userId === 'test-user';
+    return userId === "test-user";
   });
-  test.isTrue(typeof Facts.setUserIdFilter === 'function');
+  test.isTrue(typeof Facts.setUserIdFilter === "function");
 });

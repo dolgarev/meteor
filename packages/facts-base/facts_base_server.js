@@ -1,8 +1,4 @@
-import {
-  Facts,
-  FACTS_COLLECTION,
-  FACTS_PUBLICATION,
-} from './facts_base_common';
+import { Facts, FACTS_COLLECTION, FACTS_PUBLICATION } from "./facts_base_common";
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -42,7 +38,7 @@ Facts.incrementServerFact = function (pkg, fact, increment) {
     factsByPackage[pkg][fact] = 0;
   }
   factsByPackage[pkg][fact] += increment;
-  const changedField = {};
+  var changedField = {};
   changedField[fact] = factsByPackage[pkg][fact];
   activeSubscriptions.forEach(function (sub) {
     sub.changed(FACTS_COLLECTION, pkg, changedField);
@@ -74,9 +70,7 @@ Meteor.defer(function () {
         sub.added(FACTS_COLLECTION, pkg, factsByPackage[pkg]);
       });
       sub.onStop(function () {
-        activeSubscriptions = activeSubscriptions.filter(
-          (activeSub) => activeSub !== sub,
-        );
+        activeSubscriptions = activeSubscriptions.filter((activeSub) => activeSub !== sub);
       });
       sub.ready();
     },
