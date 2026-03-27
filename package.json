@@ -18,6 +18,7 @@
     "@types/node": "^18.16.18",
     "@types/sockjs": "^0.3.36",
     "@types/sockjs-client": "^1.5.4",
+    "husky": "^9.1.7",
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0",
     "typescript": "^5.4.5"
@@ -31,6 +32,7 @@
     "test:unit": "cd tools/unit-tests && npm test",
     "test:idle-bot": "node --test .github/scripts/__tests__/inactive-issues.test.js",
     "install:e2e": "cd tools/modern-tests && npm install && npx playwright install --with-deps chromium chromium-headless-shell",
-    "test:e2e": "cd tools/modern-tests && npm test -- "
+    "test:e2e": "cd tools/modern-tests && npm test -- ",
+    "prepare": "husky"
   }
 }
