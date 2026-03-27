@@ -1,3 +1,5 @@
+const chalk = require('chalk');
+
 /**
  * Custom Jest reporter that prints a structured summary of all test results,
  * including detailed error logs for failures.
@@ -36,41 +38,44 @@ class SummaryReporter {
   }
 
   _printConsole(passed, failed, skipped) {
-    const divider = '═'.repeat(70);
-    const thinDivider = '─'.repeat(70);
+    const hasFails = failed.length > 0;
+    const divider = chalk.dim('═'.repeat(70));
+    const thinDivider = chalk.dim('─'.repeat(70));
 
     console.log('\n' + divider);
-    console.log('  E2E TEST SUMMARY');
+    console.log(hasFails
+      ? chalk.bold.red('  E2E TEST SUMMARY')
+      : chalk.bold.green('  E2E TEST SUMMARY'));
     console.log(divider);
 
     if (passed.length > 0) {
-      console.log(`\n  PASSED (${passed.length}):`);
+      console.log(chalk.green(`\n  PASSED (${passed.length}):`));
       console.log(thinDivider);
       for (const t of passed) {
-        const duration = t.duration ? ` (${(t.duration / 1000).toFixed(1)}s)` : '';
-        console.log(`    [PASS] ${t.name}${duration}`);
+        const duration = t.duration ? chalk.dim(` (${(t.duration / 1000).toFixed(1)}s)`) : '';
+        console.log(`    ${chalk.green('✓')} ${t.name}${duration}`);
       }
     }
 
     if (skipped.length > 0) {
-      console.log(`\n  SKIPPED (${skipped.length}):`);
+      console.log(chalk.yellow(`\n  SKIPPED (${skipped.length}):`));
       console.log(thinDivider);
       for (const t of skipped) {
-        console.log(`    [SKIP] ${t.name}`);
+        console.log(`    ${chalk.yellow('○')} ${chalk.dim(t.name)}`);
       }
     }
 
     if (failed.length > 0) {
-      console.log(`\n  FAILED (${failed.length}):`);
+      console.log(chalk.red(`\n  FAILED (${failed.length}):`));
       console.log(thinDivider);
       for (const t of failed) {
-        const duration = t.duration ? ` (${(t.duration / 1000).toFixed(1)}s)` : '';
-        console.log(`\n    [FAIL] ${t.name}${duration}`);
-        console.log(`           Suite: ${t.suite}`);
+        const duration = t.duration ? chalk.dim(` (${(t.duration / 1000).toFixed(1)}s)`) : '';
+        console.log(`\n    ${chalk.red('✕')} ${chalk.bold(t.name)}${duration}`);
+        console.log(`      ${chalk.dim('Suite:')} ${chalk.dim(t.suite)}`);
         for (const err of t.errors) {
           const indented = err
             .split('\n')
-            .map(line => `           ${line}`)
+            .map(line => `      ${chalk.red(line)}`)
             .join('\n');
           console.log(indented);
         }
@@ -82,11 +87,11 @@ class SummaryReporter {
 
     console.log('\n' + divider);
     console.log(
-      `  TOTAL: ${passed.length + failed.length + skipped.length} | ` +
-      `PASSED: ${passed.length} | ` +
-      `FAILED: ${failed.length} | ` +
-      `SKIPPED: ${skipped.length} | ` +
-      `TIME: ${(totalTime / 1000).toFixed(1)}s`
+      `  ${chalk.bold('TOTAL:')} ${passed.length + failed.length + skipped.length} ${chalk.dim('|')} ` +
+      `${chalk.green('PASSED:')} ${chalk.green(passed.length)} ${chalk.dim('|')} ` +
+      `${chalk.red('FAILED:')} ${chalk.red(failed.length)} ${chalk.dim('|')} ` +
+      `${chalk.yellow('SKIPPED:')} ${chalk.yellow(skipped.length)} ${chalk.dim('|')} ` +
+      `${chalk.dim('TIME:')} ${chalk.dim((totalTime / 1000).toFixed(1) + 's')}`
     );
     console.log(divider + '\n');
   }
