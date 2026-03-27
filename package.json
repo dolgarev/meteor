@@ -29,8 +29,5 @@
     "test:idle-bot": "node --test .github/scripts/__tests__/inactive-issues.test.js",
     "install:e2e": "cd tools/modern-tests && npm install && npx playwright install --with-deps chromium chromium-headless-shell",
     "test:e2e": "cd tools/modern-tests && npm test -- "
-  },
-  "jshintConfig": {
-    "esversion": 11
   }
 }
