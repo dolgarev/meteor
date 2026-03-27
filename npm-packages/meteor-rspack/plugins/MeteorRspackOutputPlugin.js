@@ -9,11 +9,10 @@ const { outputMeteorRspack } = require('../lib/meteorRspackHelpers');
 /**
  * Extracts file extensions that rspack is configured to handle
  * from the resolved module.rules test patterns.
- * Only returns extensions relevant for Meteor delegation (CSS-family).
  * @param {import('@rspack/core').Compiler} compiler
- * @returns {string[]} Array of extensions like ['.css', '.less', '.scss']
+ * @returns {Set<string>} Set of extensions like .css, .less, .scss
  */
-function extractDelegatedExtensions(compiler) {
+function extractConfiguredExtensions(compiler) {
   const delegatableExtensions = ['.css', '.less', '.scss', '.sass', '.styl'];
   const found = new Set();
 
@@ -37,6 +36,36 @@ function extractDelegatedExtensions(compiler) {
   }
 
   inspectRules(compiler.options.module?.rules || []);
+  return found;
+}
+
+/**
+ * Extracts file extensions that rspack both has rules for AND actually compiled.
+ * An extension is only delegated if it appears in the config rules and at least
+ * one file with that extension was part of the compilation dependency graph.
+ * This prevents Meteor from ignoring files that Rspack is configured for but
+ * never actually processes.
+ * @param {import('@rspack/core').Stats} stats
+ * @param {import('@rspack/core').Compiler} compiler
+ * @returns {string[]} Array of extensions like ['.css', '.less', '.scss']
+ */
+function extractDelegatedExtensions(stats, compiler) {
+  const configured = extractConfiguredExtensions(compiler);
+  if (configured.size === 0) return [];
+
+  const found = new Set();
+  const path = require('path');
+
+  for (const module of stats.compilation.modules) {
+    const resource = module.resource || module.userRequest;
+    if (!resource) continue;
+    const ext = path.extname(resource);
+    if (configured.has(ext)) {
+      found.add(ext);
+      if (found.size === configured.size) break;
+    }
+  }
+
   return Array.from(found);
 }
 
