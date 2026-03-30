@@ -19,6 +19,7 @@
     "@rsdoctor/rspack-plugin": "^1.2.3",
     "@rspack/cli": "^1.7.1",
     "@rspack/core": "^1.7.1",
+    "@swc/core": "^1.15.18",
     "@rspack/plugin-react-refresh": "^1.4.3",
     "@types/meteor": "^2.9.9",
     "@types/mocha": "^8.2.3",
