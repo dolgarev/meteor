@@ -689,6 +689,7 @@ export const AVAILABLE_SKELETONS = [
   "minimal",
   DEFAULT_SKELETON,
   "typescript",
+  "typescript-tailwind",
   "vue",
   "svelte",
   "tailwind",
@@ -707,6 +708,7 @@ const SKELETON_INFO = {
   "minimal": "To create an app with as few Meteor packages as possible",
   "react": "To create a basic React-based app",
   "typescript": "To create an app using TypeScript and React",
+  "typescript-tailwind": "To create an app using TypeScript, React, and Tailwind",
   "vue": "To create a basic Vue3-based app",
   "svelte": "To create a basic Svelte app",
   "tailwind": "To create an app using React and Tailwind",
@@ -714,7 +716,7 @@ const SKELETON_INFO = {
   "solid": "To create a basic Solid app",
   "coffeescript": "To create a basic CoffeeScript app",
   "babel": "To create a React app with Babel support",
-  "angular": "To create a basic Angular app",
+  "angular": "To create a basic Angular app"
 };
 
 main.registerCommand({
@@ -733,6 +735,7 @@ main.registerCommand({
     react: { type: Boolean },
     vue: { type: Boolean },
     typescript: { type: Boolean },
+    'typescript-tailwind': { type: Boolean },
     apollo: { type: Boolean },
     svelte: { type: Boolean },
     tailwind: { type: Boolean },

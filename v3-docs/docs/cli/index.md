@@ -246,6 +246,7 @@ If you run `meteor create` without arguments, Meteor will launch an interactive 
   Minimal   # To create an app with as few Meteor packages as possible
   React     # To create a basic React-based app
   Typescript # To create an app using TypeScript and React
+  Typescript-tailwind # To create an app using TypeScript, React, and Tailwind
   Vue       # To create a basic Vue3-based app
   Svelte    # To create a basic Svelte app
   Tailwind # To create an app using React and Tailwind
@@ -316,6 +317,7 @@ meteor create my-app --from https://github.com/meteor/examples --from-branch mig
 | `--apollo`       | React + Apollo (GraphQL) | [Meteor 2 with GraphQL](https://react-tutorial.meteor.com/simple-todos-graphql/) |
 | `--typescript`   | React + TypeScript      | [TypeScript Guide](/about/build-tool#typescript) |
 | `--tailwind`     | React + Tailwind CSS    | - |
+| `--typescript-tailwind` | React + TypeScript + Tailwind CSS | - |
 | `--chakra-ui`    | React + Chakra UI       | [Simple Tasks Example](https://github.com/fredmaiaarantes/simpletasks) |
  | `--coffeescript` | CoffeeScript            | - |
  | `--babel`        | React with Babel support | - |
