@@ -10,7 +10,7 @@ const { getMeteorAppSwcConfig } = require('./lib/swc.js');
 const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
 const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
 const { AssetExternalsPlugin } = require('./plugins/AssetExternalsPlugin.js');
-const { MeteorRspackOutputPlugin } = require('./plugins/MeteorRspackOutputPlugin.js');
+const { MeteorRspackOutputPlugin, extractDelegatedExtensions } = require('./plugins/MeteorRspackOutputPlugin.js');
 const { generateEagerTestFile } = require("./lib/test.js");
 const { getMeteorIgnoreEntries, createIgnoreGlobConfig } = require("./lib/ignore");
 const {
@@ -851,7 +851,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
 
   // Add MeteorRspackOutputPlugin as the last plugin to output compilation info
   const meteorRspackOutputPlugin = new MeteorRspackOutputPlugin({
-    getData: (stats, { isRebuild, compilationCount }) => ({
+    getData: (stats, { isRebuild, compilationCount, compiler }) => ({
       name: config.name,
       mode: config.mode,
       hasErrors: stats.hasErrors(),
@@ -860,6 +860,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       statsOverrided,
       compilationCount,
       isRebuild,
+      ...(!isRebuild && compiler && {
+        delegatedExtensions: extractDelegatedExtensions(stats, compiler),
+      }),
     }),
   });
   config.plugins = [meteorRspackOutputPlugin, ...(config.plugins || [])];
