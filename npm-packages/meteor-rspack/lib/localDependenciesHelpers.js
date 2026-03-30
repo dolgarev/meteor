@@ -96,7 +96,7 @@ function visitNode(node, callback) {
 
   // Visit all properties of the node
   for (const key in node) {
-    if (node.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(node, key)) {
       const value = node[key];
       if (Array.isArray(value)) {
         value.forEach(child => visitNode(child, callback));
