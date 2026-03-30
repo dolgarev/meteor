@@ -229,7 +229,7 @@ Ensure your app defines these entry files with the correct paths where each modu
 
 Defining entry points improves performance even with the Meteor bundler, as Meteor stops scanning and eagerly loading unnecessary files. For Meteor-Rspack integration, this is required, since it does not support automatic code discovery for efficiency.
 
-In Meteor-Rspack integration, all app code is ignored by Meteor and handled by Rspack. By default, Meteor still processes eagerly CSS and HTML files in the entry folder (e.g. `client/*.[html|css]` in most apps).
+In Meteor-Rspack integration, all app code is ignored by Meteor and handled by Rspack. By default, Meteor still processes eagerly HTML files in the entry folder (e.g. `client/*.html` in most apps). CSS files in the entry folder are automatically delegated to Rspack when a CSS loader is configured, see [CSS](#css) for details. If no CSS loader is present, Meteor handles them as before.
 
 If you need Meteor to handle CSS or HTML files outside the main entry folder, add them to the `modules` field. This field accepts an array of strings, each pointing to a file or folder.
 
@@ -421,6 +421,8 @@ With the Meteor–Rspack integration, `zodern:melte` no longer works. Use the of
 ### CSS
 
 Meteor-Rspack comes with built-in CSS support. You can import any CSS file into your code, and it will be processed and included in your HTML skeleton automatically. In addition, any CSS file placed in the same folder as your Meteor entry point will be processed and added as global styles without the need for explicit imports.
+
+When Rspack is configured with a CSS rule, whether through `postcss-loader`, `type: "css"`, or any other CSS-handling loader, Meteor automatically detects the handled file extensions after Rspack's first compilation and stops processing those files itself. This means you do not need to manually add CSS files to `.meteorignore` or otherwise tell Meteor to skip them. The same automatic delegation applies to Less and SCSS when their respective loaders are configured. If no CSS rule is present in the rspack configuration, Meteor continues to handle stylesheets as it normally would.
 
 ### CSS Modules
 
@@ -827,6 +829,8 @@ new GenerateSW({
 })
 ```
 
+During development, the HMR dev server writes `sw.js` to disk by default, so build-generated service workers are served by Meteor's web server without extra configuration. If your service worker uses a different filename, see the [Dev Server](#dev-server) section for how to extend `writeToDisk`.
+
 ### Dev Server
 
 You can customize the Rspack dev server much like you would when using meteor run. Any [devServer option listed in the official Rspack guide](https://rspack.rs/config/dev-server) can be applied in your app’s [`rspack.config.js`](./rspack-bundler-integration.md#custom-rspackconfigjs).
@@ -839,6 +843,23 @@ RSPACK_DEVSERVER_PORT=3232 meteor run
 ```
 
 The reason is that the Rspack dev server is handled by the Meteor so it can make both dev server works together, and the info of the port needs to be properly shared via the env.
+
+During development, the HMR dev server keeps most build assets in memory and only writes HTML files and `sw.js` to disk by default. This means if your build pipeline generates files that need to be served from the root path, like `service-worker.js`, `manifest.json`, or any other output that Meteor's web server should serve directly, you can extend `writeToDisk` in your `rspack.config.js`:
+
+```js
+const { defineConfig } = require('@meteorjs/rspack');
+
+module.exports = defineConfig(Meteor => ({
+  devServer: {
+    devMiddleware: {
+      writeToDisk: (filePath) =>
+        /\.(html)$/.test(filePath) || filePath.endsWith('service-worker.js'),
+    },
+  },
+}));
+```
+
+In production, all build outputs are written to disk normally, so this only affects local development.
 
 ### Disable Plugins
 
