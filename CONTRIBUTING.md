@@ -58,7 +58,7 @@ Current Reviewers:
 To quickly check out a PR branch from a fork for local testing, see the [Testing a fork branch](DEVELOPMENT.md#testing-a-fork-branch) section in `DEVELOPMENT.md`, or run:
 
 ```sh
-node scripts/checkout-pr.js https://github.com/meteor/meteor/pull/<PR-number>
+npm run checkout:pr -- https://github.com/meteor/meteor/pull/<PR-number>
 ```
 
 #### Core Committer

@@ -70,13 +70,13 @@ When reviewing a pull request or testing changes from a contributor's fork, use 
 
 ```sh
 # From a PR URL (requires gh CLI or falls back to GitHub API via curl)
-$ node scripts/checkout-pr.js https://github.com/meteor/meteor/pull/<PR-number>
+$ npm run checkout:pr -- https://github.com/meteor/meteor/pull/<PR-number>
 
 # From a user:branch shorthand
-$ node scripts/checkout-pr.js <user>:<branch>
+$ npm run checkout:pr -- <user>:<branch>
 
-# From a full fork repo URL and branch name
-$ node scripts/checkout-pr.js <fork-repo-url> <branch>
+# From a full fork repo URL and branch name (HTTPS or SSH)
+$ npm run checkout:pr -- <fork-repo-url> <branch>
 ```
 
 The script will:
