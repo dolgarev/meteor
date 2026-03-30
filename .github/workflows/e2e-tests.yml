@@ -33,6 +33,7 @@ jobs:
           - Babel
           - Blaze
           - Coffeescript
+          - Examples
           - Monorepo
           - Other
           - React
