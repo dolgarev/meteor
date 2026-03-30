@@ -219,7 +219,7 @@ describe('Meteor Skeletons /', () => {
   describe(
     "Typescript Tailwind Skeleton /",
     testMeteorSkeleton({
-      skeletonName: "typescript",
+      skeletonName: "typescript-tailwind",
       port: 3221,
       filePaths: {
         client: "client/main.tsx",
