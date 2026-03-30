@@ -75,8 +75,11 @@ $ npm run checkout:pr -- https://github.com/meteor/meteor/pull/<PR-number>
 # From a user:branch shorthand
 $ npm run checkout:pr -- <user>:<branch>
 
-# From a full fork repo URL and branch name (HTTPS or SSH)
+# From a full fork repo URL and branch name (HTTPS)
 $ npm run checkout:pr -- <fork-repo-url> <branch>
+
+# From a full fork repo URL and branch name (SSH)
+$ npm run checkout:pr -- git@github.com:<user>/<repo>.git <branch>
 ```
 
 The script will:

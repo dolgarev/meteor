@@ -6,11 +6,13 @@
 //   node scripts/checkout-pr.js <PR-URL>
 //   node scripts/checkout-pr.js <user>:<branch>
 //   node scripts/checkout-pr.js <fork-repo-url> <branch>
+//   node scripts/checkout-pr.js git@github.com:<user>/<repo>.git <branch>
 //
 // Examples:
 //   node scripts/checkout-pr.js https://github.com/meteor/meteor/pull/<PR-number>
 //   node scripts/checkout-pr.js <user>:<branch>
 //   node scripts/checkout-pr.js <fork-repo-url> <branch>
+//   node scripts/checkout-pr.js git@github.com:<user>/<repo>.git <branch>
 
 'use strict';
 
@@ -40,16 +42,18 @@ function die(msg) {
 
 function usage() {
   console.log(`Usage:
-  checkout-pr.js <PR-URL>
-  checkout-pr.js <user>:<branch>
-  checkout-pr.js <fork-repo-url> <branch>
+  npm run checkout:pr -- <PR-URL>
+  npm run checkout:pr -- <user>:<branch>
+  npm run checkout:pr -- <fork-repo-url> <branch>
+  npm run checkout:pr -- git@github.com:<user>/<repo>.git <branch>
 
 Prepares a local branch from a fork contribution for testing and review.
 
 Examples:
-  node scripts/checkout-pr.js https://github.com/meteor/meteor/pull/<PR-number>
-  node scripts/checkout-pr.js <user>:<branch>
-  node scripts/checkout-pr.js <fork-repo-url> <branch>`);
+  npm run checkout:pr -- https://github.com/meteor/meteor/pull/<PR-number>
+  npm run checkout:pr -- <user>:<branch>
+  npm run checkout:pr -- <fork-repo-url> <branch>
+  npm run checkout:pr -- git@github.com:<user>/<repo>.git <branch>`);
   process.exit(1);
 }
 
