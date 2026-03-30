@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { logError } = require('./log');
+
+const { logError } = require("./log");
+
+// Normalize a path to always use forward slashes (POSIX style).
+// Module identifiers must use '/' regardless of OS.
+const toPosix = (p) => p.replace(/\\/g, '/');
 
 /**
  * Returns the current working directory of the Meteor application.
@@ -107,13 +112,13 @@ export function getMeteorInitialAppEntrypoints() {
     );
 
     if (fs.existsSync(htmlPath)) {
-      mainClientHtml = path.join(clientDir, `${clientBasename}.html`);
+      mainClientHtml = toPosix(path.join(clientDir, `${clientBasename}.html`));
     } else {
       // Find first html in entry folder
       const files = fs.readdirSync(path.join(getMeteorAppDir(), clientDir));
       const htmlFile = files.find((file) => path.extname(file) === ".html");
       if (htmlFile) {
-        mainClientHtml = path.join(clientDir, htmlFile);
+        mainClientHtml = toPosix(path.join(clientDir, htmlFile));
       }
     }
   }
@@ -268,6 +273,9 @@ export function isMeteorAppNative() {
  * @returns {boolean} True if the application is in development mode, false otherwise.
  */
 export function isMeteorAppDevelopment() {
+  if (process.env.NODE_ENV) {
+    return process.env.NODE_ENV !== 'production';
+  }
   return Package.meteor?.Meteor.isDevelopment && !isMeteorAppBuild();
 }
 
@@ -276,6 +284,9 @@ export function isMeteorAppDevelopment() {
  * @returns {boolean} True if the application is in production mode, false otherwise.
  */
 export function isMeteorAppProduction() {
+  if (process.env.NODE_ENV) {
+    return process.env.NODE_ENV === 'production';
+  }
   return Package.meteor?.Meteor.isProduction || isMeteorAppBuild();
 }
 

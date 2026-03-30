@@ -82,15 +82,26 @@ export function ensureRspackBuildContextExists() {
     }
   }
 
+  const commonBuildEntries = [
+    RSPACK_BUILD_CONTEXT,
+    `*/${RSPACK_ASSETS_CONTEXT}`,
+    `*/${RSPACK_CHUNKS_CONTEXT}`,
+    RSPACK_DOCTOR_CONTEXT,
+  ];
+
+  if (process.env.METEOR_LOCAL_DIR) {
+    addGitignoreEntries(
+      appDir,
+      [process.env.METEOR_LOCAL_DIR, ...commonBuildEntries],
+      "Meteor custom local directory (METEOR_LOCAL_DIR)"
+    );
+    return buildContextPath;
+  }
+
   addGitignoreEntries(
     appDir,
-    [
-      RSPACK_BUILD_CONTEXT,
-      `*/${RSPACK_ASSETS_CONTEXT}`,
-      `*/${RSPACK_CHUNKS_CONTEXT}`,
-      RSPACK_DOCTOR_CONTEXT,
-    ],
-    'Meteor Modern-Tools build context directories',
+    commonBuildEntries,
+    "Meteor Modern-Tools build context directories"
   );
 
   return buildContextPath;
