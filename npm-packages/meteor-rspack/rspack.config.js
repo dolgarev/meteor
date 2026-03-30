@@ -29,6 +29,7 @@ const { loadUserAndOverrideConfig } = require('./lib/meteorRspackConfigHelpers.j
 const { prepareMeteorRspackConfig } = require("./lib/meteorRspackConfigFactory");
 const { extractLocalDependencies } = require('./lib/localDependenciesHelpers.js');
 
+
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
   try {
@@ -650,7 +651,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         port: devServerPort,
         devMiddleware: {
           writeToDisk: (filePath) =>
-            /\.(html)$/.test(filePath) && !filePath.includes(".hot-update."),
+            /\.(html)$/.test(filePath) || filePath.endsWith('sw.js'),
         },
         onListening(devServer) {
           if (!devServer) return;
