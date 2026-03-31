@@ -246,6 +246,7 @@ If you run `meteor create` without arguments, Meteor will launch an interactive 
   Minimal   # To create an app with as few Meteor packages as possible
   React     # To create a basic React-based app
   Typescript # To create an app using TypeScript and React
+  Typescript-tailwind # To create an app using TypeScript, React, and Tailwind
   Vue       # To create a basic Vue3-based app
   Svelte    # To create a basic Svelte app
   Tailwind # To create an app using React and Tailwind
@@ -276,8 +277,9 @@ If you run `meteor create` without arguments, Meteor will launch an interactive 
 | `--blaze`        | Basic Blaze app         | [Meteor 2 with Blaze](https://blaze-tutorial.meteor.com/) |
 | `--solid`        | Solid               | [Meteor 2 with Solid Example](https://github.com/fredmaiaarantes/meteor-solid-app/releases/tag/milestone-2.0) |
 | `--apollo`       | React + Apollo (GraphQL) | [Meteor 2 with GraphQL](https://react-tutorial.meteor.com/simple-todos-graphql/) |
-| `--typescript`   | React + TypeScript      | [TypeScript Guide](https://guide.meteor.com/build-tool.html#typescript) |
+| `--typescript`   | React + TypeScript      | [TypeScript Guide](/about/build-tool#typescript) |
 | `--tailwind`     | React + Tailwind CSS    | - |
+| `--typescript-tailwind` | React + TypeScript + Tailwind CSS | - |
 | `--chakra-ui`    | React + Chakra UI       | [Simple Tasks Example](https://github.com/fredmaiaarantes/simpletasks) |
  | `--coffeescript` | CoffeeScript            | - |
  | `--babel`        | React with Babel support | - |
@@ -293,7 +295,7 @@ If you run `meteor create` without arguments, Meteor will launch an interactive 
 | `--package` | Create a new package instead of an application |
 
 ::: warning Prototype Mode
-The `--prototype` option adds packages that make development faster but shouldn't be used in production. See the [security checklist](https://guide.meteor.com/security.html#checklist).
+The `--prototype` option adds packages that make development faster but shouldn't be used in production. See the [security checklist](/tutorials/security/security#checklist).
 :::
 
 ### Included Packages
@@ -358,7 +360,7 @@ The `--prototype` option adds packages that make development faster but shouldn'
 </details>
 
 ::: tip File Structure
-To learn more about the recommended file structure for Meteor apps, check the [Meteor Guide](https://guide.meteor.com/structure.html#javascript-structure).
+To learn more about the recommended file structure for Meteor apps, check the [Meteor Guide](/tutorials/application-structure/#javascript-structure).
 :::
 
 ##  meteor generate  {meteorgenerate}
