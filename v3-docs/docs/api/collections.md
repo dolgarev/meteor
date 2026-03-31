@@ -354,7 +354,7 @@ Meteor.methods({
 });
 ```
 
-```jsx [client.jsx]
+```jsx [client.jsx (React)]
 // When the 'give points' button in the admin dashboard is pressed, give 5
 // points to the current player. The new score will be immediately visible on
 // everyone's screens.
@@ -371,6 +371,20 @@ function AdminDashboard() {
 }
 ```
 
+```js [client.js (Blaze)]
+// When the 'give points' button in the admin dashboard is pressed, give 5
+// points to the current player. The new score will be immediately visible on
+// everyone's screens.
+Template.adminDashboard.events({
+  "click .give-points"() {
+    Players.update(Session.get("currentPlayer"), {
+      $inc: { score: 5 },
+    });
+  },
+});
+```
+
+:::
 
 You can use `update` to perform a Mongo upsert by setting the `upsert`
 option to true. You can also use the [`upsert`](#Mongo-Collection-upsert) method to perform an
@@ -450,7 +464,7 @@ Meteor.startup(async () => {
 });
 ```
 
-```jsx [client.jsx]
+```jsx [client.jsx (React)]
 // When the 'remove' button is clicked on a chat message, delete that message.
 function ChatMessage({ message }) {
   const handleRemove = () => {
@@ -459,6 +473,15 @@ function ChatMessage({ message }) {
 
   return <button onClick={handleRemove}>Remove</button>;
 }
+```
+
+```js [client.js (Blaze)]
+// When the 'remove' button is clicked on a chat message, delete that message.
+Template.chat.events({
+  "click .remove"() {
+    Messages.remove(this._id);
+  },
+});
 ```
 
 :::
