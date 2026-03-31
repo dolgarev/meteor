@@ -1203,7 +1203,7 @@ If you want to use oplog tailing for livequeries, you should also set
 the detail can differ depending on how you host your MongoDB. Read more [here](https://github.com/meteor/docs/blob/master/long-form/oplog-observe-driver.md)).
 
 > You must ensure you set the `replicaSet` parameter on your
-> `METEOR_OPLOG_URL`
+> `MONGO_OPLOG_URL`
 
 ## MongoDB connection options {#mongo_connection_options}
 
