@@ -53,12 +53,12 @@ Use the same code whether you’re developing for web, iOS, Android, or desktop 
 
 How about trying a tutorial to get started with your favorite technology?
 
-| [<img align="left" width="25" src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg"> React](https://docs.meteor.com/tutorials/react/) |
+| [<img alt="React logo" align="left" width="25" src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg"> React](https://docs.meteor.com/tutorials/react/) |
 | - |
-| [<img align="left" width="25" src="https://progsoft.net/images/blaze-css-icon-3e80acb3996047afd09f1150f53fcd78e98c1e1b.png"> Blaze](https://docs.meteor.com/tutorials/blaze/) |
-| [<img align="left" width="25" src="https://vuejs.org/images/logo.png"> Vue](https://docs.meteor.com/tutorials/vue/meteorjs3-vue3.html) |
-| [<img align="left" width="25" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Svelte_Logo.svg/1280px-Svelte_Logo.svg.png?_=20191219133350">  Svelte](https://docs.meteor.com/tutorials/svelte/) |
-| [<img align="left" width="25" src="https://www.solidjs.com/img/logo/without-wordmark/logo.svg"> Solid](https://docs.meteor.com/tutorials/solid/) |
+| [<img alt="Blaze logo" align="left" width="25" src="https://progsoft.net/images/blaze-css-icon-3e80acb3996047afd09f1150f53fcd78e98c1e1b.png"> Blaze](https://docs.meteor.com/tutorials/blaze/) |
+| [<img alt="Vue logo" align="left" width="25" src="https://vuejs.org/images/logo.png"> Vue](https://docs.meteor.com/tutorials/vue/meteorjs3-vue3.html) |
+| [<img alt="Svelte logo" align="left" width="25" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Svelte_Logo.svg/1280px-Svelte_Logo.svg.png?_=20191219133350">  Svelte](https://docs.meteor.com/tutorials/svelte/) |
+| [<img alt="Solid logo" align="left" width="25" src="https://www.solidjs.com/img/logo/without-wordmark/logo.svg"> Solid](https://docs.meteor.com/tutorials/solid/) |
 
 # 🚀 Quick Start
 
