@@ -87,16 +87,9 @@ that supports Mongo-style [`find`](#Mongo-Collection-find), [`insert`](#Mongo-Co
 [`update`](#Mongo-Collection-update), and [`remove`](#Mongo-Collection-remove) operations. (On both the
 client and the server, this scratchpad is implemented using Minimongo.)
 
-By default, Meteor automatically publishes every document in your
-collection to each connected client. To turn this behavior off, remove
-the `autopublish` package, in your terminal:
-
-```bash
-meteor remove autopublish
-```
-
-and instead call [`Meteor.publish`](./meteor.md#Meteor-publish) to specify which parts of
-your collection should be published to which users.
+New Meteor 3.x projects do **not** include the `autopublish` package, so you need
+to call [`Meteor.publish`](./meteor.md#Meteor-publish) to specify which parts of your collection
+should be published to which users.
 
 ```js
 // client.js
@@ -105,7 +98,7 @@ your collection should be published to which users.
 // written to the server-side database a fraction of a second later, and a
 // fraction of a second after that, it will be synchronized down to any other
 // clients that are subscribed to a query that includes it (see
-// `Meteor.subscribe` and `autopublish`).
+// `Meteor.subscribe`).
 const Posts = new Mongo.Collection("posts");
 Posts.insert({ title: "Hello world", body: "First post" });
 
@@ -664,12 +657,8 @@ applications. In insecure mode, if you haven't set up any `allow` or `deny`
 rules on a collection, then all users have full write access to the
 collection. This is the only effect of insecure mode. If you call `allow` or
 `deny` at all on a collection, even `Posts.allow({})`, then access is checked
-just like normal on that collection. **New Meteor projects start in insecure
-mode by default.** To turn it off just run in your terminal:
-
-```bash
-meteor remove insecure
-```
+just like normal on that collection. New Meteor 3.x projects do **not** include
+the `insecure` package by default.
 
 <ApiBox name="Mongo.Collection#deny" instanceName="Collection"/>
 
