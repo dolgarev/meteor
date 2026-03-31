@@ -278,7 +278,7 @@ In each file, update only packages that are at prerelease versions (or newly add
 
 Use the [changelog skill](../changelog/SKILL.md) to create or update the changelog entry at `v3-docs/docs/generators/changelog/versions/<VERSION>.md`.
 
-Update the **Bumped Meteor Packages** section in the changelog with all packages that were bumped, using the final version (without prerelease suffix). Format: one package per line, `name@version`. Include `meteor-tool@<version>` when applicable.
+Update the **Bumped Meteor Packages** section in the changelog with all packages that were bumped. Use the version that matches the current release stage — beta versions for beta releases, RC versions for RC releases, and final versions (no prerelease suffix) for official releases. Format: one package per line, `name@version`. Include `meteor-tool@<version>` when applicable.
 
 Update any documentation files that reference specific package versions (e.g., rspack installation commands).
 
