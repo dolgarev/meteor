@@ -91,10 +91,10 @@ Users can associate more than one email address with their account. Meteor store
 await Accounts.addEmailAsync(userId, "work@example.com");
 
 // Remove an address (server)
-Accounts.removeEmail(userId, "old@example.com");
+await Accounts.removeEmail(userId, "old@example.com");
 
 // Send a verification email to a specific address (server)
-Accounts.sendVerificationEmail(userId, "work@example.com");
+await Accounts.sendVerificationEmail(userId, "work@example.com");
 ```
 
 A common pattern is to record a "primary" email address — the one used for notifications and password resets — as a top-level field on the user document:
@@ -209,10 +209,14 @@ If you need to generate a token without sending an email (for example, to build 
 
 ```js
 // Generate a password reset token (server)
-const { token } = Accounts.generateResetToken(userId, email, "resetPassword");
+const { token } = await Accounts.generateResetToken(
+  userId,
+  email,
+  "resetPassword"
+);
 
 // Generate an email verification token (server)
-const { token } = Accounts.generateVerificationToken(userId, email);
+const { token } = await Accounts.generateVerificationToken(userId, email);
 ```
 
 The email is generated using the email templates from [`Accounts.emailTemplates`](/api/accounts#Accounts-emailTemplates), and includes links generated with `Accounts.urls`.
@@ -226,7 +230,11 @@ Accounts.onResetPasswordLink(async (token, done) => {
   // Display the password reset UI, get the new password...
 
   try {
-    await Accounts.resetPassword(token, newPassword);
+    await new Promise((resolve, reject) =>
+      Accounts.resetPassword(token, newPassword, (err) =>
+        err ? reject(err) : resolve()
+      )
+    );
     // Resume normal operation
     done();
   } catch (err) {
@@ -248,10 +256,10 @@ If you have customized the URL, you will need to add a new route to your router 
 
 #### Completing the process
 
-When the user submits the form, you need to call the appropriate function to commit their change to the database. Both functions return a `Promise`:
+When the user submits the form, you need to call the appropriate function to commit their change to the database. Both functions are callback-based; wrap them in a `Promise` to use with `async/await`:
 
-1. [`Accounts.resetPassword(token, newPassword)`](/api/accounts#Accounts-resetPassword) — use this both for resetting the password and enrolling a new user; it accepts both kinds of tokens. Logs in the user after a successful reset (unless 2FA is enabled — see [Two-Factor Authentication](#two-factor-authentication-accounts-2fa)).
-2. [`Accounts.verifyEmail(token)`](/api/accounts#Accounts-verifyEmail) — logs in the user after a successful verification (unless 2FA is enabled).
+1. [`Accounts.resetPassword(token, newPassword, callback)`](/api/accounts#Accounts-resetPassword) — use this both for resetting the password and enrolling a new user; it accepts both kinds of tokens. Logs in the user after a successful reset (unless 2FA is enabled — see [Two-Factor Authentication](#two-factor-authentication-accounts-2fa)).
+2. [`Accounts.verifyEmail(token, callback)`](/api/accounts#Accounts-verifyEmail) — logs in the user after a successful verification (unless 2FA is enabled).
 
 After you have called one of the two functions above or the user has cancelled the process, call the `done` function you got in the link callback.
 
@@ -324,25 +332,35 @@ When the user clicks the link in their email (or copies the token), call:
 
 ```js
 // Client
-await Meteor.passwordlessLoginWithToken({ email: "ada@lovelace.com" }, token);
+await new Promise((resolve, reject) =>
+  Meteor.passwordlessLoginWithToken(
+    { email: "ada@lovelace.com" },
+    token,
+    (err) => (err ? reject(err) : resolve())
+  )
+);
 ```
 
 If the user has [Two-Factor Authentication](#two-factor-authentication-accounts-2fa) enabled, use the 2FA variant instead:
 
 ```js
-await Meteor.passwordlessLoginWithTokenAnd2faCode(
-  { email: "ada@lovelace.com" },
-  token,
-  totpCode
+await new Promise((resolve, reject) =>
+  Meteor.passwordlessLoginWithTokenAnd2faCode(
+    { email: "ada@lovelace.com" },
+    token,
+    totpCode,
+    (err) => (err ? reject(err) : resolve())
+  )
 );
 ```
 
 ### Automatic URL-based login
 
-Add `Accounts.autoLoginWithToken()` to your client startup code to detect when the URL contains a login token (e.g. from an email link) and log the user in automatically:
+The `accounts-passwordless` package automatically detects when the URL contains a `loginToken` query parameter (e.g. from an email link) and logs the user in. This is handled by `Accounts.autoLoginWithToken()`, which the package calls internally on startup — **you do not need to call it yourself**.
+
+If you need to trigger the check manually (for example, after programmatically updating the URL), you can call it directly:
 
 ```js
-// client-side startup
 Accounts.autoLoginWithToken();
 ```
 
@@ -418,10 +436,13 @@ When a user has 2FA enabled, the standard `Meteor.loginWithPassword` call will f
 
 ```js
 try {
-  await Meteor.loginWithPasswordAnd2faCode(
-    "ada@lovelace.com",
-    "mypassword",
-    totpCode
+  await new Promise((resolve, reject) =>
+    Meteor.loginWithPasswordAnd2faCode(
+      "ada@lovelace.com",
+      "mypassword",
+      totpCode,
+      (err) => (err ? reject(err) : resolve())
+    )
   );
 } catch (err) {
   console.error("Login failed:", err);
