@@ -101,16 +101,22 @@ For each changed package, Claude should analyze the diff to determine the bump m
 git diff devel -- packages/<name>/
 ```
 
+**IMPORTANT — Auto-update safety rule:** Meteor patch versions are picked up automatically by apps using `~` semver ranges. A patch bump that changes observable behavior can silently break apps on their next update. **When in doubt, bump minor** — it's always safer. Minor bumps require explicit opt-in, giving users control over when they adopt changes.
+
 **Check for minor bump signals:**
 - New functions or methods exported in `package.js` (`api.export`, `api.addFiles` for new files)
 - New public methods added to existing classes (e.g., new assertion methods, new query helpers)
 - New configuration options or capabilities that users can opt into
 - Significant new features even without new exports (e.g., new bundler capabilities)
+- **Removed internal methods/functions** — even `_`-prefixed methods, since Meteor users commonly monkey-patch internals
+- **Changed which implementation runs** — e.g., switching from a polyfill to native, or replacing a dependency, even if the API is the same
+- **Behavioral changes in existing code paths** — changed defaults, different error handling, altered timing/ordering, even if "correct"
+- **Changed HTML templates or UI content** — packages that deliver HTML via `addFiles` (e.g., `*-config-ui` packages with OAuth setup instructions) produce different user-visible output when their templates change
 
 **Check for patch bump signals:**
-- Changes only to existing function bodies (bug fixes, optimizations)
-- TypeScript type corrections (`.d.ts` changes only)
-- Removed redundant code with no behavior change
+- Changes only to existing function bodies that **fix clearly incorrect behavior** (null checks, crash fixes, typo corrections)
+- TypeScript type corrections (additive `.d.ts` changes only)
+- Removed truly redundant code with **provably identical behavior** (e.g., `return await` → `return` in async function)
 - Test-only changes alongside minor runtime fixes
 - Documentation or JSDoc updates
 
@@ -129,6 +135,8 @@ When proposing version bumps to the user, always present a table with the **reas
 |---------|---------|------|-------------|--------|
 | roles | 1.0.2 | minor | 1.1.0-betaXXX.0 | **New public API:** `getUserIdsInRoleAsync` added |
 | webapp | 2.1.1 | patch | 2.1.2-betaXXX.0 | Removed Vary header — bug fix, no new APIs |
+| google-config-ui | 1.0.4 | minor | 1.1.0-betaXXX.0 | **UI content change:** OAuth setup instructions updated — user-facing HTML differs |
+| ddp-client | 3.1.1 | minor | 3.2.0-betaXXX.0 | **Removed internal method:** `_processOneDataMessage` — could break monkey-patching |
 ```
 
 Always get user confirmation before applying the bumps.
@@ -146,7 +154,7 @@ babel-compiler
 └── minifier-js      (registerBuildPlugin, uses babel-compiler)
 ```
 
-**Rule:** If `babel-compiler` is in the bump list, also bump `ecmascript`, `typescript`, and `minifier-js` (patch, unless they have their own changes warranting a higher bump).
+**Rule:** If `babel-compiler` is in the bump list, also bump `ecmascript`, `typescript`, and `minifier-js`. Cascade bumps must match or exceed the upstream magnitude — if `babel-compiler` gets a minor bump, cascading packages also get minor (unless their own changes warrant major).
 
 This rule applies only to build plugin dependencies (`registerBuildPlugin` + `api.use` of the upstream package). It does **not** apply to:
 - Umbrella/wrapper packages that `api.imply` a bumped package (e.g., `ddp` implying `ddp-server`)
@@ -173,7 +181,7 @@ When presenting the bump table, mark cascading bumps clearly:
 | `packages/*/package.js` | Yes | Yes | Yes |
 | `scripts/admin/meteor-release-experimental.json` | Yes | Yes | No |
 | `scripts/admin/meteor-release-official.json` | No | No | Yes |
-| `.meteor/versions` in test apps | Yes | Yes | Yes |
+| `.meteor/versions` in `test-apps/` only | Yes | Yes | Yes |
 | `npm-packages/meteor-installer/config.js` | No | No | Yes |
 | `npm-packages/meteor-installer/package.json` + lock | No | No | Yes |
 | `v3-docs/` (changelog, docs with version refs) | Yes | Yes | Yes |
@@ -264,10 +272,10 @@ Edit `scripts/admin/meteor-release-experimental.json`:
 
 ### Step 3: Update `.meteor/versions` in test apps
 
-Known locations under `tools/modern-tests/apps/` (e.g., `solid`, `svelte`, `vue`):
+**Only update test apps under `test-apps/`** (e.g., `test-apps/34app/`). Do **NOT** update `.meteor/versions` in `tools/tests/apps/` or `tools/e2e-tests/apps/` — those are pinned for CI stability.
 
 ```bash
-find tools/ -name "versions" -path "*/.meteor/*"
+find test-apps/ -name "versions" -path "*/.meteor/*"
 ```
 
 In each file, update only packages that are at prerelease versions (or newly added packages). Leave already-stable package versions untouched.
@@ -312,7 +320,7 @@ Edit `scripts/admin/meteor-release-experimental.json`:
 
 ### Step 3: Update `.meteor/versions` in test apps
 
-Same rule as beta: update only packages at prerelease versions.
+Same rule as beta: only `test-apps/`, not `tools/tests/apps/` or `tools/e2e-tests/apps/`. Update only packages at prerelease versions.
 
 ### Step 4: Update documentation and changelog
 
@@ -353,7 +361,7 @@ Edit `scripts/admin/meteor-release-official.json`:
 
 #### Step 3: Update `.meteor/versions` in test apps
 
-Strip prerelease suffixes from packages that were at RC versions. Leave stable versions untouched.
+Only `test-apps/`, not `tools/tests/apps/` or `tools/e2e-tests/apps/`. Strip prerelease suffixes from packages that were at RC versions. Leave stable versions untouched.
 
 #### Step 4: Update changelog and docs
 
@@ -404,7 +412,7 @@ Run `npm install` in `npm-packages/meteor-installer/` to regenerate the lock fil
 - [ ] Present bump table with reasons to user and get confirmation
 - [ ] Apply version bumps to all `packages/*/package.js`
 - [ ] Update `scripts/admin/meteor-release-experimental.json` version to `X.Y.Z-beta.N`
-- [ ] Update `.meteor/versions` in test apps (prerelease packages only)
+- [ ] Update `.meteor/versions` in `test-apps/` only (not `tools/tests/apps/` or `tools/e2e-tests/apps/`)
 - [ ] Update changelog at `v3-docs/docs/generators/changelog/versions/`
 - [ ] Update docs referencing package versions
 
@@ -412,7 +420,7 @@ Run `npm install` in `npm-packages/meteor-installer/` to regenerate the lock fil
 
 - [ ] Update prerelease suffix from beta to RC (or increment RC) in all `packages/*/package.js`
 - [ ] Update `scripts/admin/meteor-release-experimental.json` version to `X.Y.Z-rc.N`
-- [ ] Update `.meteor/versions` in test apps (prerelease packages only)
+- [ ] Update `.meteor/versions` in `test-apps/` only (not `tools/tests/apps/` or `tools/e2e-tests/apps/`)
 - [ ] Update changelog
 - [ ] Update docs referencing package versions
 
@@ -420,7 +428,7 @@ Run `npm install` in `npm-packages/meteor-installer/` to regenerate the lock fil
 
 - [ ] Strip RC suffixes from all `packages/*/package.js`
 - [ ] Update `scripts/admin/meteor-release-official.json` (version `X.Y`, `official: true`)
-- [ ] Update `.meteor/versions` in test apps (strip prerelease suffixes)
+- [ ] Update `.meteor/versions` in `test-apps/` only (strip prerelease suffixes)
 - [ ] Finalize changelog (set date, replace RC versions with final)
 - [ ] Update `v3-docs/docs/history.md`
 - [ ] **Separate commit:** Update `npm-packages/meteor-installer/config.js` (`'X.Y'`)
