@@ -26,6 +26,20 @@ const isMacOS = () => {
   return platform() === 'darwin';
 };
 
+// Resolve the current process's primary group name by looking up its GID in
+// /etc/group. This is used in tests that chown a socket file: we need a group
+// the running user actually belongs to, so the chown doesn't fail with EPERM.
+const getCurrentGroupName = () => {
+  try {
+    const gid = userInfo().gid;
+    const lines = readFileSync('/etc/group', 'utf8').split('\n');
+    const match = lines.find(line => parseInt(line.split(':')[2], 10) === gid);
+    return match ? match.split(':')[0] : null;
+  } catch (_) {
+    return null;
+  }
+};
+
 const removeTestSocketFile = () => {
   try {
     unlinkSync(testSocketFile);
@@ -133,7 +147,7 @@ testAsyncMulti(
       // use UNIX_SOCKET_PATH and UNIX_SOCKET_GROUP
       const { httpServer, server } = prepareServer();
 
-      const groupToUse = Boolean(process.env.TRAVIS) && 'travis' || (isMacOS() ? 'staff' : 'root');
+      const groupToUse = isMacOS() ? 'staff' : (getCurrentGroupName() || 'root');
       process.env.UNIX_SOCKET_PATH = testSocketFile;
       process.env.UNIX_SOCKET_GROUP = groupToUse;
       process.env.UNIX_SOCKET_PERMISSIONS = '777';
