@@ -16,7 +16,6 @@ jobs:
     timeout-minutes: 90
     env:
       CXX: g++-12
-      TEST_PACKAGES_EXCLUDE: stylus
       METEOR_MODERN: true
       NODE_ENV: CI
 
@@ -59,4 +58,6 @@ jobs:
           fi
 
       - name: Run test-in-console suite
-        run: ./packages/test-in-console/run.sh
+        run: |
+          export TEST_PACKAGES_EXCLUDE='stylus'
+         ./packages/test-in-console/run.sh
