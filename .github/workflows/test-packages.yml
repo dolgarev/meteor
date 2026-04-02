@@ -14,10 +14,6 @@ jobs:
   test-packages:
     runs-on: oss-vm
     timeout-minutes: 90
-    env:
-      CXX: g++-12
-      METEOR_MODERN: true
-      NODE_ENV: CI
 
     steps:
       - name: Fix workspace permissions
@@ -59,5 +55,12 @@ jobs:
 
       - name: Run test-in-console suite
         run: |
-          export TEST_PACKAGES_EXCLUDE='stylus'
+          export TEST_PACKAGES_EXCLUDE="stylus"
+          export METEOR_MODERN="true"
+          export NODE_ENV="CI"
+          export CXX="g++-12"
+          export phantom="false"
+          export TIMEOUT_SCALE_FACTOR="20"
+          export METEOR_HEADLESS="true"
+
          ./packages/test-in-console/run.sh
