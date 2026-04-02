@@ -8,8 +8,13 @@
 cd $(dirname $0)/../..
 export METEOR_HOME=`pwd`
 
-# Installs into dev_bundle/lib/node_modules/puppeteer.
-./meteor npm install -g puppeteer@23.6.0
+# Install puppeteer into dev_bundle only when it is not already available globally
+# (e.g. on oss-vm, where puppeteer@23.6.0 is pre-installed via system npm and
+# NODE_PATH is set to $(npm root -g) by the CI workflow).
+if ! node -e "require('./dev_bundle/lib/node_modules/puppeteer')" 2>/dev/null && \
+   ! node -e "require('puppeteer')" 2>/dev/null; then
+  ./meteor npm install -g puppeteer@23.6.0
+fi
 
 export PATH=$METEOR_HOME:$PATH
 
