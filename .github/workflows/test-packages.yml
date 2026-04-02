@@ -28,6 +28,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Expose globally-installed puppeteer to Node.js
         # puppeteer@23.6.0 is pre-installed on oss-vm via `npm install -g`.
