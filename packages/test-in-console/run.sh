@@ -18,7 +18,14 @@ fi
 
 export PATH=$METEOR_HOME:$PATH
 
-export URL='http://127.0.0.1:4096/'
+# Pick a port that is unique per concurrent runner on the same host so that
+# multiple matrix jobs running simultaneously on one machine do not collide.
+# We derive an offset from the runner name (e.g. "actions-runner20" → 20) and
+# add it to the base port 4096.  When no runner number is present (local runs)
+# the offset is 0, so the default 4096 is used unchanged.
+_RUNNER_NUM=$(echo "${RUNNER_NAME:-}" | tr -dc '0-9' | sed 's/^0*//')
+_PORT=$(( 4096 + ${_RUNNER_NUM:-0} ))
+export URL="http://127.0.0.1:$_PORT/"
 export METEOR_PACKAGE_DIRS='packages/deprecated'
 
 # --- Hosted CI mode ---
@@ -39,7 +46,7 @@ if [ "${METEOR_HOSTED_CI:-}" = "true" ]; then
   export TEST_PACKAGES_EXCLUDE="${TEST_PACKAGES_EXCLUDE:+${TEST_PACKAGES_EXCLUDE},}${_BLAZE},${_DEPRECATED}"
 fi
 
-exec 3< <(./meteor test-packages --driver-package test-in-console -p 4096 --exclude ${TEST_PACKAGES_EXCLUDE:-''} "$@")
+exec 3< <(./meteor test-packages --driver-package test-in-console -p "$_PORT" --exclude ${TEST_PACKAGES_EXCLUDE:-''} "$@")
 EXEC_PID=$!
 trap "pkill -TERM -P $EXEC_PID; exit 1" SIGINT
 
