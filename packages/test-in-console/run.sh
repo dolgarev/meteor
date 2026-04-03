@@ -21,10 +21,13 @@ export PATH=$METEOR_HOME:$PATH
 # Pick a port that is unique per concurrent runner on the same host so that
 # multiple matrix jobs running simultaneously on one machine do not collide.
 # We derive an offset from the runner name (e.g. "actions-runner20" → 20) and
-# add it to the base port 4096.  When no runner number is present (local runs)
+# multiply by 2 so that each runner gets two consecutive ports: one for the
+# Meteor HTTP server and one for the MongoDB instance that Meteor spawns on
+# PORT+1.  Without this gap, runner N's Mongo (PORT+1) would collide with
+# runner N+1's HTTP port.  When no runner number is present (local runs)
 # the offset is 0, so the default 4096 is used unchanged.
 _RUNNER_NUM=$(echo "${RUNNER_NAME:-}" | tr -dc '0-9' | sed 's/^0*//')
-_PORT=$(( 4096 + ${_RUNNER_NUM:-0} ))
+_PORT=$(( 4096 + ${_RUNNER_NUM:-0} * 2 ))
 export URL="http://127.0.0.1:$_PORT/"
 export METEOR_PACKAGE_DIRS='packages/deprecated'
 
