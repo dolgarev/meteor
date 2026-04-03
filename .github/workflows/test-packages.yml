@@ -26,22 +26,18 @@ jobs:
           - name: accounts
             packages: >-
               accounts-base accounts-password accounts-passwordless accounts-2fa
-              accounts-oauth accounts-ui-unstyled
-              audit-argument-checks check
+              accounts-oauth accounts-ui-unstyled check
 
           - name: auth-social
             packages: >-
               oauth oauth2 oauth-encryption
-              accounts-facebook accounts-github accounts-google accounts-twitter
-              accounts-weibo accounts-meetup accounts-meteor-developer
               facebook-oauth github-oauth google-oauth weibo-oauth
               meetup-oauth meteor-developer-oauth
 
           - name: database
             packages: >-
-              mongo minimongo allow-deny diff-sequence mongo-id
-              geojson-utils id-map ordered-dict binary-heap
-              npm-mongo npm-mongo-legacy
+              mongo minimongo allow-deny diff-sequence
+              geojson-utils binary-heap
 
           - name: ddp-realtime
             packages: >-
@@ -51,12 +47,11 @@ jobs:
 
           - name: build
             packages: >-
-              babel-compiler babel-runtime ecmascript ecmascript-runtime
-              ecmascript-runtime-client ecmascript-runtime-server
-              caching-compiler typescript minifier-css minifier-js
-              standard-minifier-css static-html-tools es5-shim
+              ecmascript ecmascript-runtime
+              typescript minifier-css minifier-js
+              static-html-tools
               constraint-solver package-version-parser
-              modules modules-runtime modules-runtime-hot
+              modules-runtime modules-runtime-hot
 
           - name: webapp
             packages: >-
@@ -65,9 +60,9 @@ jobs:
 
           - name: core
             packages: >-
-              meteor core-runtime base64 ejson random tracker reactive-var
-              reactive-dict callback-hook retry url promise session
-              dynamic-import localstorage fetch roles facts-base
+              meteor base64 ejson random tracker
+              reactive-dict callback-hook url promise session
+              localstorage fetch roles facts-base
               logic-solver test-helpers rspack
 
     steps:
