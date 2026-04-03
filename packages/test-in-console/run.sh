@@ -63,10 +63,18 @@ trap "pkill -TERM -P $EXEC_PID; exit 1" SIGINT
 # ERR_CONNECTION_REFUSED from Puppeteer.
 sed '/test-in-console listening$/q' <&3
 
+# Drain remaining Meteor output so the process is never blocked on a full pipe.
+# Without this, Meteor's write() calls stall once the kernel pipe buffer fills
+# (e.g. from npm-dep update lines), which freezes its HTTP server and causes
+# Puppeteer's navigation to time out.
+cat <&3 >/dev/null &
+_DRAIN_PID=$!
+
 if ! kill -0 "$EXEC_PID" 2>/dev/null; then
   echo "" >&2
   echo "error: meteor test-packages exited before the server started listening on port $_PORT." >&2
   echo "Check the output above for the actual crash reason." >&2
+  kill $_DRAIN_PID 2>/dev/null || true
   pkill -TERM -P $EXEC_PID 2>/dev/null || true
   exit 1
 fi
@@ -75,5 +83,6 @@ node --trace-warnings "$METEOR_HOME/packages/test-in-console/puppeteer_runner.js
 
 STATUS=$?
 
+kill $_DRAIN_PID 2>/dev/null || true
 pkill -TERM -P $EXEC_PID
 exit $STATUS
