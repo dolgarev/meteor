@@ -120,29 +120,28 @@ jobs:
         #   --rm               — discard the container after the run
         #   --shm-size=2gb     — Chrome requires more shared memory than Docker's 64 MB default
         #   --user             — run as the runner uid/gid so volume-mounted files
-        #                        (workspace, npm cache) retain their original ownership
+        #                        (workspace, home dir) retain their original ownership
         #   -v WORKSPACE       — the checked-out source and all restored caches
         #                        (.meteor, dev_bundle, .babel-cache) live here
-        #   -v HOME/.npm       — reuse the npm cache restored by actions/cache
-        #   HOME=/tmp          — Chrome's crashpad writes to $HOME/.local; /tmp is
-        #                        always world-writable regardless of runner uid,
-        #                        avoiding "Permission denied" when the runner uid does
-        #                        not own /home/ubuntu inside the Ubuntu base image.
-        #   npm_config_cache   — pin npm's cache to the volume-mounted host path so
-        #                        it is still reused even though HOME is now /tmp.
+        #   -v HOME:HOME       — bind-mount the runner's real home directory at the
+        #                        same path inside the container. This lets Chrome's
+        #                        crashpad write to $HOME/.local (the runner uid owns
+        #                        the host path, so the write succeeds), and lets
+        #                        Meteor read/write $HOME/.meteor without hitting
+        #                        first-run interactive prompts in a bare /tmp.
+        #                        The npm cache ($HOME/.npm) is included automatically.
         run: |
           docker run --rm \
             --shm-size=2gb \
             --user "$(id -u):$(id -g)" \
-            --env HOME=/tmp \
-            --env npm_config_cache="$HOME/.npm" \
+            --env HOME="$HOME" \
             --env CXX=g++-12 \
             --env METEOR_HOSTED_CI=true \
             --env NODE_PATH=/usr/local/lib/node_modules \
             --env PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
             --env PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
             -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" \
-            -v "$HOME/.npm:$HOME/.npm" \
+            -v "$HOME:$HOME" \
             -w "$GITHUB_WORKSPACE" \
             meteor-test-packages:local \
             ./packages/test-in-console/run.sh ${{ matrix.group.packages }}
