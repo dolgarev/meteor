@@ -9,6 +9,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
-      - run: npm install
-      - name: Check TypeScript type coverage (100%)
+      - run: npm ci
+      - name: Check TypeScript type coverage (85%)
         run: npm run ts-coverage:ci
