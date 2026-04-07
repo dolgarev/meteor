@@ -18,8 +18,7 @@
   },
   "include": [
     "packages/**/*.ts",
-    "tools/**/*.ts",
-    "types/**/*.d.ts"
+    "packages/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
