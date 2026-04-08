@@ -46,15 +46,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-meteor-
 
-      - name: Install system dependencies
-        # g++-12 is needed to build native Node.js add-ons (e.g. fibers).
-        # All Chromium dependencies are already satisfied on oss-vm.
-        run: |
-          if ! dpkg -s g++-12 >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y g++-12
-          fi
-
       - name: Run test-in-console suite
         run: |
           export TEST_PACKAGES_EXCLUDE="stylus"
