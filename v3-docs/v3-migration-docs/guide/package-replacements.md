@@ -65,10 +65,10 @@ When a package doesn't have a Meteor 3-compatible version:
 
 | Old Package | Replacement | Notes |
 |---|---|---|
-| `fourseven:scss` | Remove | rspack (Meteor 3.4+) has native SCSS support |
+| `fourseven:scss` | Remove (if using rspack on Meteor 3.4+) | rspack has native SCSS support |
 
 ::: info
-For projects on Meteor 3.4+ with rspack, many build-tool-related Atmosphere packages (SCSS, Less, etc.) are no longer needed as rspack handles these natively.
+For projects on Meteor 3.4+ with rspack, many build-tool-related Atmosphere packages (SCSS, Less, etc.) are no longer needed as rspack handles these natively. See the [Meteor-Rspack integration guide](https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html) for setup details and supported features.
 :::
 
 ## Utilities
