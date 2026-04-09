@@ -189,6 +189,7 @@ jobs:
       - name: Running self-test (Test Group 0)
         timeout-minutes: 35
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -211,7 +212,9 @@ jobs:
   test-group-1:
     name: "Test Group 1 (^com[n-z])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -251,6 +254,7 @@ jobs:
       - name: Running self-test (Test Group 1)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -318,6 +322,7 @@ jobs:
       - name: Running self-test (Test Group 2)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -382,6 +387,7 @@ jobs:
       - name: Running self-test (Test Group 3)
         timeout-minutes: 35
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -446,6 +452,7 @@ jobs:
       - name: Running self-test (Test Group 4)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -510,6 +517,7 @@ jobs:
       - name: Running self-test (Test Group 5)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -574,6 +582,7 @@ jobs:
       - name: Running self-test (Test Group 6)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -638,6 +647,7 @@ jobs:
       - name: Running self-test (Test Group 7)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -702,6 +712,7 @@ jobs:
       - name: Running self-test (Test Group 8)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -766,6 +777,7 @@ jobs:
       - name: Running self-test (Test Group 9)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -830,6 +842,7 @@ jobs:
       - name: Running self-test (Test Group 10)
         timeout-minutes: 25
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
@@ -894,6 +907,7 @@ jobs:
       - name: Running self-test (Test Group 11)
         timeout-minutes: 40
         run: |
+          mkdir -p tmp/results/junit
           ulimit -c unlimited
           echo "Test group pattern: $TEST_GROUP"
           ./meteor self-test \
