@@ -36,7 +36,9 @@ jobs:
   setup:
     name: Setup
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     timeout-minutes: 75
     steps:
       - name: Checkout repository
@@ -76,7 +78,9 @@ jobs:
   isolated-tests:
     name: Isolated Tests
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 45
     steps:
@@ -142,7 +146,9 @@ jobs:
   test-group-0:
     name: "Test Group 0 (^[a-b]|^c[a-n]|^co[a-l]|^comm)"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 35
     env:
@@ -267,7 +273,9 @@ jobs:
   test-group-2:
     name: "Test Group 2 (^co[n-z])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -331,7 +339,9 @@ jobs:
   test-group-3:
     name: "Test Group 3 (^c[p-z]|^h[a-e])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 35
     env:
@@ -393,7 +403,9 @@ jobs:
   test-group-4:
     name: "Test Group 4 (^h[f-z]|^[i-l])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -455,7 +467,9 @@ jobs:
   test-group-5:
     name: "Test Group 5 (^m[a-n]|^mo[a-d])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -517,7 +531,9 @@ jobs:
   test-group-6:
     name: "Test Group 6 (^mo[e-z]|^m[p-z]|^[n-o])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -579,7 +595,9 @@ jobs:
   test-group-7:
     name: "Test Group 7 (^[p-q]|^r[a-e])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -641,7 +659,9 @@ jobs:
   test-group-8:
     name: "Test Group 8 (^r[f-z])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -703,7 +723,9 @@ jobs:
   test-group-9:
     name: "Test Group 9 (^s)"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -765,7 +787,9 @@ jobs:
   test-group-10:
     name: "Test Group 10 (^[t-z])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 25
     env:
@@ -827,7 +851,9 @@ jobs:
   test-group-11:
     name: "Test Group 11 (^[d-g])"
     runs-on: oss-vm
-    container: meteor/circleci:2025.07.8-android-35-node-22
+    container:
+      image: meteor/circleci:2025.07.8-android-35-node-22
+      options: --user root
     needs: setup
     timeout-minutes: 40
     env:
