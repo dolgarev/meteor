@@ -1009,11 +1009,11 @@ You can combine both solutions: raise the heap limit with `TOOL_NODE_FLAGS` (3.4
 
 Rspack itself has reported plans to optimize persistent cache and overall RAM consumption in [Rspack 2.0](https://rspack.rs/misc/planning/roadmap), which should improve memory behavior in future Meteor-Rspack releases.
 
-### Docker
+### CI & Docker {#docker}
 
-When building or deploying a Meteor-Rspack app inside Docker, you may encounter errors like `Rspack plugin error: Could not find rspack.config.js`. This typically means the NPM dependencies expected by Meteor are not aligned with the Meteor version in use.
+When building or deploying a Meteor-Rspack app in CI or Docker, you may encounter errors like `Could not find rspack.config.js, rspack.config.ts, rspack.config.mjs, or rspack.config.cjs`. This typically means the NPM dependencies expected by Meteor are not aligned with the Meteor version in use.
 
-Each Meteor release requires specific minimum versions of NPM packages like Rspack. If these were not committed after upgrading Meteor locally, the Docker environment won't have them. To fix this, run `meteor update --npm` before `meteor npm install` in your Dockerfile:
+Each Meteor release requires specific minimum versions of NPM packages like Rspack. If these were not committed after upgrading Meteor locally, the CI or Docker environment won't have them. To fix this, run `meteor update --npm` before `meteor npm install` in your Dockerfile or CI pipeline:
 
 ```dockerfile
 RUN (meteor update --npm 2>/dev/null || true) && meteor npm install && meteor build [...]
@@ -1021,7 +1021,7 @@ RUN (meteor update --npm 2>/dev/null || true) && meteor npm install && meteor bu
 
 The `(meteor update --npm 2>/dev/null || true)` wrapper is for compatibility. The `--npm` option was introduced in Meteor 3.4. Older versions don't support it and would fail, so redirecting the error and allowing the command to continue ensures the same Docker step works across Meteor versions.
 
-> Keep `meteor update --npm` in the same Docker step as `meteor build` or `meteor deploy`. If you forget to commit and push the NPM bumps locally, this lets the Docker environment apply them on the fly. When using multiple Docker steps, each step is isolated, so NPM bumps won't carry over between steps.
+> Keep `meteor update --npm` in the same Docker step or CI stage as `meteor build` or `meteor deploy`. If you forget to commit and push the NPM bumps locally, this lets the CI or Docker environment apply them on the fly. When using multiple Docker steps or CI stages, each step is isolated, so NPM bumps won't carry over between steps.
 
 ::: info
 To avoid this issue entirely, run `meteor update --npm` locally after upgrading Meteor, or run the app once so the bumps are applied, then commit and push both the Meteor update and the updated NPM dependencies.

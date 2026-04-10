@@ -178,11 +178,26 @@ export function getConfigFilePath() {
   // If no config file is found, throw an error with suggestion to run npm install
   const isYarnProj = process.env.YARN_ENABLED === 'true';
   const installCommand = isYarnProj ? 'yarn install' : 'npm install';
-  throw new Error(
-    `Could not find rspack.config.js, rspack.config.ts, rspack.config.mjs, or rspack.config.cjs.\n\n` +
-    `Try running \`${installCommand}\` in your project directory and then re-run the build.\n` +
-    `This will ensure @meteorjs/rspack is installed correctly.`
+  const isCI = !!(
+    process.env.CI ||                      // Most CI providers (GitHub Actions, GitLab CI, Travis, CircleCI, Buildkite, Drone, Semaphore, etc.)
+    process.env.GITHUB_ACTIONS ||          // GitHub Actions
+    process.env.JENKINS_URL ||             // Jenkins
+    process.env.TEAMCITY_VERSION ||        // TeamCity
+    process.env.CODEBUILD_BUILD_ARN ||     // AWS CodeBuild
+    process.env.BUILDER_OUTPUT ||           // Google Cloud Build
+    process.env.TF_BUILD ||                // Azure Pipelines
+    process.env.KUBERNETES_SERVICE_HOST    // Kubernetes
   );
+  let message =
+    `Could not find rspack.config.js, rspack.config.ts, rspack.config.mjs, or rspack.config.cjs.\n\n` +
+    `Try running \`meteor update --npm\` followed by \`${installCommand}\` in your project directory and then re-run the build.\n` +
+    `This will ensure @meteorjs/rspack is installed correctly.`;
+  if (isCI) {
+    message += `\n\nIt looks like you are running in a CI/Docker environment.\n` +
+      `Make sure your Dockerfile or CI pipeline runs \`(meteor update --npm 2>/dev/null || true) && ${installCommand}\` before building.\n` +
+      `See: https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html#docker`;
+  }
+  throw new Error(message);
 }
 
 /**
