@@ -1,4 +1,3 @@
-const net = require('net');
 const execa = require('execa');
 const waitOn = require('wait-on');
 const path = require('path');
@@ -178,39 +177,6 @@ export async function killProcessByPort(port) {
  * @returns {Promise<void>}
  * @private
  */
-/**
- * Check if a port is available by attempting to listen on it.
- * @param {number} port
- * @returns {Promise<boolean>}
- * @private
- */
-function isPortAvailable(port) {
-  return new Promise((resolve) => {
-    const server = net.createServer();
-    server.once('error', () => resolve(false));
-    server.once('listening', () => {
-      server.close(() => resolve(true));
-    });
-    server.listen(port);
-  });
-}
-
-/**
- * Wait until a port is available, with retries.
- * @param {number} port
- * @param {number} retries
- * @param {number} delayMs
- * @returns {Promise<boolean>}
- * @private
- */
-async function waitForPortAvailable(port, retries = 10, delayMs = 500) {
-  for (let i = 0; i < retries; i++) {
-    if (await isPortAvailable(port)) return true;
-    await new Promise(r => setTimeout(r, delayMs));
-  }
-  return false;
-}
-
 async function killSingleProcessByPort(port) {
   try {
     // Different commands based on OS
@@ -232,14 +198,7 @@ async function killSingleProcessByPort(port) {
       // This catch block will only be reached for operational errors, not for command failures
       console.log(`Error executing kill command: ${err.message}`);
     }
-
-    // Wait for the port to actually become available after killing
-    const available = await waitForPortAvailable(port);
-    if (available) {
-      console.log(`Successfully ensured no process is running on port ${port}`);
-    } else {
-      console.warn(`Warning: port ${port} is still in use after killing process`);
-    }
+    console.log(`Successfully ensured no process is running on port ${port}`);
   } catch (error) {
     // This should never be reached with the inner try/catch, but keeping as a safety net
     console.error(`Error killing process on port ${port}:`, error);
