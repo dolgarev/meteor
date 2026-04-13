@@ -38,6 +38,7 @@ const {
 const {
   checkNpmDependencyExists,
   getNpxCommand,
+  getNodeBinEnv,
   getMonorepoPath,
 } = require('meteor/tools-core/lib/npm');
 
@@ -327,7 +328,7 @@ export function startRspackClientServe(options = {}) {
     command,
     args, {
       cwd: appDir,
-      env: { ...process.env, ...envs },
+      env: { ...process.env, ...getNodeBinEnv(), ...envs },
       onStdout: (data) => {
         logInfo(`[Rspack Client] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
@@ -390,7 +391,7 @@ export function startRspackServerWatch(options = {}) {
     command,
     args, {
     cwd: appDir,
-    env: { ...process.env, ...envs },
+    env: { ...process.env, ...getNodeBinEnv(), ...envs },
     onStdout: (data) => {
       logInfo(`[Rspack Server] ${data}`);
       if (onCompile && data.trim().includes("compiled")) {
@@ -457,7 +458,7 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
       args,
       {
       cwd: appDir,
-      env: { ...process.env, ...envs },
+      env: { ...process.env, ...getNodeBinEnv(), ...envs },
       onStdout: (data) => {
         logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
