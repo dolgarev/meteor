@@ -15,7 +15,11 @@ var hmrSecret = __meteor_runtime_config__._hmrSecret;
 
 // Cordova doesn't need the hmrSecret, though cordova is also unable to tell
 // if Meteor needs to be restarted to enable HMR;
-var enabled = Meteor.isCordova || !!hmrSecret;
+// HMR is disabled by the compile layer during test runs (buildMode 'test'),
+// so skip the WebSocket connect to avoid spurious errors and upgrade-path
+// races with SockJS.
+var enabled = (Meteor.isCordova || !!hmrSecret) &&
+  !Meteor.isTest && !Meteor.isAppTest;
 
 if (!enabled) {
   console.log('Restart Meteor to enable HMR');
