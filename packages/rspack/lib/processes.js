@@ -41,6 +41,7 @@ const {
 const {
   checkNpmDependencyExists,
   getNpxCommand,
+  getNodeBinEnv,
   getMonorepoPath,
 } = require('meteor/tools-core/lib/npm');
 
@@ -385,7 +386,7 @@ export function startRspackClientServe(options = {}) {
     command,
     args, {
       cwd: appDir,
-      env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
+      env: inheritMeteorToolNodeFlags({ ...process.env, ...getNodeBinEnv(), ...envs }),
       onStdout: (data) => {
         const { cleanedData, config } = parseMeteorRspackOutput(data);
         if (config && !!config?.devServerUrl) {
@@ -487,7 +488,7 @@ export function startRspackServerWatch(options = {}) {
     command,
     args, {
     cwd: appDir,
-    env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
+    env: inheritMeteorToolNodeFlags({ ...process.env, ...getNodeBinEnv(), ...envs }),
     onStdout: (data) => {
       const { cleanedData, config } = parseMeteorRspackOutput(data);
       if (onCompile && config && (config?.compilationCount || 0) > 0) {
@@ -578,7 +579,7 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
       args,
       {
       cwd: appDir,
-      env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
+      env: inheritMeteorToolNodeFlags({ ...process.env, ...getNodeBinEnv(), ...envs }),
       onStdout: (data) => {
         const { cleanedData, config } = parseMeteorRspackOutput(data);
         if (onCompile && config && (config?.compilationCount || 0) > 0) {
