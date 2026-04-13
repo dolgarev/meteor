@@ -128,7 +128,7 @@ export async function runMeteorApp(tempDir, port, options = {}) {
     console.log(`Waiting for app to be available on port ${port}...`);
     await waitOn({
       resources: [`http-get://localhost:${port}`],
-      timeout: process.env.CI ? 300000 : 90000
+      timeout: 90000
     });
   }
 
@@ -368,7 +368,7 @@ export async function wait(ms) {
  * @returns {Promise<string>} - A promise that resolves with the matched line
  */
 export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
-  const timeout = options.timeout || (process.env.CI ? 240000 : 90000); // Default 90s locally, 240s on CI
+  const timeout = options.timeout || 90000; // Default 1 minute timeout
   const checkInterval = options.checkInterval || 100; // Check every 100ms by default
   const negate = options.negate || false; // Default is to check for presence, not absence
 
@@ -595,7 +595,7 @@ export async function runMeteorTests(tempDir, port, options = {}) {
  * @returns {Promise<string|{message: string, allLogs: string[]}>} - Returns the matching message or an object with message and allLogs if returnAllLogs is true
  */
 export async function waitForPlaywrightConsole(pattern, options = {}) {
-  const timeout = options.timeout || (process.env.CI ? 90000 : 30000); // Default 30s locally, 90s on CI
+  const timeout = options.timeout || 30000; // Default 30 seconds timeout
   const checkInterval = options.checkInterval || 100; // Check every 100ms by default
   const negate = options.negate || false; // Default is to check for presence, not absence
   const returnAllLogs = options.returnAllLogs || false; // Default is to return just the matching message
