@@ -10,6 +10,7 @@ on:
       - 'packages/babel-compiler/**'
       - 'packages/meteor-tool/**'
       - 'npm-packages/meteor-rspack/**'
+      - 'tools/isobuild/**'
       - 'tools/static-assets/skel-**'
       - '.github/workflows/e2e-tests.yml'
 
