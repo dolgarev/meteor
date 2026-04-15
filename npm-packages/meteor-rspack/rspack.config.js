@@ -650,8 +650,15 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         ...(Meteor.isBlazeEnabled && { hot: false }),
         port: devServerPort,
         devMiddleware: {
-          writeToDisk: (filePath) =>
-            /\.(html)$/.test(filePath) || filePath.endsWith('sw.js'),
+          writeToDisk: (filePath) => {
+            if (filePath.endsWith('sw.js')) {
+              // Only write sw.js on first build,skip on HMR rebuilds to
+              // avoid re-registering the service worker and forcing a full
+              // page reload.
+              return !fs.existsSync(path.join(clientOutputDir, 'sw.js'));
+            }
+            return filePath.endsWith('.html');
+          },
         },
         onListening(devServer) {
           if (!devServer) return;
