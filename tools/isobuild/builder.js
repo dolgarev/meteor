@@ -550,9 +550,13 @@ Previous builder: ${previousBuilder.outputPath}, this builder: ${outputPath}`
       );
     }
 
+    // Exclude node_modules/.cache: transient bundler scratch space that
+    // races with readdir (ENOENT) and doesn't belong in the bundle.
     // Call this._copyDirectory rather than this.copyDirectory so that the
     // subBuilder hacks from Builder#enter won't apply a second time.
-    return this._copyDirectory(options);
+    return this._copyDirectory(Object.assign({}, options, {
+      ignore: [/^\.cache\/$/].concat(options.ignore || []),
+    }));
   }
 
   _ensureAllNonPackageDirectories(absFromDir, relToDir) {
@@ -574,7 +578,19 @@ Previous builder: ${previousBuilder.outputPath}, this builder: ${outputPath}`
 
     this._ensureDirectory(relToDir);
 
-    optimisticReaddir(absFromDir).forEach(item => {
+    let entries;
+    try {
+      entries = optimisticReaddir(absFromDir);
+    } catch (e) {
+      // The directory may have vanished between stat and readdir (e.g.
+      // a bundler tool rewriting files underneath us). Skip it.
+      if (e.code === "ENOENT") return;
+      throw e;
+    }
+
+    entries.forEach(item => {
+      // Skip node_modules/.cache (see copyNodeModulesDirectory).
+      if (item === ".cache") return;
       this._ensureAllNonPackageDirectories(
         files.pathJoin(absFromDir, item),
         files.pathJoin(relToDir, item)
@@ -658,7 +674,17 @@ Previous builder: ${previousBuilder.outputPath}, this builder: ${outputPath}`
 
       this._ensureDirectory(relTo);
 
-      for (const item of optimisticReaddir(absFrom)) {
+      let items;
+      try {
+        items = optimisticReaddir(absFrom);
+      } catch (e) {
+        // The directory may have disappeared mid-walk (e.g. a bundler
+        // tool rewriting files underneath us). Skip it.
+        if (e.code === "ENOENT") return;
+        throw e;
+      }
+
+      for (const item of items) {
         let thisAbsFrom = files.pathResolve(absFrom, item);
         const thisRelTo = files.pathJoin(relTo, item);
 
