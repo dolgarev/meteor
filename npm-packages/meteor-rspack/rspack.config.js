@@ -766,38 +766,11 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     ...loggingConfig,
   };
 
-  // Establish Angular overrides to ensure proper integration.
-  // Angular's createConfig() from @nx/angular-rspack may overwrite the entire
-  // devServer block (webpack-merge does a shallow merge for devServer), losing
-  // critical settings like static.publicPath that the Meteor proxy relies on.
-  // Re-apply the full devServer config here so it's restored after the merge.
-  // TODO: Extract the devServer block into a shared helper to avoid duplicating
-  // it between clientConfig and angularExpandConfig. Blocked until we confirm
-  // this fix resolves the Angular 504 on CI.
+  // Establish Angular overrides to ensure proper integration
   const angularExpandConfig = isAngularEnabled
     ? {
         mode: isProd ? "production" : "development",
-        ...(isDevEnvironment && {
-          devServer: {
-            ...createRemoteDevServerConfig(),
-            static: { directory: clientOutputDir, publicPath: "/__rspack__/" },
-            hot: true,
-            liveReload: true,
-            port: devServerPort,
-            devMiddleware: {
-              writeToDisk: (filePath) =>
-                /\.(html)$/.test(filePath) || filePath.endsWith('sw.js'),
-            },
-            onListening(devServer) {
-              if (!devServer) return;
-              const { host, port } = devServer.options;
-              const protocol =
-                devServer.options.server?.type === "https" ? "https" : "http";
-              const devServerUrl = `${protocol}://${host || "localhost"}:${port}`;
-              outputMeteorRspack({ devServerUrl });
-            },
-          },
-        }),
+        devServer: { port: devServerPort },
         stats: { preset: "normal" },
         infrastructureLogging: { level: "info" },
         ...(isProd && isClient && { output: { module: false } }),

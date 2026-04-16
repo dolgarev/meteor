@@ -18,12 +18,18 @@ export async function assertMeteorApp(port, options = {}) {
   // Extract options with default values
   const { title: inTitle, h1: inH1 = "Welcome to Meteor!" } = options;
 
-  // Collect browser console errors during page load to diagnose failures
+  // Collect browser errors and failed HTTP responses to diagnose failures
   const consoleErrors = [];
+  const failedResponses = [];
   page.on('console', msg => {
     if (msg.type() === 'error') consoleErrors.push(msg.text());
   });
   page.on('pageerror', err => consoleErrors.push(err.message));
+  page.on('response', response => {
+    if (response.status() >= 400) {
+      failedResponses.push(`${response.status()} ${response.url()}`);
+    }
+  });
 
   // Navigate to the app
   await page.goto(`http://localhost:${port}`);
@@ -58,8 +64,18 @@ export async function assertMeteorApp(port, options = {}) {
     }
     if (lastErr) {
       // Capture diagnostic info to help debug rendering failures
-      const bodyHTML = await page.evaluate(() => document.body?.innerHTML?.substring(0, 2000) || '<empty>');
-      console.log(`❌ h1 not found. Body HTML:\n${bodyHTML}`);
+      const scriptTags = await page.evaluate(() =>
+        [...document.querySelectorAll('script[src]')].map(s => s.src).join('\n')
+      );
+      const bodySnippet = await page.evaluate(() => {
+        const root = document.querySelector('app-root') || document.body;
+        return root?.innerHTML?.substring(0, 500) || '<empty>';
+      });
+      console.log(`❌ h1 not found. <app-root> content: ${bodySnippet}`);
+      console.log(`❌ Script tags loaded:\n${scriptTags}`);
+      if (failedResponses.length > 0) {
+        console.log(`❌ Failed HTTP responses:\n${failedResponses.join('\n')}`);
+      }
       if (consoleErrors.length > 0) {
         console.log(`❌ Browser console errors:\n${consoleErrors.join('\n')}`);
       }
