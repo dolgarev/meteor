@@ -62,6 +62,7 @@ module.exports = defineConfig(Meteor => {
               handler: 'StaleWhileRevalidate',
               options: {
                 cacheName: 'bundles',
+                // Meteor serves assets with Vary headers that can cause cache misses
                 matchOptions: { ignoreVary: true },
               },
             },
