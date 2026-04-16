@@ -864,7 +864,11 @@ module.exports = defineConfig(Meteor => ({
               `(/__rspack__/|/${Meteor.assetsContext}/|/${Meteor.chunksContext}/|[?&](hash|meteor_css_resource|meteor_js_resource)=)`
             ),
             handler: ‘StaleWhileRevalidate’,
-            options: { cacheName: ‘bundles’ },
+            options: {
+              cacheName: ‘bundles’,
+              // Meteor serves assets with Vary headers that can cause cache misses
+              matchOptions: { ignoreVary: true },
+            },
           },
           // Static assets: scripts, styles, workers
           {
@@ -882,6 +886,7 @@ module.exports = defineConfig(Meteor => ({
             options: {
               cacheName: ‘images’,
               expiration: { maxEntries: 60 },
+              matchOptions: { ignoreVary: true },
             },
           },
         ],
