@@ -101,18 +101,9 @@ jobs:
         timeout-minutes: 15
         run: METEOR_ALLOW_SUPERUSER=1 npm run test:e2e -- -t="${{ matrix.category }}"
 
-      - name: Retry failed tests for ${{ matrix.category }} (attempt 2)
-        id: test-retry-1
+      - name: Retry failed tests for ${{ matrix.category }}
         if: steps.test-run.outcome == 'failure'
-        continue-on-error: true
         timeout-minutes: 20
         run: |
           echo "::warning::First attempt failed, retrying..."
-          METEOR_ALLOW_SUPERUSER=1 npm run test:e2e -- -t="${{ matrix.category }}"
-
-      - name: Retry failed tests for ${{ matrix.category }} (attempt 3)
-        if: steps.test-retry-1.outcome == 'failure'
-        timeout-minutes: 20
-        run: |
-          echo "::warning::Second attempt failed, retrying..."
           METEOR_ALLOW_SUPERUSER=1 npm run test:e2e -- -t="${{ matrix.category }}"
