@@ -92,6 +92,36 @@ type MeteorEnv = Record<string, any> & {
    * @returns A config fragment with `meteor.enablePortableBuild: true`
    */
   enablePortableBuild: () => Record<string, any>;
+  /**
+   * Persist specific files to disk during development. Returns a config
+   * fragment to spread into your rspack config.
+   *
+   * Accepts an array (defaults to "always" strategy) or an object with
+   * `once` and/or `always` keys for mixed strategies.
+   *
+   * Matchers can be:
+   * - `string` — matched with `endsWith` (e.g. `'sw.js'`, `'.html'`)
+   * - `RegExp` — tested against the full file path
+   * - `function` — `(filePath: string) => boolean`
+   *
+   * Strategies:
+   * - `always` — write on every build (default). For HTML files, manifests, etc.
+   * - `once` — write on the first build only. For service workers and files
+   *   that trigger full reloads when rewritten.
+   *
+   * @example
+   * ...Meteor.persistDevFiles(['manifest.json'])
+   * ...Meteor.persistDevFiles({ once: ['sw.js'], always: ['manifest.json'] })
+   * ...Meteor.persistDevFiles({ always: [(f) => f.includes('/custom/')] })
+   */
+  persistDevFiles: (
+    matchers:
+      | (string | RegExp | ((filePath: string) => boolean))[]
+      | {
+          once?: (string | RegExp | ((filePath: string) => boolean))[];
+          always?: (string | RegExp | ((filePath: string) => boolean))[];
+        }
+  ) => Record<string, object>;
 }
 
 export type ConfigFactory = (
