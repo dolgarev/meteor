@@ -93,32 +93,27 @@ type MeteorEnv = Record<string, any> & {
    */
   enablePortableBuild: () => Record<string, any>;
   /**
-   * Persist specific files to disk during development. Returns a config
-   * fragment to spread into your rspack config.
+   * Persist build-output files to disk during development.
+   * HTML files are always persisted automatically.
    *
-   * Accepts an array (defaults to "always" strategy) or an object with
-   * `once` and/or `always` keys for mixed strategies.
+   * Matchers: `string` (endsWith), `RegExp`, or `(filePath) => boolean`.
+   * Array form defaults to `always`. Object form supports `once` and `always`.
+   * - `always` — written on every build (default)
+   * - `once` — first build only (e.g. service workers)
    *
-   * Matchers can be:
-   * - `string` — matched with `endsWith` (e.g. `'sw.js'`, `'.html'`)
-   * - `RegExp` — tested against the full file path
-   * - `function` — `(filePath: string) => boolean`
-   *
-   * Strategies:
-   * - `always` — write on every build (default). For HTML files, manifests, etc.
-   * - `once` — write on the first build only. For service workers and files
-   *   that trigger full reloads when rewritten.
+   * @param matchers - Array or `{ once?, always? }` of matchers
+   * @returns A config fragment with `devServer.devMiddleware.writeToDisk`
    *
    * @example
-   * ...Meteor.persistDevFiles(['manifest.json'])
    * ...Meteor.persistDevFiles({ once: ['sw.js'], always: ['manifest.json'] })
-   * ...Meteor.persistDevFiles({ always: [(f) => f.includes('/custom/')] })
    */
   persistDevFiles: (
     matchers:
       | (string | RegExp | ((filePath: string) => boolean))[]
       | {
+          /** Files written on the first build only. */
           once?: (string | RegExp | ((filePath: string) => boolean))[];
+          /** Files written on every build. */
           always?: (string | RegExp | ((filePath: string) => boolean))[];
         }
   ) => Record<string, object>;
