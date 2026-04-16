@@ -174,6 +174,7 @@ Monorepo structure with app in subdirectory, service worker, and PWA manifest.
 | Custom rspack config (`rspack.config.cjs`) | All |
 | `rspack.config.override.cjs` custom plugin loading | Run, Test, Build |
 | Static assets in bundle (png, md, icon, manifest) | Build |
+| Service worker in production build (`sw.js` found in bundle tree) | Build |
 | Service worker file served (`/sw.js`) | Run |
 | Service worker registers, activates, controls page | Run |
 | Service worker runtime caching (images) | Run |
@@ -314,6 +315,7 @@ Where each feature is tested across apps and skeletons.
 | Service worker (Workbox GenerateSW) | monorepo | |
 | Service worker stability (no rewrite on rebuild) | monorepo | |
 | Service worker regenerated on restart | monorepo | |
+| Service worker in production build | monorepo | |
 | Service worker runtime caching (images) | monorepo | |
 | Service worker precaching (`additionalManifestEntries`) | monorepo | |
 | PWA manifest | monorepo | |

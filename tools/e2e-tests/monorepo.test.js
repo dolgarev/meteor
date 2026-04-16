@@ -10,6 +10,7 @@ import {
   assertServiceWorkerReady,
   assertServiceWorkerCaching,
   assertServiceWorkerPrecaching,
+  assertFileInTree,
   captureFileMtime
 } from "./assertions";
 import { testMeteorRspackBundler } from './test-helpers';
@@ -105,9 +106,12 @@ describe('Monorepo App Bundling /', () => {
         // Check custom plugin gets loaded from rspack.config.override.cjs file
         await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/);
       },
-      afterBuild: async ({ result }) => {
+      afterBuild: async ({ result, buildOutputDir }) => {
         // Check custom plugin gets loaded from rspack.config.override.cjs file
         await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/);
+
+        // Verify sw.js exists somewhere in the production build output
+        await assertFileInTree(path.join(buildOutputDir, 'bundle'), 'sw.js');
       },
     }
   }));

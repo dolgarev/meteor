@@ -664,6 +664,47 @@ export async function assertFileChanged(basePath, relPath, previousMtime, option
 }
 
 /**
+ * Helper function to assert that a file exists somewhere within a directory tree.
+ * Searches recursively and returns all matching relative paths.
+ * @param {string} baseDir - Root directory to search in
+ * @param {string} fileName - File name to search for (exact match)
+ * @param {Object} options - Additional options
+ * @param {number} options.minCount - Minimum number of matches expected (default: 1)
+ * @param {number} options.maxCount - Maximum number of matches expected (default: Infinity)
+ * @returns {Promise<string[]>} - Array of relative paths where the file was found
+ */
+export async function assertFileInTree(baseDir, fileName, options = {}) {
+  const { minCount = 1, maxCount = Infinity } = options;
+
+  const find = async (dir) => {
+    const results = [];
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) results.push(...await find(full));
+      else if (entry.name === fileName) results.push(path.relative(baseDir, full));
+    }
+    return results;
+  };
+
+  const matches = await find(baseDir);
+
+  if (matches.length < minCount) {
+    throw new Error(
+      `Expected at least ${minCount} "${fileName}" in ${baseDir}, found ${matches.length}: ${matches.join(', ') || '(none)'}`
+    );
+  }
+  if (matches.length > maxCount) {
+    throw new Error(
+      `Expected at most ${maxCount} "${fileName}" in ${baseDir}, found ${matches.length}: ${matches.join(', ')}`
+    );
+  }
+
+  console.log(`✅ Found "${fileName}" (${matches.length}): ${matches.join(', ')}`);
+  return matches;
+}
+
+/**
  * Helper function to assert that meta tags have the expected content
  * @param {Object} expectedMetaTags - Expected meta tag properties and values as key-value pairs
  * @param {Object} options - Additional options for assertConsoleEval
