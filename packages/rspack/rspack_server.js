@@ -49,13 +49,18 @@ if (shouldEnableDevHMRProxy) {
     })
   );
 
-  // Proxy all dev asset requests under the rspack prefix
+  // Proxy all dev asset requests under the rspack prefix.
+  // Strip /__rspack__/ before forwarding so the dev server receives
+  // root-relative paths (e.g. /client-rspack.js). This is required because
+  // some framework integrations (e.g. @nx/angular-rspack) override
+  // output.publicPath, so the dev server may not serve files under /__rspack__/.
   WebApp.connectHandlers.use('/__rspack__',
     createProxyMiddleware({
       target,
       changeOrigin: true,
       ws: true,
       logLevel: 'debug',
+      pathRewrite: { '^/__rspack__': '' },
     })
   );
 
