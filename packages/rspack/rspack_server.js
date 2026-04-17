@@ -40,12 +40,21 @@ if (shouldEnableDevHMRProxy) {
   // Target URL for the Rspack dev server
   const target = `http://localhost:${process.env.RSPACK_DEVSERVER_PORT}`;
 
+  // Log upstream proxy errors so CI can tell ECONNREFUSED / ETIMEDOUT /
+  // ECONNRESET apart (all of which http-proxy-middleware maps to a 504).
+  const logProxyError = (scope) => (err, req) => {
+    console.error(
+      `[rspack-proxy:${scope}] upstream error ${err.code || err.message} for ${req.method} ${req.url} -> ${target}`
+    );
+  };
+
   // Proxy HMR websocket upgrade requests
   WebApp.connectHandlers.use('/ws',
     createProxyMiddleware( {
       target,
       ws: true,
-      logLevel: 'debug'
+      logLevel: 'debug',
+      onError: logProxyError('ws'),
     })
   );
 
@@ -54,13 +63,18 @@ if (shouldEnableDevHMRProxy) {
   // root-relative paths (e.g. /client-rspack.js). This is required because
   // some framework integrations (e.g. @nx/angular-rspack) override
   // output.publicPath, so the dev server may not serve files under /__rspack__/.
+  //
+  // ws is intentionally off here: the dedicated /ws handler above already
+  // proxies HMR upgrades, and leaving ws:true on two overlapping handlers
+  // has caused upgrade-race symptoms (Invalid frame header, hung HTTP
+  // responses surfacing as 504) under slow CI.
   WebApp.connectHandlers.use('/__rspack__',
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      ws: true,
       logLevel: 'debug',
       pathRewrite: { '^/__rspack__': '' },
+      onError: logProxyError('assets'),
     })
   );
 
