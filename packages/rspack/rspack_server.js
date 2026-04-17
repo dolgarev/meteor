@@ -37,8 +37,11 @@ if (shouldEnableDevHMRProxy) {
   const { shuffleString } = require('meteor/tools-core/lib/string');
   const { createProxyMiddleware } = require('http-proxy-middleware');
 
-  // Target URL for the Rspack dev server
-  const target = `http://localhost:${process.env.RSPACK_DEVSERVER_PORT}`;
+  // Target URL for the Rspack dev server. Pin to 127.0.0.1 rather than
+  // "localhost" so Node's http.request doesn't resolve to ::1 on systems
+  // (CI runners, some containers) where the dev-server child only binds
+  // to the IPv4 loopback — the mismatch surfaces as ECONNREFUSED.
+  const target = `http://127.0.0.1:${process.env.RSPACK_DEVSERVER_PORT}`;
 
   // Log upstream proxy errors so CI can tell ECONNREFUSED / ETIMEDOUT /
   // ECONNRESET apart (all of which http-proxy-middleware maps to a 504).
