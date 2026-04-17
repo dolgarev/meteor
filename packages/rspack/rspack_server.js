@@ -42,7 +42,9 @@ if (shouldEnableDevHMRProxy) {
 
   // Log upstream proxy errors so CI can tell ECONNREFUSED / ETIMEDOUT /
   // ECONNRESET apart (all of which http-proxy-middleware maps to a 504).
-  const logProxyError = (scope) => (err, req) => {
+  // NB: v3 of http-proxy-middleware uses `on.error` and `logger`. The
+  // legacy `onError` / `logLevel` options are silently ignored here.
+  const makeErrorHandler = (scope) => (err, req) => {
     console.error(
       `[rspack-proxy:${scope}] upstream error ${err.code || err.message} for ${req.method} ${req.url} -> ${target}`
     );
@@ -50,11 +52,11 @@ if (shouldEnableDevHMRProxy) {
 
   // Proxy HMR websocket upgrade requests
   WebApp.connectHandlers.use('/ws',
-    createProxyMiddleware( {
+    createProxyMiddleware({
       target,
       ws: true,
-      logLevel: 'debug',
-      onError: logProxyError('ws'),
+      logger: console,
+      on: { error: makeErrorHandler('ws') },
     })
   );
 
@@ -72,9 +74,9 @@ if (shouldEnableDevHMRProxy) {
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      logLevel: 'debug',
+      logger: console,
       pathRewrite: { '^/__rspack__': '' },
-      onError: logProxyError('assets'),
+      on: { error: makeErrorHandler('assets') },
     })
   );
 
