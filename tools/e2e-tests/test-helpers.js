@@ -356,6 +356,9 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(appDir, `${buildDir}/main-dev/server-rspack.js`);
       await assertFileExist(appDir, `${buildDir}/main-dev/server-meteor.js`);
 
+      // node_modules/.cache is rspack scratch — must not leak into the server bundle.
+      await assertPathNotExist(appDir, '.meteor/local/build/programs/server/npm/node_modules/.cache');
+
       if (!skipClient) {
         // Assert that the Meteor app is running correctly
         await assertMeteorReactApp(port, { title: appName });
@@ -759,6 +762,9 @@ export function testMeteorRspackBundler(options) {
         // Assert that the [web.browser|web.browser.legacy]/program.json file exists
         expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser/program.json`)).toBe(true);
         expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser.legacy/program.json`)).toBe(true);
+
+        // node_modules/.cache is rspack scratch — must not leak into the built bundle.
+        await assertPathNotExist(buildOutputDir, 'bundle/programs/server/npm/node_modules/.cache');
 
         // Run npm install in the server directory
         console.log('Running npm install in the server directory...');
