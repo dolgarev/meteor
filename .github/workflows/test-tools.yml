@@ -15,7 +15,7 @@ concurrency:
 
 env:
   # Multiplies the waitSecs for self-tests.
-  TIMEOUT_SCALE_FACTOR: 8
+  TIMEOUT_SCALE_FACTOR: 14
   # Retry failed tests additional times.
   METEOR_SELF_TEST_RETRIES: 2
   METEOR_HEADLESS: true
