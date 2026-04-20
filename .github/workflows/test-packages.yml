@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-22.04
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: truejobs:
+      cancel-in-progress: true
+
+jobs:
   test-packages:
     runs-on: oss-vm
     timeout-minutes: 90

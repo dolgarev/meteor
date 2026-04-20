@@ -62,13 +62,20 @@ async function linkLocalRspack(appDir) {
  * @returns {Function} - Jest test function
  */
 export function testMeteorBundler(options) {
-  const { appName, port, customAssertions, beforeAllBehavior, afterAllBehavior, env = {} } = options;
+  const { appName, port, devServerPort = 18080, customAssertions, beforeAllBehavior, afterAllBehavior, env = {} } = options;
+  const devServerPortStr = String(devServerPort);
 
   return () => {
     let meteorProcess;
     let tempDir;
+    let previousRspackDevServerPort;
 
     beforeAll(async () => {
+      // Route this test's rspack dev server to the configured port so it doesn't
+      // collide with dev servers bundled inside the app under test.
+      previousRspackDevServerPort = process.env.RSPACK_DEVSERVER_PORT;
+      process.env.RSPACK_DEVSERVER_PORT = devServerPortStr;
+
       // Run additional beforeAll behavior
       if (beforeAllBehavior) {
         await beforeAllBehavior({ tempDir, port });
@@ -92,11 +99,25 @@ export function testMeteorBundler(options) {
       if (afterAllBehavior) {
         await afterAllBehavior({ tempDir, port });
       }
+
+      // Restore the previous RSPACK_DEVSERVER_PORT so neighbouring describes aren't affected.
+      if (previousRspackDevServerPort === undefined) {
+        delete process.env.RSPACK_DEVSERVER_PORT;
+      } else {
+        process.env.RSPACK_DEVSERVER_PORT = previousRspackDevServerPort;
+      }
     });
 
     beforeEach(async () => {
       // Ensure any process on the port is killed
-      await killProcessByPort([port, '8080']);
+      await killProcessByPort([port, devServerPortStr]);
+    });
+
+    afterEach(async () => {
+      if (meteorProcess) {
+        await killMeteorProcess(meteorProcess);
+        meteorProcess = null;
+      }
     });
 
     test(`"meteor run" / should start the app`, async () => {
@@ -150,6 +171,9 @@ export function testMeteorRspackBundler(options) {
   const {
     appName,
     port,
+    // Rspack dev server port. Defaults to 18080 to avoid colliding with dev servers
+    // that some skeletons bundle on :8080 (e.g. Angular CLI's webpack-dev-server).
+    devServerPort = 18080,
     isMonorepo = false,
     filePaths = {
       client: 'client/main.jsx',
@@ -204,20 +228,27 @@ export function testMeteorRspackBundler(options) {
     // Skip isDevelopment/isProduction/isRun/isTest/isBuild verbose output checks
     skipEnvCheck = false,
   } = options;
+  const devServerPortStr = String(devServerPort);
 
   return () => {
     let meteorProcess;
     let tempDir;
     let appDir;
+    let previousRspackDevServerPort;
 
     beforeAll(async () => {
+      // Route this test's rspack dev server to the configured port so it doesn't
+      // collide with dev servers bundled inside the app under test.
+      previousRspackDevServerPort = process.env.RSPACK_DEVSERVER_PORT;
+      process.env.RSPACK_DEVSERVER_PORT = devServerPortStr;
+
       // Run additional beforeAll behavior
       if (beforeAllBehavior) {
         await beforeAllBehavior({ tempDir, port });
       }
 
       // Ensure any process on the port is killed
-      await killProcessByPort([port, '8080']);
+      await killProcessByPort([port, devServerPortStr]);
 
       // Setup the Meteor app
       tempDir = (await setupMeteorApp(appName, { isMonorepo }))?.tempDir;
@@ -270,7 +301,7 @@ export function testMeteorRspackBundler(options) {
       await killMeteorProcess(meteorProcess);
 
       // Ensure any process on the port is killed
-      await killProcessByPort([port, '8080']);
+      await killProcessByPort([port, devServerPortStr]);
     });
 
     afterAll(async () => {
@@ -281,11 +312,25 @@ export function testMeteorRspackBundler(options) {
       if (afterAllBehavior) {
         await afterAllBehavior({ tempDir, port });
       }
+
+      // Restore the previous RSPACK_DEVSERVER_PORT so neighbouring describes aren't affected.
+      if (previousRspackDevServerPort === undefined) {
+        delete process.env.RSPACK_DEVSERVER_PORT;
+      } else {
+        process.env.RSPACK_DEVSERVER_PORT = previousRspackDevServerPort;
+      }
     });
 
     beforeEach(async () => {
       // Ensure any process on the port is killed
-      await killProcessByPort([port, '8080']);
+      await killProcessByPort([port, devServerPortStr]);
+    });
+
+    afterEach(async () => {
+      if (meteorProcess) {
+        await killMeteorProcess(meteorProcess);
+        meteorProcess = null;
+      }
     });
 
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
@@ -310,6 +355,9 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(appDir, `${buildDir}/main-dev/server-entry.js`);
       await assertFileExist(appDir, `${buildDir}/main-dev/server-rspack.js`);
       await assertFileExist(appDir, `${buildDir}/main-dev/server-meteor.js`);
+
+      // node_modules/.cache is rspack scratch — must not leak into the server bundle.
+      await assertPathNotExist(appDir, '.meteor/local/build/programs/server/npm/node_modules/.cache');
 
       if (!skipClient) {
         // Assert that the Meteor app is running correctly
@@ -381,7 +429,7 @@ export function testMeteorRspackBundler(options) {
       await killMeteorProcess(meteorProcess);
 
       // Ensure any process on the port is killed
-      await killProcessByPort([port, '8080']);
+      await killProcessByPort([port, devServerPortStr]);
     });
 
     test(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
@@ -484,7 +532,7 @@ export function testMeteorRspackBundler(options) {
       await killMeteorProcess(meteorProcess);
 
       // Ensure any process on the port is killed
-      await killProcessByPort([port, '8080']);
+      await killProcessByPort([port, devServerPortStr]);
     });
 
     // Conditional test for bundle-visualizer in production mode
@@ -542,7 +590,7 @@ export function testMeteorRspackBundler(options) {
         await killMeteorProcess(meteorProcess);
 
         // Ensure any process on the port is killed
-        await killProcessByPort([port, '8080']);
+        await killProcessByPort([port, devServerPortStr]);
       });
     }
 
@@ -715,6 +763,9 @@ export function testMeteorRspackBundler(options) {
         expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser/program.json`)).toBe(true);
         expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser.legacy/program.json`)).toBe(true);
 
+        // node_modules/.cache is rspack scratch — must not leak into the built bundle.
+        await assertPathNotExist(buildOutputDir, 'bundle/programs/server/npm/node_modules/.cache');
+
         // Run npm install in the server directory
         console.log('Running npm install in the server directory...');
         const serverDir = path.join(buildOutputDir, 'bundle', 'programs', 'server');
@@ -852,6 +903,9 @@ export function testMeteorSkeleton(options) {
     skeletonName,
     title = skeletonName, // Default to skeletonName if title is not provided
     port,
+    // Rspack dev server port. Defaults to 18080 to avoid colliding with dev servers
+    // that some skeletons bundle on :8080 (e.g. Angular CLI's webpack-dev-server).
+    devServerPort = 18080,
     filePaths = {
       client: "client/main.jsx",
       server: "server/main.js",
@@ -874,12 +928,19 @@ export function testMeteorSkeleton(options) {
     // Chunks context directory (default: 'build-chunks')
     chunksContext = 'build-chunks',
   } = options;
+  const devServerPortStr = String(devServerPort);
 
   return () => {
     let meteorProcess;
     let tempDir;
+    let previousRspackDevServerPort;
 
     beforeAll(async () => {
+      // Route this test's rspack dev server to the configured port so it doesn't
+      // collide with dev servers bundled inside the app under test.
+      previousRspackDevServerPort = process.env.RSPACK_DEVSERVER_PORT;
+      process.env.RSPACK_DEVSERVER_PORT = devServerPortStr;
+
       // Run additional beforeAll behavior
       if (beforeAllBehavior) {
         await beforeAllBehavior({ tempDir, port });
@@ -899,11 +960,27 @@ export function testMeteorSkeleton(options) {
       if (afterAllBehavior) {
         await afterAllBehavior({ tempDir, port });
       }
+
+      // Restore the previous RSPACK_DEVSERVER_PORT so neighbouring describes aren't affected.
+      if (previousRspackDevServerPort === undefined) {
+        delete process.env.RSPACK_DEVSERVER_PORT;
+      } else {
+        process.env.RSPACK_DEVSERVER_PORT = previousRspackDevServerPort;
+      }
     });
 
     beforeEach(async () => {
       // Ensure any process on the port is killed
-      await killProcessByPort([port, '8080']);
+      await killProcessByPort([port, devServerPortStr]);
+    });
+
+    afterEach(async () => {
+      // Kill the meteor process directly if it's still running.
+      // This prevents port leaks when a test assertion fails mid-run.
+      if (meteorProcess) {
+        await killMeteorProcess(meteorProcess);
+        meteorProcess = null;
+      }
     });
 
     test(`"meteor create --${skeletonName}" / should create a new Meteor ${skeletonName} app`, async () => {

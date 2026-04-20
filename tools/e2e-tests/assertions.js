@@ -18,6 +18,19 @@ export async function assertMeteorApp(port, options = {}) {
   // Extract options with default values
   const { title: inTitle, h1: inH1 = "Welcome to Meteor!" } = options;
 
+  // Collect browser errors and failed HTTP responses to diagnose failures
+  const consoleErrors = [];
+  const failedResponses = [];
+  page.on('console', msg => {
+    if (msg.type() === 'error') consoleErrors.push(msg.text());
+  });
+  page.on('pageerror', err => consoleErrors.push(err.message));
+  page.on('response', response => {
+    if (response.status() >= 400) {
+      failedResponses.push(`${response.status()} ${response.url()}`);
+    }
+  });
+
   // Navigate to the app
   await page.goto(`http://localhost:${port}`);
 
@@ -30,7 +43,44 @@ export async function assertMeteorApp(port, options = {}) {
 
   // Check for static content if specified
   if (inH1) {
-    await page.waitForSelector('h1');
+    // In dev mode on slow CI (e.g. Docker), the Rspack proxy may 504 on the
+    // first request for the client bundle. Retry the page load once before
+    // failing, since the dev server will be warmed up by the second attempt.
+    let lastErr;
+    const maxAttempts = process.env.CI ? 2 : 1;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await page.waitForSelector('h1');
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+        if (attempt < maxAttempts) {
+          console.log(`⏳ h1 not found (attempt ${attempt}/${maxAttempts}), reloading page...`);
+          consoleErrors.length = 0;
+          await page.reload({ waitUntil: 'load' });
+        }
+      }
+    }
+    if (lastErr) {
+      // Capture diagnostic info to help debug rendering failures
+      const scriptTags = await page.evaluate(() =>
+        [...document.querySelectorAll('script[src]')].map(s => s.src).join('\n')
+      );
+      const bodySnippet = await page.evaluate(() => {
+        const root = document.querySelector('app-root') || document.body;
+        return root?.innerHTML?.substring(0, 500) || '<empty>';
+      });
+      console.log(`❌ h1 not found. <app-root> content: ${bodySnippet}`);
+      console.log(`❌ Script tags loaded:\n${scriptTags}`);
+      if (failedResponses.length > 0) {
+        console.log(`❌ Failed HTTP responses:\n${failedResponses.join('\n')}`);
+      }
+      if (consoleErrors.length > 0) {
+        console.log(`❌ Browser console errors:\n${consoleErrors.join('\n')}`);
+      }
+      throw lastErr;
+    }
     const h1Text = await page.$eval('h1', el => el.textContent);
     expect(h1Text).toMatch(new RegExp(inH1));
     console.log(`✅ H1: ${h1Text}`);
