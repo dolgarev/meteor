@@ -716,7 +716,22 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       runtimeChunk: false,
     },
     module: {
-      rules: [swcConfigRule, ...extraRules],
+      rules: [
+        swcConfigRule,
+        // Mirror the client rule: ignore .html so rspack doesn't try to
+        // parse them as JavaScript. Meteor's template compiler handles
+        // .html files separately, and RequireExternalsPlugin below wires
+        // the imports to Meteor's module system.
+        ...(Meteor.isBlazeEnabled
+          ? [
+              {
+                test: /\.html$/i,
+                loader: 'ignore-loader',
+              },
+            ]
+          : []),
+        ...extraRules,
+      ],
       parser: {
         javascript: {
           // Dynamic imports on the server are treated as bundled in the same chunk
