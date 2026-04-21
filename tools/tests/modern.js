@@ -4,6 +4,10 @@ var files = require('../fs/files');
 
 // No need for a high value since the asserts already wait long enough to pass tests
 const waitToStart = 5;
+// Budget for `meteor build` to fully exit. Doubled on CI where the container
+// is resource-constrained and the build can take substantially longer than
+// locally.
+const buildWaitSecs = process.env.CI ? 90 : 60;
 
 // Applies env var overrides for the duration of `fn`, then restores them on
 // every exit path. Required for retry-compatibility: without the try/finally,
@@ -53,13 +57,15 @@ selftest.define("modern build stack - legacy", async function () {
     run.waitSecs(waitToStart);
     await run.match("App running at");
 
+    const out = run.getMatcherFullBuffer();
+
     /* check legacy stack */
-    await run.match(/Babel\.compile/, false, true);
-    await run.match(/safeWatcher\.watchLegacy/, false, true);
-    await run.match(/_findSources for web\.browser.legacy/, false, true);
+    selftest.expectTrue(/Babel\.compile/.test(out));
+    selftest.expectTrue(/safeWatcher\.watchLegacy/.test(out));
+    selftest.expectTrue(/_findSources for web\.browser\.legacy/.test(out));
 
     /* check debug stack */
-    await run.match(/server\/main\.js:6:22/, false, true);
+    selftest.expectTrue(/server\/main\.js:6:22/.test(out));
 
     await run.stop();
   });
@@ -82,16 +88,18 @@ selftest.define("modern build stack", async function () {
     run.waitSecs(waitToStart);
     await run.match("App running at");
 
-    /* check modern stack */
-    await run.match(/SWC\.compile/, false, true);
-    await run.match(/safeWatcher\.watchModern/, false, true);
-    await run.match(/_findSources for web\.browser/, false, true);
+    const out = run.getMatcherFullBuffer();
 
-    run.forbid(/Babel\.compile/, false, true);
-    run.forbid(/_findSources for web\.browser\.legacy/, false, true);
+    /* check modern stack */
+    selftest.expectTrue(/SWC\.compile/.test(out));
+    selftest.expectTrue(/safeWatcher\.watchModern/.test(out));
+    selftest.expectTrue(/_findSources for web\.browser/.test(out));
+
+    selftest.expectFalse(/Babel\.compile/.test(out));
+    selftest.expectFalse(/_findSources for web\.browser\.legacy/.test(out));
 
     /* check debug stack */
-    await run.match(/server\/main\.js:6:22/, false, true);
+    selftest.expectTrue(/server\/main\.js:6:22/.test(out));
 
     await run.stop();
   });
@@ -114,14 +122,16 @@ selftest.define("modern build stack - disable transpiler", async function () {
     run.waitSecs(waitToStart);
     await run.match("App running at");
 
+    const out = run.getMatcherFullBuffer();
+
     /* disable transpiler */
-    run.forbid(/SWC\.compile/, false, true);
-    await run.match(/Babel\.compile/, false, true);
+    selftest.expectFalse(/SWC\.compile/.test(out));
+    selftest.expectTrue(/Babel\.compile/.test(out));
 
     /* Keep rest of modern build stack */
-    await run.match(/safeWatcher\.watchModern/, false, true);
-    await run.match(/_findSources for web\.browser/, false, true);
-    run.forbid(/_findSources for web\.browser\.legacy/, false, true);
+    selftest.expectTrue(/safeWatcher\.watchModern/.test(out));
+    selftest.expectTrue(/_findSources for web\.browser/.test(out));
+    selftest.expectFalse(/_findSources for web\.browser\.legacy/.test(out));
 
     await run.stop();
   });
@@ -144,14 +154,16 @@ selftest.define("modern build stack - disable watcher", async function () {
     run.waitSecs(waitToStart);
     await run.match("App running at");
 
+    const out = run.getMatcherFullBuffer();
+
     /* disable watcher */
-    run.forbid(/safeWatcher\.watchModern/, false, true);
-    await run.match(/safeWatcher\.watchLegacy/, false, true);
+    selftest.expectFalse(/safeWatcher\.watchModern/.test(out));
+    selftest.expectTrue(/safeWatcher\.watchLegacy/.test(out));
 
     /* Keep rest of modern build stack */
-    await run.match(/SWC\.compile/, false, true);
-    await run.match(/_findSources for web\.browser/, false, true);
-    run.forbid(/_findSources for web\.browser\.legacy/, false, true);
+    selftest.expectTrue(/SWC\.compile/.test(out));
+    selftest.expectTrue(/_findSources for web\.browser/.test(out));
+    selftest.expectFalse(/_findSources for web\.browser\.legacy/.test(out));
 
     await run.stop();
   });
@@ -174,13 +186,15 @@ selftest.define("modern build stack - disable webArchOnly", async function () {
     run.waitSecs(waitToStart);
     await run.match("App running at");
 
+    const out = run.getMatcherFullBuffer();
+
     /* disable webArchOnly */
-    await run.match(/_findSources for web\.browser/, false, true);
-    await run.match(/_findSources for web\.browser\.legacy/, false, true);
+    selftest.expectTrue(/_findSources for web\.browser/.test(out));
+    selftest.expectTrue(/_findSources for web\.browser\.legacy/.test(out));
 
     /* Keep rest of modern build stack */
-    await run.match(/safeWatcher\.watchModern/, false, true);
-    await run.match(/SWC\.compile/, false, true);
+    selftest.expectTrue(/safeWatcher\.watchModern/.test(out));
+    selftest.expectTrue(/SWC\.compile/.test(out));
 
     await run.stop();
   });
@@ -617,16 +631,19 @@ selftest.define("modern build stack - enable build", async function () {
     await writeModernConfig(s, true);
 
     const buildSwc = s.run("build", `../modern`);
-    buildSwc.waitSecs(waitToStart);
+    buildSwc.waitSecs(buildWaitSecs);
+    await buildSwc.expectExit(0);
+
+    const out = buildSwc.getMatcherFullBuffer();
 
     /* Perserve legacy and modern on build */
-    await buildSwc.match(/_findSources for web\.browser/, false, true);
-    await buildSwc.match(/_findSources for web\.browser\.legacy/, false, true);
+    selftest.expectTrue(/_findSources for web\.browser/.test(out));
+    selftest.expectTrue(/_findSources for web\.browser\.legacy/.test(out));
 
     /* Keep rest of modern build stack */
-    await buildSwc.match(/safeWatcher\.watchModern/, false, true);
-    await buildSwc.match(/SWC\.compile/, false, true);
-    await buildSwc.match("[DEBUG] Minifying using SWC", false, true);
+    selftest.expectTrue(/safeWatcher\.watchModern/.test(out));
+    selftest.expectTrue(/SWC\.compile/.test(out));
+    selftest.expectTrue(out.includes("[DEBUG] Minifying using SWC"));
   });
 });
 
@@ -649,15 +666,18 @@ selftest.define("modern build stack - disable build", async function () {
     });
 
     const buildLegacy = s.run("build", `../modern`);
-    buildLegacy.waitSecs(waitToStart);
+    buildLegacy.waitSecs(buildWaitSecs);
+    await buildLegacy.expectExit(0);
+
+    const out = buildLegacy.getMatcherFullBuffer();
 
     /* Perserve legacy and modern on build */
-    await buildLegacy.match(/_findSources for web\.browser/, false, true);
-    await buildLegacy.match(/_findSources for web\.browser\.legacy/, false, true);
+    selftest.expectTrue(/_findSources for web\.browser/.test(out));
+    selftest.expectTrue(/_findSources for web\.browser\.legacy/.test(out));
 
     /* Keep rest of modern build stack */
-    await buildLegacy.match(/safeWatcher\.watchLegacy/, false, true);
-    await buildLegacy.match(/Babel\.compile/, false, true);
-    await buildLegacy.match("[DEBUG] Minifying using Terser", false, true);
+    selftest.expectTrue(/safeWatcher\.watchLegacy/.test(out));
+    selftest.expectTrue(/Babel\.compile/.test(out));
+    selftest.expectTrue(out.includes("[DEBUG] Minifying using Terser"));
   });
 });
