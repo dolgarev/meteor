@@ -663,6 +663,35 @@ module.exports = async function (inMeteor = {}, argv = {}) {
             devServer.options.server?.type === "https" ? "https" : "http";
           const devServerUrl = `${protocol}://${host || "localhost"}:${port}`;
           outputMeteorRspack({ devServerUrl });
+
+          // Windows-only: webpack-dev-server tracks accepted sockets
+          // but doesn't attach 'error'. On Windows, teardown of a
+          // closed proxy connection sends RST, producing an unhandled
+          // ECONNRESET that crashes the dev server. Unix peers send
+          // FIN and never hit this.
+          if (process.platform !== "win32") return;
+
+          const server = devServer.server;
+          if (!server || server.__meteorRspackErrorGuard) return;
+          server.__meteorRspackErrorGuard = true;
+
+          const QUIET_CODES = new Set([
+            "ECONNRESET",
+            "ECONNABORTED",
+            "EPIPE",
+          ]);
+          server.on("connection", (socket) => {
+            if (!socket || socket.__meteorRspackGuarded) return;
+            socket.__meteorRspackGuarded = true;
+            socket.on("error", (err) => {
+              if (QUIET_CODES.has(err && err.code)) return;
+              console.warn(
+                `[meteor-rspack] dev server socket error: ${
+                  err && (err.code || err.message)
+                }`
+              );
+            });
+          });
         },
       },
     }),
