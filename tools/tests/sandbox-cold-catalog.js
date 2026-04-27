@@ -1,8 +1,8 @@
-var selftest = require('../tool-testing/selftest.js');
-var catalog = require('../packaging/catalog/catalog.js');
-var catalogLocal = require('../packaging/catalog/catalog-local.js');
-var buildmessage = require('../utils/buildmessage.js');
-var files = require('../fs/files');
+const selftest = require('../tool-testing/selftest.js');
+const catalog = require('../packaging/catalog/catalog.js');
+const catalogLocal = require('../packaging/catalog/catalog-local.js');
+const buildmessage = require('../utils/buildmessage.js');
+const files = require('../fs/files');
 
 selftest.define("self-test catalog scan tolerates cold official catalog",
 async function () {
@@ -10,16 +10,16 @@ async function () {
   // lookup come back empty. Without buildingSelfTestCatalog, this causes
   // versionsFrom() in scanned packages (e.g. packages/non-core/jquery) to
   // raise a fatal "Unknown release …" buildmessage.
-  var originalGetReleaseVersion = catalog.official.getReleaseVersion;
-  catalog.official.getReleaseVersion = async function () { return null; };
+  const originalGetReleaseVersion = catalog.official.getReleaseVersion;
+  catalog.official.getReleaseVersion = async () => null;
 
   try {
-    var localCatalog = new catalogLocal.LocalCatalog();
-    var packagesDir = files.pathJoin(files.getCurrentToolsDir(), 'packages');
+    const localCatalog = new catalogLocal.LocalCatalog();
+    const packagesDir = files.pathJoin(files.getCurrentToolsDir(), 'packages');
 
-    var messages = await buildmessage.capture({
+    const messages = await buildmessage.capture({
       title: "scanning core packages for cold-catalog regression test",
-    }, async function () {
+    }, async () => {
       await localCatalog.initialize({
         localPackageSearchDirs: [
           packagesDir,
@@ -32,8 +32,7 @@ async function () {
 
     if (messages.hasMessages()) {
       selftest.fail(
-        "scan errored despite buildingSelfTestCatalog=true:\n" +
-        messages.formatMessages(0)
+        `scan errored despite buildingSelfTestCatalog=true:\n${messages.formatMessages(0)}`,
       );
     }
   } finally {

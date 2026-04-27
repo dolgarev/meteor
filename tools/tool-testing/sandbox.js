@@ -556,28 +556,26 @@ async function setUpBuiltPackageTropohouse() {
     versions[packageName] = localCatalog.getLatestVersion(packageName).version;
   }
   const packageMap = new PackageMap(versions, {
-    localCatalog: localCatalog
+    localCatalog,
   });
   // An isopack cache that doesn't automatically save isopacks to disk and
   // has no access to versioned packages.
   const isopackCache = new IsopackCache({
-    packageMap: packageMap,
-    includeCordovaUnibuild: true
+    packageMap,
+    includeCordovaUnibuild: true,
   });
-  await doOrThrow(function () {
-    return enterJob("building self-test packages", () => {
-      return isopackCache.buildLocalPackages(ROOT_PACKAGES_TO_BUILD_IN_SANDBOX);
-    });
-  });
+  await doOrThrow(() => enterJob("building self-test packages",
+    () => isopackCache.buildLocalPackages(ROOT_PACKAGES_TO_BUILD_IN_SANDBOX),
+  ));
 
   // Save all the isopacks into localDir/packages.  (Note that we are always
   // putting them into the default 'packages' (assuming
   // $METEOR_PACKAGE_SERVER_URL is not set in the self-test process itself)
   // even though some tests will want them to be under
   // 'packages-for-server/test-packages'; we'll fix this in _makeWarehouse.
-  await isopackCache.eachBuiltIsopack((name, isopack) => {
-    return tropohouse._saveIsopack(isopack, name);
-  });
+  await isopackCache.eachBuiltIsopack(
+    (name, isopack) => tropohouse._saveIsopack(isopack, name),
+  );
 
   // Atomic publish: assign module-level state only after every step above
   // has succeeded. tropohouseIsopackCache must be assigned LAST because the
