@@ -537,8 +537,9 @@ export class PackageAPI {
       // The self-test catalog is built from a checkout-only set of packages
       // where the local catalog has exactly one version of each package.
       // versionsFrom's release records would only fill in unspecified
-      // version constraints (see package-source.js:727), which has no effect
-      // when there is exactly one candidate version. Skipping the lookup
+      // version constraints (see the !_.isEmpty(api.releaseRecords) check
+      // in package-source.js), which has no effect when there is exactly
+      // one candidate version. Skipping the lookup
       // avoids a hard dependency on catalog.official having every Meteor
       // release cached on disk, which is fragile in CI.
       return;
