@@ -527,47 +527,65 @@ async function doOrThrow(f) {
 }
 
 async function setUpBuiltPackageTropohouse() {
-  if (builtPackageTropohouseDir) {
+  // Use tropohouseIsopackCache (the *last* variable assigned) as the
+  // success sentinel. Earlier this guard checked builtPackageTropohouseDir
+  // (the *first* variable assigned), which meant a mid-setup throw would
+  // leave the dir set but empty — and every subsequent call would
+  // early-return as if setup had completed, causing _makeWarehouse to
+  // ENOENT on a missing 'packages' subdirectory inside the empty tmpdir.
+  if (tropohouseIsopackCache) {
     return;
   }
-  builtPackageTropohouseDir = files.mkdtemp('built-package-tropohouse');
 
   if (getPackagesDirectoryName() !== 'packages') {
     throw Error("running self-test with METEOR_PACKAGE_SERVER_URL set?");
   }
 
-  const tropohouse = new Tropohouse(builtPackageTropohouseDir);
-  tropohouseLocalCatalog = await newSelfTestCatalog();
+  // Build into local variables. Module-level state is published only at
+  // the very end, so a throw anywhere above leaves the module state
+  // untouched and the next call retries the full setup from scratch.
+  // The orphaned tmpdir is intentionally left in place — METEOR_SAVE_TMPDIRS
+  // is set in CI for debugging, and we don't want to delete a half-built
+  // tmpdir that someone might want to inspect.
+  const localDir = files.mkdtemp('built-package-tropohouse');
+  const tropohouse = new Tropohouse(localDir);
+  const localCatalog = await newSelfTestCatalog();
+
   const versions = {};
-  for (const packageName of tropohouseLocalCatalog.getAllNonTestPackageNames()) {
+  for (const packageName of localCatalog.getAllNonTestPackageNames()) {
     versions[packageName] =
-        await tropohouseLocalCatalog.getLatestVersion(packageName).version;
+      await localCatalog.getLatestVersion(packageName).version;
   }
   const packageMap = new PackageMap(versions, {
-    localCatalog: tropohouseLocalCatalog
+    localCatalog: localCatalog,
   });
-  // Make an isopack cache that doesn't automatically save isopacks to disk and
+  // An isopack cache that doesn't automatically save isopacks to disk and
   // has no access to versioned packages.
-  tropohouseIsopackCache = new IsopackCache({
+  const isopackCache = new IsopackCache({
     packageMap: packageMap,
-    includeCordovaUnibuild: true
+    includeCordovaUnibuild: true,
   });
   await doOrThrow(function () {
     return enterJob("building self-test packages", () => {
-      // Build the packages into the in-memory IsopackCache.
-      return tropohouseIsopackCache.buildLocalPackages(
-        ROOT_PACKAGES_TO_BUILD_IN_SANDBOX);
+      return isopackCache.buildLocalPackages(ROOT_PACKAGES_TO_BUILD_IN_SANDBOX);
     });
   });
 
-  // Save all the isopacks into builtPackageTropohouseDir/packages.  (Note that
-  // we are always putting them into the default 'packages' (assuming
-  // $METEOR_PACKAGE_SERVER_URL is not set in the self-test process itself) even
-  // though some tests will want them to be under
+  // Save all the isopacks into localDir/packages.  (Note that we are always
+  // putting them into the default 'packages' (assuming
+  // $METEOR_PACKAGE_SERVER_URL is not set in the self-test process itself)
+  // even though some tests will want them to be under
   // 'packages-for-server/test-packages'; we'll fix this in _makeWarehouse.
-  await tropohouseIsopackCache.eachBuiltIsopack((name, isopack) => {
+  await isopackCache.eachBuiltIsopack((name, isopack) => {
     return tropohouse._saveIsopack(isopack, name);
   });
+
+  // Atomic publish: assign module-level state only after every step above
+  // has succeeded. tropohouseIsopackCache must be assigned LAST because the
+  // guard at the top of this function uses it as the success sentinel.
+  builtPackageTropohouseDir = localDir;
+  tropohouseLocalCatalog = localCatalog;
+  tropohouseIsopackCache = isopackCache;
 }
 
 // Our current strategy for running tests that need warehouses is to build all
