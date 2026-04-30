@@ -62,7 +62,7 @@ Beyond these, we also track smaller tasks delivered in each release. These focus
 
 [📄 Modern Build Stack Documentation](./modern-build-stack)
 
-Delivered across Meteor 3.2 to 3.4.x:
+Delivered across Meteor 3.2 to 3.4.1:
 
 - **Phase 1 (3.2): Profiling.** Added the [`meteor profile`](/cli/#meteorprofile) command to measure bundler performance and bundle size. 🔗 [Article](https://dev.to/meteor/unlocking-meteor-32-new-profiling-tool-to-track-bundler-performance-and-size-1jc8)
 - **Phase 2 (3.3): External transpiler (SWC).** SWC integration plus bundler optimizations available to any Meteor user. 🔗 [Article](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
