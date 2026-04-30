@@ -12,7 +12,7 @@ Contributors are encouraged to focus their efforts on work that aligns with the 
 
 > As with any roadmap, this is a living document that will evolve as priorities and dependencies shift.
 
-> If you have new feature requests or ideas, you should open a new [discussion](https://github.com/meteor/meteor/discussions/new).
+> If you have new feature requests or ideas, you should open a new [discussion](https://forums.meteor.com/).
 
 ## Current project: Change streams
 
